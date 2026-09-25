@@ -9,7 +9,18 @@ import {
 import { splitIntoSections } from "@/lib/server/extract";
 import { engineLabel } from "@/lib/server/llm";
 import { getFramework, getReview, updateReview } from "@/lib/server/store";
-import type { Review, StageId, StageState } from "@/types/review";
+import type {
+  ContentAnalysis,
+  CurriculumProfile,
+  DocumentSection,
+  FinalReport,
+  LanguageIssue,
+  Review,
+  StageId,
+  StageState,
+  Standard,
+  StandardAlignment,
+} from "@/types/review";
 
 // Orchestrator. Stage graph:
 //
@@ -19,6 +30,9 @@ import type { Review, StageId, StageState } from "@/types/review";
 //
 // The three analysis agents run in parallel. A failing analysis stage does
 // not stop the others; the report agent states which parts were not assessed.
+//
+// `executeReview` is storage-agnostic so the same pipeline runs from the web
+// app (runReviewPipeline, which persists to the store) and from the CLI.
 
 export const STAGE_ORDER: StageId[] = ["ingestion", "language", "standards", "content", "report"];
 
@@ -29,45 +43,139 @@ export function initialStages(hasFramework: boolean): StageState[] {
   }));
 }
 
+export interface ReviewInput {
+  sourceText: string;
+  frameworkName: string | null;
+  standards: Standard[];
+  /** Run only these stages (ingestion always runs). Defaults to all. */
+  stages?: StageId[];
+}
+
+export interface ReviewResult {
+  sections: DocumentSection[];
+  profile: CurriculumProfile | null;
+  languageIssues: LanguageIssue[] | null;
+  alignment: StandardAlignment[] | null;
+  content: ContentAnalysis | null;
+  report: FinalReport | null;
+  stages: StageState[];
+  /** Wall-clock milliseconds per stage. */
+  timings: Partial<Record<StageId, number>>;
+  engine: string;
+}
+
+export interface PipelineHooks {
+  onStage?: (stage: StageState) => Promise<void> | void;
+  onResult?: <K extends keyof ReviewResult>(key: K, value: ReviewResult[K]) => Promise<void> | void;
+}
+
+export async function executeReview(
+  input: ReviewInput,
+  hooks: PipelineHooks = {},
+): Promise<ReviewResult> {
+  const wanted = new Set<StageId>(input.stages ?? STAGE_ORDER);
+  wanted.add("ingestion");
+  const hasStandards = input.standards.length > 0;
+
+  const stages = STAGE_ORDER.map(
+    (id): StageState => ({
+      id,
+      status: !wanted.has(id) || (id === "standards" && !hasStandards) ? "skipped" : "pending",
+    }),
+  );
+  const timings: ReviewResult["timings"] = {};
+
+  async function update(id: StageId, patch: Partial<StageState>) {
+    const stage = stages.find((s) => s.id === id)!;
+    Object.assign(stage, patch);
+    await hooks.onStage?.({ ...stage });
+  }
+
+  async function runStage<T>(
+    id: StageId,
+    work: (progress: (note: string) => Promise<void>) => Promise<T>,
+  ): Promise<T | null> {
+    if (stages.find((s) => s.id === id)!.status === "skipped") {
+      await hooks.onStage?.({ ...stages.find((s) => s.id === id)! });
+      return null;
+    }
+    const started = Date.now();
+    await update(id, { status: "running", startedAt: new Date().toISOString() });
+    try {
+      const result = await work((note) => update(id, { progress: note }));
+      timings[id] = Date.now() - started;
+      await update(id, { status: "done", finishedAt: new Date().toISOString() });
+      return result;
+    } catch (error) {
+      timings[id] = Date.now() - started;
+      await update(id, {
+        status: "failed",
+        finishedAt: new Date().toISOString(),
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  // 1. Ingestion: split into sections + profile.
+  const sections = splitIntoSections(input.sourceText);
+  await hooks.onResult?.("sections", sections);
+  const profile = await runStage("ingestion", () => ingestionAgent(sections));
+  await hooks.onResult?.("profile", profile);
+
+  // 2-4. Analysis agents in parallel.
+  const [languageIssues, alignment, content] = await Promise.all([
+    runStage("language", (p) => languageAgent(sections, p)).then(async (value) => {
+      await hooks.onResult?.("languageIssues", value);
+      return value;
+    }),
+    runStage("standards", (p) => standardsAgent(sections, input.standards, profile, p)).then(
+      async (value) => {
+        await hooks.onResult?.("alignment", value);
+        return value;
+      },
+    ),
+    runStage("content", (p) => contentAgent(sections, profile, p)).then(async (value) => {
+      await hooks.onResult?.("content", value);
+      return value;
+    }),
+  ]);
+
+  // 5. Report.
+  const failedStages = stages.filter((s) => s.status === "failed").map((s) => s.id);
+  const report = await runStage("report", () =>
+    reportAgent({
+      profile,
+      frameworkName: input.frameworkName,
+      wordCount: input.sourceText.split(/\s+/).filter(Boolean).length,
+      languageIssues,
+      alignment,
+      content,
+      failedStages,
+    }),
+  );
+  await hooks.onResult?.("report", report);
+
+  return {
+    sections,
+    profile,
+    languageIssues,
+    alignment,
+    content,
+    report,
+    stages,
+    timings,
+    engine: engineLabel(),
+  };
+}
+
+// ---- Web app wrapper: persists progress to the store. ----
+
 // Reviews currently executing in this process, so a double click cannot start two runs.
 const running = new Set<string>();
 
 export function isRunning(id: string): boolean {
   return running.has(id);
-}
-
-async function setStage(id: string, stage: StageId, patch: Partial<StageState>): Promise<void> {
-  await updateReview(id, (review) => {
-    const target = review.stages.find((s) => s.id === stage);
-    if (target) Object.assign(target, patch);
-  });
-}
-
-async function runStage<T>(
-  reviewId: string,
-  stage: StageId,
-  work: (progress: (note: string) => Promise<void>) => Promise<T>,
-): Promise<T | null> {
-  await setStage(reviewId, stage, {
-    status: "running",
-    startedAt: new Date().toISOString(),
-    error: undefined,
-    progress: undefined,
-  });
-  try {
-    const result = await work((note) => setStage(reviewId, stage, { progress: note }));
-    await setStage(reviewId, stage, { status: "done", finishedAt: new Date().toISOString() });
-    return result;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(`[review ${reviewId}] stage ${stage} failed:`, error);
-    await setStage(reviewId, stage, {
-      status: "failed",
-      finishedAt: new Date().toISOString(),
-      error: message,
-    });
-    return null;
-  }
 }
 
 export async function runReviewPipeline(reviewId: string): Promise<void> {
@@ -81,82 +189,31 @@ export async function runReviewPipeline(reviewId: string): Promise<void> {
     await updateReview(reviewId, (r) => {
       r.status = "running";
       r.engine = engineLabel();
-      for (const stage of r.stages) {
-        if (stage.status !== "skipped") {
-          stage.status = "pending";
-          stage.error = undefined;
-          stage.progress = undefined;
-        }
-      }
+      r.stages = initialStages(Boolean(r.frameworkId));
     });
 
-    // 1. Ingestion: split into sections + profile. Without sections nothing else can run.
-    const sections = splitIntoSections(review.sourceText);
-    await updateReview(reviewId, (r) => {
-      r.sections = sections;
-    });
-    const profile = await runStage(reviewId, "ingestion", () => ingestionAgent(sections));
-    if (!sections.length) {
-      await finish(reviewId, "failed");
-      return;
-    }
-    await updateReview(reviewId, (r) => {
-      r.profile = profile;
-    });
-
-    // 2-4. Analysis agents in parallel.
     const framework = review.frameworkId ? await getFramework(review.frameworkId) : null;
 
-    const [languageIssues, alignment, content] = await Promise.all([
-      runStage(reviewId, "language", (progress) => languageAgent(sections, progress)).then(
-        async (issues) => {
-          await updateReview(reviewId, (r) => {
-            r.languageIssues = issues;
-          });
-          return issues;
-        },
-      ),
-      framework && framework.standards.length
-        ? runStage(reviewId, "standards", (progress) =>
-            standardsAgent(sections, framework.standards, profile, progress),
-          ).then(async (result) => {
-            await updateReview(reviewId, (r) => {
-              r.alignment = result;
-            });
-            return result;
-          })
-        : setStage(reviewId, "standards", { status: "skipped" }).then(() => null),
-      runStage(reviewId, "content", (progress) => contentAgent(sections, profile, progress)).then(
-        async (result) => {
-          await updateReview(reviewId, (r) => {
-            r.content = result;
-          });
-          return result;
-        },
-      ),
-    ]);
-
-    // 5. Report.
-    const current = (await getReview(reviewId)) as Review;
-    const failedStages = current.stages.filter((s) => s.status === "failed").map((s) => s.id);
-    const wordCount = review.sourceText.split(/\s+/).filter(Boolean).length;
-
-    const report = await runStage(reviewId, "report", () =>
-      reportAgent({
-        profile,
+    const result = await executeReview(
+      {
+        sourceText: review.sourceText,
         frameworkName: framework?.name ?? null,
-        wordCount,
-        languageIssues,
-        alignment,
-        content,
-        failedStages,
-      }),
+        standards: framework?.standards ?? [],
+      },
+      {
+        onStage: (stage) =>
+          updateReview(reviewId, (r) => {
+            const target = r.stages.find((s) => s.id === stage.id);
+            if (target) Object.assign(target, stage);
+          }).then(() => undefined),
+        onResult: (key, value) =>
+          updateReview(reviewId, (r) => {
+            if (key in r) (r as unknown as Record<string, unknown>)[key] = value;
+          }).then(() => undefined),
+      },
     );
-    await updateReview(reviewId, (r) => {
-      r.report = report;
-    });
 
-    await finish(reviewId, report ? "done" : "failed");
+    await finish(reviewId, result.report ? "done" : "failed");
   } catch (error) {
     console.error(`[review ${reviewId}] pipeline crashed:`, error);
     await finish(reviewId, "failed").catch(() => undefined);

@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { contextBudgetChars, generateStructured } from "@/lib/server/llm";
+import { appearsIn, normalizeForMatch } from "@/lib/text";
 import type {
   BloomLevel,
   ContentAnalysis,
@@ -25,22 +26,6 @@ Write all human-readable fields (explanations, findings, recommendations, summar
 
 // ---------------------------------------------------------------------------
 // Helpers
-
-/** Normalise for tolerant "does this quote appear in the source" checks. */
-function normalizeForMatch(text: string): string {
-  return text
-    .normalize("NFKC")
-    .replace(/[ً-ْـ]/g, "") // Arabic diacritics + tatweel
-    .replace(/[“”«»"']/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-export function appearsIn(quote: string, source: string): boolean {
-  const q = normalizeForMatch(quote);
-  return q.length > 0 && normalizeForMatch(source).includes(q);
-}
 
 /** Run async work over items with bounded concurrency. */
 async function mapLimit<T, R>(
