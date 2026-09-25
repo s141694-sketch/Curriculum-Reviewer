@@ -2,10 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { SystemStatus } from "@/components/system-status";
 import { inputClass, primaryButtonClass } from "@/components/ui";
 import type { StandardsFramework } from "@/types/review";
 import { fetchJson } from "@/lib/api-client";
+import { extractDocumentText, SUPPORTED_EXTENSIONS } from "@/lib/document-text";
+
+// Hosting platforms cap request bodies (Vercel: 4.5 MB). Text extracted in the
+// browser is sent instead of the file; a raw file is only sent when small.
+const MAX_RAW_UPLOAD_BYTES = 4 * 1024 * 1024;
+const MAX_TEXT_BYTES = 4 * 1024 * 1024;
 
 export default function NewReviewPage() {
   const router = useRouter();
@@ -16,7 +23,10 @@ export default function NewReviewPage() {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [systemReady, setSystemReady] = useState(true);
+  const onStatus = useCallback((ok: boolean) => setSystemReady(ok), []);
 
   useEffect(() => {
     fetchJson<{ frameworks: StandardsFramework[] }>("/api/frameworks")
@@ -36,19 +46,50 @@ export default function NewReviewPage() {
     const form = new FormData();
     form.set("title", title);
     form.set("frameworkId", frameworkId);
-    if (mode === "file" && file) form.set("file", file);
-    if (mode === "text") form.set("text", text);
 
     try {
+      if (mode === "text") {
+        form.set("text", text);
+      } else if (file) {
+        if (!SUPPORTED_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))) {
+          throw new Error(`صيغة الملف غير مدعومة. الصيغ المدعومة: ${SUPPORTED_EXTENSIONS.join("، ")}`);
+        }
+        setProgress("جارٍ قراءة الملف على جهازك...");
+        let extracted: string | null = null;
+        try {
+          extracted = await extractDocumentText(file.name, await file.arrayBuffer());
+        } catch (err) {
+          console.warn("Browser extraction failed, falling back to upload", err);
+        }
+        if (extracted !== null) {
+          if (extracted.trim().length < 50) {
+            throw new Error(
+              "لم يُعثر على نص قابل للقراءة في الملف. إن كان PDF ممسوحًا ضوئيًا (صورًا) فحوّله إلى نص (OCR) أولًا.",
+            );
+          }
+          if (new Blob([extracted]).size > MAX_TEXT_BYTES) {
+            throw new Error("المنهج طويل جدًا لمراجعة واحدة. قسّمه إلى أجزاء (مثلًا كل وحدة في ملف).");
+          }
+          form.set("text", extracted);
+          form.set("fileName", file.name);
+        } else if (file.size <= MAX_RAW_UPLOAD_BYTES) {
+          form.set("file", file);
+        } else {
+          throw new Error("تعذر قراءة هذا الملف في المتصفح، وهو أكبر من أن يُرفع كما هو. جرّب حفظه بصيغة Word أو PDF نصي.");
+        }
+      }
+
+      setProgress("جارٍ الإرسال وبدء المراجعة...");
       const data = await fetchJson<{ id: string }>("/api/reviews", { method: "POST", body: form });
       router.push(`/reviews/${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر بدء المراجعة");
       setSubmitting(false);
+      setProgress(null);
     }
   }
 
-  const canSubmit = mode === "file" ? Boolean(file) : text.trim().length >= 50;
+  const canSubmit = systemReady && (mode === "file" ? Boolean(file) : text.trim().length >= 50);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-10 sm:px-6">
@@ -59,6 +100,8 @@ export default function NewReviewPage() {
           نصيًا (OCR) قبل الرفع.
         </p>
       </div>
+
+      <SystemStatus onChange={onStatus} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <label className="flex flex-col gap-1 text-sm">
@@ -128,7 +171,7 @@ export default function NewReviewPage() {
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         <button type="submit" disabled={!canSubmit || submitting} className={`${primaryButtonClass} self-start`}>
-          {submitting ? "جارٍ الرفع وبدء المراجعة..." : "ابدأ المراجعة الآلية"}
+          {submitting ? (progress ?? "جارٍ البدء...") : "ابدأ المراجعة الآلية"}
         </button>
       </form>
     </main>

@@ -77,10 +77,10 @@ export default function ReviewPage() {
     return () => clearInterval(timer);
   }, [inProgress, load]);
 
-  async function rerun() {
+  async function rerun(mode: "resume" | "full") {
     setActionError(null);
     try {
-      await fetchJson(`/api/reviews/${params.id}/run`, { method: "POST" });
+      await fetchJson(`/api/reviews/${params.id}/run?mode=${mode}`, { method: "POST" });
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "تعذر إعادة التشغيل");
       return;
@@ -115,8 +115,10 @@ export default function ReviewPage() {
     );
   }
 
-  // A "running" review with no live worker was interrupted (e.g. server restart).
-  const interrupted = inProgress && !active && review.status === "running";
+  // A queued/running review with no live worker was interrupted (server restart or time limit).
+  const interrupted = inProgress && !active;
+  // Some stages finished but not all: offer to continue from where it stopped.
+  const canResume = (interrupted || review.status === "failed") && review.stages.some((s) => s.status === "done");
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
@@ -152,12 +154,17 @@ export default function ReviewPage() {
           <a href={`/api/reviews/${review.id}/export?format=json`} className={secondaryButtonClass}>
             تنزيل JSON
           </a>
-          {(!inProgress || interrupted) && (
-            <button onClick={rerun} className={secondaryButtonClass}>
-              إعادة المراجعة
+          {canResume && (
+            <button onClick={() => rerun("resume")} className={secondaryButtonClass}>
+              استئناف المراجعة
             </button>
           )}
-          {!inProgress && (
+          {(!inProgress || interrupted) && (
+            <button onClick={() => rerun("full")} className={secondaryButtonClass}>
+              إعادة المراجعة بالكامل
+            </button>
+          )}
+          {(!inProgress || interrupted) && (
             <button onClick={remove} className={`${secondaryButtonClass} text-red-600`}>
               حذف
             </button>
@@ -168,7 +175,7 @@ export default function ReviewPage() {
       {actionError && <p className="text-sm text-red-500">{actionError}</p>}
       {interrupted && (
         <p className="rounded-md bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          توقفت هذه المراجعة قبل اكتمالها (ربما بسبب إعادة تشغيل الخادم). اضغط «إعادة المراجعة» لتشغيلها من جديد.
+          توقفت هذه المراجعة قبل اكتمالها (بسبب إعادة تشغيل الخادم أو تجاوز المهلة الزمنية). اضغط «استئناف المراجعة» لإكمال المراحل المتبقية فقط، أو «إعادة المراجعة بالكامل».
         </p>
       )}
 

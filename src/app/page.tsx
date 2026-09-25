@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { SystemStatus } from "@/components/system-status";
 import { Badge, primaryButtonClass, scoreColor } from "@/components/ui";
 import { REVIEW_STATUS_LABELS } from "@/lib/labels";
 import type { ReviewSummary } from "@/types/review";
@@ -38,7 +39,8 @@ export default function DashboardPage() {
   const anyActive = reviews?.some((r) => r.status === "queued" || r.status === "running");
   useEffect(() => {
     if (!anyActive) return;
-    const timer = setInterval(load, 4000);
+    // Every poll lists stored reviews (a billable operation on Vercel Blob), so keep it modest.
+    const timer = setInterval(load, 8000);
     return () => clearInterval(timer);
   }, [anyActive, load]);
 
@@ -65,6 +67,8 @@ export default function DashboardPage() {
           مراجعة جديدة
         </Link>
       </header>
+
+      <SystemStatus />
 
       <section className="grid gap-3 sm:grid-cols-3">
         <Stat label="إجمالي المراجعات" value={reviews?.length ?? "—"} />

@@ -1,13 +1,19 @@
 import "server-only";
 import { NextResponse } from "next/server";
+import { BlobError } from "@vercel/blob";
+import { StorageNotConfiguredError } from "@/lib/server/store";
 
 // Route handlers that throw make Next.js answer with an empty 500 body, which
 // the browser then fails to parse ("Unexpected end of JSON input"). Wrapping
 // every API handler guarantees a JSON `{ error }` body the UI can display.
 
-const STORAGE_ERROR_CODES = new Set(["EROFS", "EACCES", "EPERM", "ENOTDIR", "ENOSPC"]);
+const STORAGE_ERROR_CODES = new Set(["EROFS", "EACCES", "EPERM", "ENOTDIR", "ENOSPC", "ENOENT"]);
 
 export function describeError(error: unknown): string {
+  if (error instanceof StorageNotConfiguredError) return error.message;
+  if (error instanceof BlobError) {
+    return `تعذر الوصول إلى مخزن Vercel Blob: ${error.message}. تحقق من ربط المخزن بالمشروع وصلاحية BLOB_READ_WRITE_TOKEN.`;
+  }
   const code = (error as NodeJS.ErrnoException | null)?.code;
   if (code && STORAGE_ERROR_CODES.has(code)) {
     const hint = process.env.VERCEL

@@ -49,6 +49,8 @@ export interface ReviewInput {
   standards: Standard[];
   /** Run only these stages (ingestion always runs). Defaults to all. */
   stages?: StageId[];
+  /** Results of an earlier, interrupted run: stages already done are reused, not re-run. */
+  previous?: Pick<Review, "stages" | "profile" | "languageIssues" | "alignment" | "content">;
 }
 
 export interface ReviewResult {
@@ -94,10 +96,18 @@ export async function executeReview(
   async function runStage<T>(
     id: StageId,
     work: (progress: (note: string) => Promise<void>) => Promise<T>,
+    reuse?: T | null,
   ): Promise<T | null> {
-    if (stages.find((s) => s.id === id)!.status === "skipped") {
-      await hooks.onStage?.({ ...stages.find((s) => s.id === id)! });
+    const stage = stages.find((s) => s.id === id)!;
+    if (stage.status === "skipped") {
+      await hooks.onStage?.({ ...stage });
       return null;
+    }
+    // Resume: keep a stage that finished in an earlier, interrupted run.
+    const earlier = input.previous?.stages.find((s) => s.id === id);
+    if (reuse != null && earlier?.status === "done") {
+      await update(id, { ...earlier });
+      return reuse;
     }
     const started = Date.now();
     await update(id, { status: "running", startedAt: new Date().toISOString() });
@@ -120,22 +130,27 @@ export async function executeReview(
   // 1. Ingestion: split into sections + profile.
   const sections = splitIntoSections(input.sourceText);
   await hooks.onResult?.("sections", sections);
-  const profile = await runStage("ingestion", () => ingestionAgent(sections));
+  const previous = input.previous;
+  const profile = await runStage("ingestion", () => ingestionAgent(sections), previous?.profile);
   await hooks.onResult?.("profile", profile);
 
   // 2-4. Analysis agents in parallel.
   const [languageIssues, alignment, content] = await Promise.all([
-    runStage("language", (p) => languageAgent(sections, p)).then(async (value) => {
+    runStage("language", (p) => languageAgent(sections, p), previous?.languageIssues).then(async (value) => {
       await hooks.onResult?.("languageIssues", value);
       return value;
     }),
-    runStage("standards", (p) => standardsAgent(sections, input.standards, profile, p)).then(
+    runStage(
+      "standards",
+      (p) => standardsAgent(sections, input.standards, profile, p),
+      previous?.alignment,
+    ).then(
       async (value) => {
         await hooks.onResult?.("alignment", value);
         return value;
       },
     ),
-    runStage("content", (p) => contentAgent(sections, profile, p)).then(async (value) => {
+    runStage("content", (p) => contentAgent(sections, profile, p), previous?.content).then(async (value) => {
       await hooks.onResult?.("content", value);
       return value;
     }),
@@ -178,7 +193,25 @@ export function isRunning(id: string): boolean {
   return running.has(id);
 }
 
-export async function runReviewPipeline(reviewId: string): Promise<void> {
+// On Vercel a review can run on a different instance than the one answering,
+// so "is it still running?" is judged by how recently it was updated. A
+// function is stopped after maxDuration (300 s), so older means interrupted.
+const STALE_AFTER_MS = 6 * 60 * 1000;
+
+/** Is this review being worked on right now (by this or another instance)? */
+export function isActive(review: Pick<Review, "id" | "status" | "updatedAt">): boolean {
+  if (running.has(review.id)) return true;
+  if (review.status !== "running" && review.status !== "queued") return false;
+  // A single self-hosted process knows exactly what it runs; only serverless needs the heuristic.
+  if (!process.env.VERCEL) return false;
+  return Date.now() - new Date(review.updatedAt).getTime() < STALE_AFTER_MS;
+}
+
+/**
+ * Run the agents for a stored review. With `resume`, stages that already
+ * finished in an interrupted run are kept (useful after a timeout).
+ */
+export async function runReviewPipeline(reviewId: string, options: { resume?: boolean } = {}): Promise<void> {
   if (running.has(reviewId)) return;
   running.add(reviewId);
 
@@ -186,10 +219,23 @@ export async function runReviewPipeline(reviewId: string): Promise<void> {
     const review = await getReview(reviewId);
     if (!review) return;
 
+    const previous = options.resume
+      ? {
+          stages: review.stages,
+          profile: review.profile,
+          languageIssues: review.languageIssues,
+          alignment: review.alignment,
+          content: review.content,
+        }
+      : undefined;
+
     await updateReview(reviewId, (r) => {
       r.status = "running";
       r.engine = engineLabel();
       r.stages = initialStages(Boolean(r.frameworkId));
+      if (!options.resume) {
+        r.profile = r.languageIssues = r.alignment = r.content = r.report = null;
+      }
     });
 
     const framework = review.frameworkId ? await getFramework(review.frameworkId) : null;
@@ -199,6 +245,7 @@ export async function runReviewPipeline(reviewId: string): Promise<void> {
         sourceText: review.sourceText,
         frameworkName: framework?.name ?? null,
         standards: framework?.standards ?? [],
+        previous,
       },
       {
         onStage: (stage) =>

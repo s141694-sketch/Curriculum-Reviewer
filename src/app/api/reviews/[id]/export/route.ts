@@ -5,9 +5,9 @@ import { getReview } from "@/lib/server/store";
 
 export const GET = withErrorHandling(async function GET(request: NextRequest, ctx: RouteContext<"/api/reviews/[id]/export">) {
   const { id } = await ctx.params;
-  const review = await getReview(id).catch(() => null);
+  const review = await getReview(id);
   if (!review) {
-    return NextResponse.json({ error: "Review not found" }, { status: 404 });
+    return NextResponse.json({ error: "المراجعة غير موجودة." }, { status: 404 });
   }
 
   const format = request.nextUrl.searchParams.get("format") === "json" ? "json" : "md";

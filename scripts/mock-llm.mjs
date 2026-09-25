@@ -72,6 +72,13 @@ function answer(system, user) {
 
 http
   .createServer(async (req, res) => {
+    // Model list used by the app's health check: pretend the configured models are installed.
+    if (req.method === "GET" && req.url === "/api/tags") {
+      const names = ["mock", "qwen2.5:14b", "qwen2.5:7b", ...(process.env.MOCK_MODELS ?? "").split(",").filter(Boolean)];
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ models: names.map((name) => ({ name, model: name })) }));
+      return;
+    }
     let body = "";
     for await (const chunk of req) body += chunk;
     const { messages = [] } = JSON.parse(body || "{}");

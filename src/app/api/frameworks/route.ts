@@ -13,14 +13,14 @@ export const POST = withErrorHandling(async function POST(request: NextRequest) 
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "بيانات غير صالحة." }, { status: 400 });
   }
 
   const name = body.name?.trim();
   const standards = parseStandards(body.standardsText ?? "");
   if (!name || standards.length === 0) {
     return NextResponse.json(
-      { error: "A name and at least one standard are required" },
+      { error: "يلزم اسم للإطار ومعيار واحد على الأقل." },
       { status: 400 },
     );
   }
