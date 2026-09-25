@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
-import { engineLabel, LlmConfigError, provider } from "@/lib/server/llm";
+import { checkLlm, engineLabel, LlmConfigError, provider } from "@/lib/server/llm";
 import { isActive } from "@/lib/server/pipeline";
 import { storageBackend } from "@/lib/server/store";
 
@@ -69,5 +69,37 @@ describe("isActive", () => {
     assert.equal(isActive({ id: "a", status: "queued", updatedAt: minutesAgo(1) }), true);
     assert.equal(isActive({ id: "a", status: "running", updatedAt: minutesAgo(10) }), false);
     assert.equal(isActive({ id: "a", status: "done", updatedAt: minutesAgo(0) }), false);
+  });
+});
+
+describe("gateway readiness check", () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  function gatewayAnswers(status: number, body: unknown) {
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })) as typeof fetch;
+  }
+
+  it("reports not ready when the gateway rejects the credentials", async () => {
+    env({ VERCEL: "1", AI_GATEWAY_API_KEY: "rejected-key" });
+    gatewayAnswers(403, { error: "forbidden" });
+    const status = await checkLlm();
+    assert.equal(status.ok, false);
+    assert.match(status.message, /403/);
+  });
+
+  it("reports not ready with a zero balance, ready with credit", async () => {
+    env({ VERCEL: "1", AI_GATEWAY_API_KEY: "empty-key" });
+    gatewayAnswers(200, { balance: "0.00", total_used: "0" });
+    assert.equal((await checkLlm()).ok, false);
+
+    env({ VERCEL: "1", AI_GATEWAY_API_KEY: "funded-key" });
+    gatewayAnswers(200, { balance: "5.00", total_used: "0" });
+    const ready = await checkLlm();
+    assert.equal(ready.ok, true);
+    assert.match(ready.message, /5\.00/);
   });
 });

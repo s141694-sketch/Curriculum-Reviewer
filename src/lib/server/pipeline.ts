@@ -118,6 +118,8 @@ export async function executeReview(
       return result;
     } catch (error) {
       timings[id] = Date.now() - started;
+      // Log the full error (with status codes / causes) so it shows up in server logs.
+      console.error(`[pipeline] stage "${id}" failed:`, error);
       await update(id, {
         status: "failed",
         finishedAt: new Date().toISOString(),

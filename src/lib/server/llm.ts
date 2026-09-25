@@ -35,6 +35,9 @@ const CLAUDE_REVIEW_MODEL = process.env.CLAUDE_MODEL || "claude-opus-5";
 
 export class LlmConfigError extends Error {}
 
+const GATEWAY_SETUP_HINT =
+  "افتح AI Gateway من لوحة Vercel وأضف بطاقة للتحقق (تُفعّل الرصيد المجاني الشهري) أو اشترِ رصيدًا، أو أضف ANTHROPIC_API_KEY لاستخدام Claude API مباشرة.";
+
 export function provider(): Provider {
   const explicit = process.env.LLM_PROVIDER?.trim().toLowerCase();
   if (explicit) {
@@ -125,8 +128,8 @@ export function describeClaudeError(agent: string, error: unknown): Error {
   if (error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError) {
     return new Error(
       gateway
-        ? `${agent}: رفضت Vercel AI Gateway الصلاحية. تأكد من تفعيل AI Gateway لحسابك.`
-        : `${agent}: مفتاح ANTHROPIC_API_KEY غير صالح.`,
+        ? `${agent}: رفضت Vercel AI Gateway الصلاحية (${error.status}). ${GATEWAY_SETUP_HINT}`
+        : `${agent}: مفتاح ANTHROPIC_API_KEY غير صالح (${error.status}).`,
     );
   }
   if (error instanceof Anthropic.RateLimitError) {
@@ -137,7 +140,7 @@ export function describeClaudeError(agent: string, error: unknown): Error {
   }
   if (error instanceof Anthropic.APIError) {
     if (error.status === 402) {
-      return new Error(`${agent}: رصيد Vercel AI Gateway غير كافٍ. أضف رصيدًا من لوحة Vercel أو استخدم مفتاحًا آخر.`);
+      return new Error(`${agent}: رصيد Vercel AI Gateway غير كافٍ (402). ${GATEWAY_SETUP_HINT}`);
     }
     if (error.status === 404) {
       return new Error(`${agent}: النموذج "${claudeModelId(CLAUDE_REVIEW_MODEL)}" غير متاح. غيّر CLAUDE_MODEL.`);
@@ -287,14 +290,16 @@ export async function checkLlm(): Promise<LlmStatus> {
 
   if (p === "gateway") {
     const key = await gatewayKey();
-    return key
-      ? { ok: true, provider: p, engine, message: "Vercel AI Gateway جاهز." }
-      : {
-          ok: false,
-          provider: p,
-          engine,
-          message: "لا توجد صلاحية لـ Vercel AI Gateway: فعّل OIDC للمشروع أو أضف AI_GATEWAY_API_KEY.",
-        };
+    if (!key) {
+      return {
+        ok: false,
+        provider: p,
+        engine,
+        message: "لا توجد صلاحية لـ Vercel AI Gateway: فعّل OIDC للمشروع أو أضف AI_GATEWAY_API_KEY.",
+      };
+    }
+    const verdict = await verifyGateway(key);
+    return { provider: p, engine, ...verdict };
   }
 
   try {
@@ -319,4 +324,43 @@ export async function checkLlm(): Promise<LlmStatus> {
       message: `تعذر الاتصال بـ Ollama على ${OLLAMA_URL}. شغّل Ollama، أو اضبط LLM_PROVIDER على محرك آخر.`,
     };
   }
+}
+
+// A token existing does not mean the gateway accepts it (e.g. the account has
+// not added a card yet). Ask the free credits endpoint, and cache the answer
+// briefly so page loads do not hammer it.
+let gatewayVerdict: { at: number; key: string; ok: boolean; message: string } | null = null;
+const GATEWAY_VERDICT_TTL_MS = 60_000;
+
+async function verifyGateway(key: string): Promise<{ ok: boolean; message: string }> {
+  if (gatewayVerdict && gatewayVerdict.key === key && Date.now() - gatewayVerdict.at < GATEWAY_VERDICT_TTL_MS) {
+    return gatewayVerdict;
+  }
+  let verdict: { ok: boolean; message: string };
+  try {
+    const res = await fetch(`${GATEWAY_URL}/v1/credits`, {
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (res.status === 401 || res.status === 403) {
+      verdict = { ok: false, message: `رفضت Vercel AI Gateway الصلاحية (${res.status}). ${GATEWAY_SETUP_HINT}` };
+    } else if (!res.ok) {
+      // Unexpected answer: do not block reviews on it, but say it was not verified.
+      verdict = { ok: true, message: `Vercel AI Gateway: تعذر التحقق من الرصيد (${res.status}).` };
+    } else {
+      const data = (await res.json().catch(() => ({}))) as { balance?: string };
+      const balance = Number(data.balance);
+      verdict =
+        Number.isFinite(balance) && balance <= 0
+          ? { ok: false, message: `رصيد Vercel AI Gateway صفر. ${GATEWAY_SETUP_HINT}` }
+          : {
+              ok: true,
+              message: `Vercel AI Gateway جاهز${Number.isFinite(balance) ? ` (الرصيد ${balance.toFixed(2)}$)` : ""}.`,
+            };
+    }
+  } catch {
+    verdict = { ok: true, message: "Vercel AI Gateway: تعذر الاتصال للتحقق من الرصيد، ستتم المحاولة عند المراجعة." };
+  }
+  gatewayVerdict = { at: Date.now(), key, ...verdict };
+  return verdict;
 }
