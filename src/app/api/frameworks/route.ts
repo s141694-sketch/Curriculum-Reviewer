@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withErrorHandling } from "@/lib/server/http";
 import { parseStandards } from "@/lib/standards";
 import { listFrameworks, saveFramework } from "@/lib/server/store";
 import type { StandardsFramework } from "@/types/review";
 
-export async function GET() {
+export const GET = withErrorHandling(async function GET() {
   return NextResponse.json({ frameworks: await listFrameworks() });
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandling(async function POST(request: NextRequest) {
   let body: { name?: string; description?: string; source?: string; standardsText?: string };
   try {
     body = await request.json();
@@ -36,4 +37,4 @@ export async function POST(request: NextRequest) {
   };
   await saveFramework(framework);
   return NextResponse.json({ framework }, { status: 201 });
-}
+});

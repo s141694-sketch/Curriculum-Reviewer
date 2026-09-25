@@ -1,9 +1,10 @@
 import { after, NextRequest, NextResponse } from "next/server";
+import { withErrorHandling } from "@/lib/server/http";
 import { isRunning, runReviewPipeline } from "@/lib/server/pipeline";
 import { getReview } from "@/lib/server/store";
 
 /** Re-run the full agent pipeline for an existing review (e.g. after a failure). */
-export async function POST(_request: NextRequest, ctx: RouteContext<"/api/reviews/[id]/run">) {
+export const POST = withErrorHandling(async function POST(_request: NextRequest, ctx: RouteContext<"/api/reviews/[id]/run">) {
   const { id } = await ctx.params;
   const review = await getReview(id).catch(() => null);
   if (!review) {
@@ -14,4 +15,4 @@ export async function POST(_request: NextRequest, ctx: RouteContext<"/api/review
   }
   after(() => runReviewPipeline(id));
   return NextResponse.json({ id }, { status: 202 });
-}
+});

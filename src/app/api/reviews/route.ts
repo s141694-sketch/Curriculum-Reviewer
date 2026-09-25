@@ -1,14 +1,15 @@
 import { after, NextRequest, NextResponse } from "next/server";
+import { withErrorHandling } from "@/lib/server/http";
 import { extractText, MAX_UPLOAD_BYTES } from "@/lib/server/extract";
 import { initialStages, runReviewPipeline } from "@/lib/server/pipeline";
 import { getFramework, listReviews, saveReview } from "@/lib/server/store";
 import type { Review } from "@/types/review";
 
-export async function GET() {
+export const GET = withErrorHandling(async function GET() {
   return NextResponse.json({ reviews: await listReviews() });
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandling(async function POST(request: NextRequest) {
   let form: FormData;
   try {
     form = await request.formData();
@@ -80,4 +81,4 @@ export async function POST(request: NextRequest) {
   after(() => runReviewPipeline(review.id));
 
   return NextResponse.json({ id: review.id }, { status: 201 });
-}
+});

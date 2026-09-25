@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withErrorHandling } from "@/lib/server/http";
 import { parseStandards } from "@/lib/standards";
 import { deleteFramework, getFramework, saveFramework } from "@/lib/server/store";
 
-export async function GET(_request: NextRequest, ctx: RouteContext<"/api/frameworks/[id]">) {
+export const GET = withErrorHandling(async function GET(_request: NextRequest, ctx: RouteContext<"/api/frameworks/[id]">) {
   const { id } = await ctx.params;
   const framework = await getFramework(id).catch(() => null);
   if (!framework) {
     return NextResponse.json({ error: "Framework not found" }, { status: 404 });
   }
   return NextResponse.json({ framework });
-}
+});
 
-export async function PUT(request: NextRequest, ctx: RouteContext<"/api/frameworks/[id]">) {
+export const PUT = withErrorHandling(async function PUT(request: NextRequest, ctx: RouteContext<"/api/frameworks/[id]">) {
   const { id } = await ctx.params;
   const framework = await getFramework(id).catch(() => null);
   if (!framework) {
@@ -45,10 +46,10 @@ export async function PUT(request: NextRequest, ctx: RouteContext<"/api/framewor
   };
   await saveFramework(updated);
   return NextResponse.json({ framework: updated });
-}
+});
 
-export async function DELETE(_request: NextRequest, ctx: RouteContext<"/api/frameworks/[id]">) {
+export const DELETE = withErrorHandling(async function DELETE(_request: NextRequest, ctx: RouteContext<"/api/frameworks/[id]">) {
   const { id } = await ctx.params;
   await deleteFramework(id).catch(() => undefined);
   return new NextResponse(null, { status: 204 });
-}
+});

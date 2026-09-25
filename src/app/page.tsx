@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge, primaryButtonClass, scoreColor } from "@/components/ui";
 import { REVIEW_STATUS_LABELS } from "@/lib/labels";
 import type { ReviewSummary } from "@/types/review";
+import { fetchJson } from "@/lib/api-client";
 
 const STATUS_STYLES: Record<ReviewSummary["status"], string> = {
   queued: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300",
@@ -19,10 +20,9 @@ export default function DashboardPage() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/reviews", { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "تعذر تحميل المراجعات");
+      const data = await fetchJson<{ reviews: ReviewSummary[] }>("/api/reviews", { cache: "no-store" });
       setReviews(data.reviews);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر تحميل المراجعات");
     }

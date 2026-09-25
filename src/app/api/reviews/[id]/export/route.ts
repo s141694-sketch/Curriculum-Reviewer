@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withErrorHandling } from "@/lib/server/http";
 import { reviewToMarkdown } from "@/lib/report-markdown";
 import { getReview } from "@/lib/server/store";
 
-export async function GET(request: NextRequest, ctx: RouteContext<"/api/reviews/[id]/export">) {
+export const GET = withErrorHandling(async function GET(request: NextRequest, ctx: RouteContext<"/api/reviews/[id]/export">) {
   const { id } = await ctx.params;
   const review = await getReview(id).catch(() => null);
   if (!review) {
@@ -27,4 +28,4 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/reviews/
       "Content-Disposition": `attachment; filename="${baseName}.md"`,
     },
   });
-}
+});

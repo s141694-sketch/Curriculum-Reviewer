@@ -18,6 +18,7 @@ import {
   SEVERITY_LABELS,
 } from "@/lib/labels";
 import type { AlignmentStatus, BloomLevel, LanguageIssueType, Review } from "@/types/review";
+import { ApiError, fetchJson } from "@/lib/api-client";
 
 type Tab = "summary" | "language" | "standards" | "content" | "source";
 
@@ -50,14 +51,17 @@ export default function ReviewPage() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/reviews/${params.id}`, { cache: "no-store" });
-    if (res.status === 404) {
-      setReview(null);
-      return;
+    try {
+      const data = await fetchJson<{ review: Review; active: boolean }>(`/api/reviews/${params.id}`, {
+        cache: "no-store",
+      });
+      setReview(data.review);
+      setActive(data.active);
+      setActionError(null);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) setReview(null);
+      else setActionError(err instanceof Error ? err.message : "تعذر تحميل المراجعة");
     }
-    const data = await res.json();
-    setReview(data.review);
-    setActive(data.active);
   }, [params.id]);
 
   useEffect(() => {
@@ -75,10 +79,10 @@ export default function ReviewPage() {
 
   async function rerun() {
     setActionError(null);
-    const res = await fetch(`/api/reviews/${params.id}/run`, { method: "POST" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setActionError(data.error || "تعذر إعادة التشغيل");
+    try {
+      await fetchJson(`/api/reviews/${params.id}/run`, { method: "POST" });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "تعذر إعادة التشغيل");
       return;
     }
     await load();
@@ -86,12 +90,18 @@ export default function ReviewPage() {
 
   async function remove() {
     if (!confirm("حذف هذه المراجعة نهائيًا؟")) return;
-    const res = await fetch(`/api/reviews/${params.id}`, { method: "DELETE" });
-    if (res.ok) router.push("/");
-    else setActionError("تعذر الحذف أثناء التشغيل");
+    try {
+      await fetchJson(`/api/reviews/${params.id}`, { method: "DELETE" });
+      router.push("/");
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "تعذر الحذف");
+    }
   }
 
   if (review === undefined) {
+    if (actionError) {
+      return <main className="flex-1 p-10 text-center text-sm text-red-500">{actionError}</main>;
+    }
     return <main className="flex-1 p-10 text-center text-sm text-neutral-500">جارٍ التحميل...</main>;
   }
   if (review === null) {

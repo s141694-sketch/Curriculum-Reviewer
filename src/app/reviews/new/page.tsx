@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { inputClass, primaryButtonClass } from "@/components/ui";
 import type { StandardsFramework } from "@/types/review";
+import { fetchJson } from "@/lib/api-client";
 
 export default function NewReviewPage() {
   const router = useRouter();
@@ -18,8 +19,7 @@ export default function NewReviewPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/frameworks")
-      .then((res) => res.json())
+    fetchJson<{ frameworks: StandardsFramework[] }>("/api/frameworks")
       .then((data) => {
         const list: StandardsFramework[] = data.frameworks ?? [];
         setFrameworks(list);
@@ -40,9 +40,7 @@ export default function NewReviewPage() {
     if (mode === "text") form.set("text", text);
 
     try {
-      const res = await fetch("/api/reviews", { method: "POST", body: form });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "تعذر بدء المراجعة");
+      const data = await fetchJson<{ id: string }>("/api/reviews", { method: "POST", body: form });
       router.push(`/reviews/${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر بدء المراجعة");

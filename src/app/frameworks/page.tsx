@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { inputClass, primaryButtonClass, secondaryButtonClass } from "@/components/ui";
 import { formatStandards, parseStandards } from "@/lib/standards";
 import type { StandardsFramework } from "@/types/review";
+import { fetchJson } from "@/lib/api-client";
 
 interface Draft {
   id: string | null;
@@ -44,9 +45,12 @@ export default function FrameworksPage() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/frameworks", { cache: "no-store" });
-    const data = await res.json();
-    setFrameworks(data.frameworks ?? []);
+    try {
+      const data = await fetchJson<{ frameworks: StandardsFramework[] }>("/api/frameworks", { cache: "no-store" });
+      setFrameworks(data.frameworks ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر تحميل أطر المعايير");
+    }
   }, []);
 
   useEffect(() => {
@@ -61,13 +65,11 @@ export default function FrameworksPage() {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(draft.id ? `/api/frameworks/${draft.id}` : "/api/frameworks", {
+      await fetchJson(draft.id ? `/api/frameworks/${draft.id}` : "/api/frameworks", {
         method: draft.id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draft),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "تعذر الحفظ");
       setDraft(null);
       await load();
     } catch (err) {
@@ -79,7 +81,11 @@ export default function FrameworksPage() {
 
   async function remove(framework: StandardsFramework) {
     if (!confirm(`حذف «${framework.name}»؟ المراجعات السابقة تحتفظ بنتائجها.`)) return;
-    await fetch(`/api/frameworks/${framework.id}`, { method: "DELETE" });
+    try {
+      await fetchJson(`/api/frameworks/${framework.id}`, { method: "DELETE" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر الحذف");
+    }
     await load();
   }
 
@@ -106,6 +112,8 @@ export default function FrameworksPage() {
           </div>
         )}
       </header>
+
+      {error && !draft && <p className="text-sm text-red-500">{error}</p>}
 
       {draft && (
         <form onSubmit={save} className="flex flex-col gap-4 rounded-md border border-neutral-200 p-4 dark:border-neutral-800">
