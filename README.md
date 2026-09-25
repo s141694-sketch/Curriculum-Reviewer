@@ -1,40 +1,121 @@
-# Curriculum Reviewer
+# مراجع المناهج — Curriculum Reviewer
 
-An AI-assisted curriculum design tool. Describe a subject, level, learning goals, and
-duration, and Claude drafts a structured course outline (modules, objectives, topics)
-that you can then edit directly.
+منصة ويب داخلية تؤتمت مراجعة المناهج الدراسية بواسطة **خمسة وكلاء ذكاء اصطناعي**، كل وكيل مسؤول عن
+مرحلة واحدة. الهدف تخفيف العبء عن قسم المناهج في ظل قلة الكوادر والخبراء: يرفع الموظف ملف المنهج،
+ويحصل على تقرير شامل يتضمن التدقيق الإملائي واللغوي، والمطابقة مع المعايير، وتحليل المحتوى، مع توصيات
+مرتبة حسب الأولوية.
 
-## Stack
+> الأداة **مساعدة للخبير لا بديل عنه**: كل نتيجة مرتبطة بشاهد من النص، وما لا يمكن التحقق منه آليًا
+> يُعلَّم بعلامة ⚠ ليراجعه المختص.
 
-- Next.js (App Router) + TypeScript
-- Tailwind CSS
-- Claude API via `@anthropic-ai/sdk`
-- Curricula are persisted to `localStorage` (no backend database yet — see below)
+## مسار الأتمتة (الوكلاء)
 
-## Getting started
+```
+            ┌── 2. وكيل التدقيق اللغوي ──┐
+1. الاستيعاب ├── 3. وكيل المعايير      ──┼── 5. وكيل التقارير
+            └── 4. وكيل تحليل المحتوى ──┘
+```
+
+| # | الوكيل | ماذا يفعل | الضمانات |
+|---|---|---|---|
+| 1 | الاستيعاب | يستخرج النص من Word/PDF/TXT، يقسّمه إلى مقاطع، ويحدد المادة والمرحلة والأهداف المعلنة | إصلاح النص العربي المعكوس في ملفات PDF |
+| 2 | التدقيق اللغوي | أخطاء إملائية ونحوية وترقيم ومصطلحات، مع التصحيح والخطورة | كل خطأ يُطابق حرفيًا مع النص؛ غير الموجود يُعلَّم ⚠ |
+| 3 | المعايير | لكل معيار: متحقق / جزئي / غير متحقق + شواهد نصية + الفجوة + التوصية | الشواهد تُتحقق آليًا؛ المعيار الذي يُغفله النموذج يظهر للمراجعة اليدوية |
+| 4 | تحليل المحتوى | 8 محاور (الدقة العلمية، الأهداف، التسلسل، العمق، التقويم، الأنشطة، الشمول، الارتباط بالواقع)، توزيع مستويات بلوم، ملاحظات الدقة، نقاط القوة | ملاحظات الدقة التي لا يوجد نصها في المنهج تُحذف |
+| 5 | التقارير | ملخص تنفيذي، أبرز النتائج، توصيات مرتبة | **الدرجات تُحسب برمجيًا** من نتائج الوكلاء، لا يخترعها النموذج |
+
+الوكلاء 2 و3 و4 تعمل بالتوازي. إذا فشل أحدها تستمر البقية، ويذكر التقرير ما لم يُقيَّم. يمكن إعادة
+تشغيل أي مراجعة من صفحتها.
+
+### طريقة حساب الدرجات
+- **سلامة اللغة**: 100 ناقص (مجموع الأخطاء الموزونة لكل 1000 كلمة × 10)، الوزن: عالية 3، متوسطة 2، منخفضة 1.
+- **المعايير**: متحقق = 1، جزئي = 0.5، غير متحقق = 0، كنسبة مئوية.
+- **المحتوى**: متوسط درجات المحاور الثمانية.
+- **الكلية**: 20% لغة + 40% معايير + 40% محتوى (يُعاد توزيع الوزن إن غاب محور).
+
+هذه الأوزان اختيار افتراضي قابل للتعديل في `computeScores` داخل `src/lib/server/agents.ts`.
+
+## الخصوصية والتشغيل على خادم داخلي
+
+المحرك يُختار بمتغير `LLM_PROVIDER`:
+
+| الخيار | أين تذهب البيانات | الجودة |
+|---|---|---|
+| `ollama` | **لا شيء يغادر الخادم** — نموذج مفتوح يعمل على أجهزتكم عبر [Ollama](https://ollama.com) | تعتمد على النموذج والعتاد (يُنصح بـ GPU) |
+| `anthropic` | نص المنهج يُرسل إلى Claude API عبر الإنترنت | أعلى جودة، خاصة للعربية والتحليل التربوي |
+
+إذا كانت سياسة الجهة تمنع خروج المحتوى من الشبكة الداخلية فاستخدم `ollama`. جرّب أكثر من نموذج على
+عينات حقيقية قبل الاعتماد (مثل `qwen2.5:14b` أو نماذج أكبر إن سمح العتاد)، فجودة التدقيق العربي تختلف
+كثيرًا بين النماذج.
+
+بقية عناصر الأمان:
+- التخزين ملفات JSON على قرص الخادم نفسه (`DATA_DIR`)، بلا قاعدة بيانات خارجية.
+- حماية اختيارية بكلمة مرور لكامل الموقع عبر `APP_USERNAME` / `APP_PASSWORD` (HTTP Basic). للإنتاج
+  ضع التطبيق خلف Reverse Proxy يوفر HTTPS، أو اربطه بنظام الدخول الموحد لديكم.
+
+## التشغيل
+
+### بـ Docker (موصى به للخادم الداخلي)
+
+```bash
+cp .env.example .env        # عدّل الإعدادات
+docker compose up -d        # التطبيق فقط (Claude API)
+
+# أو: تشغيل محلي بالكامل مع نموذج داخلي
+#   في .env:  LLM_PROVIDER=ollama  و  OLLAMA_URL=http://ollama:11434
+docker compose --profile local-ai up -d
+docker compose exec ollama ollama pull qwen2.5:14b
+```
+
+افتح `http://<عنوان-الخادم>:3000`.
+
+> ملاحظة: خطوة البناء (`docker build`) تحتاج إنترنت لتنزيل الحزم والخطوط. بعد البناء لا يحتاج التطبيق
+> إنترنت في وضع `ollama`.
+
+### للتطوير
 
 ```bash
 npm install
-cp .env.example .env.local   # then set ANTHROPIC_API_KEY
+cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+## طريقة الاستخدام
 
-## How it works
+1. **أطر المعايير** ← أضف إطارًا والصق المعايير، معيار في كل سطر: `الرمز | نص المعيار`.
+   يوجد «مثال» جاهز للتجربة، وهو معايير عامة كُتبت لهذه الأداة وليس وثيقة رسمية؛ استبدله بالمعايير
+   المعتمدة لديكم (معايير الوزارة أو الإطار الدولي الذي تتبعونه).
+2. **مراجعة جديدة** ← ارفع الملف (`.docx` أو `.pdf` نصي أو `.txt` أو `.md`) واختر الإطار.
+3. تابع تقدم الوكلاء مباشرة، ثم استعرض التقرير أو اطبعه PDF أو نزّله Markdown/JSON.
 
-- `/` — lists curricula saved in the browser
-- `/curriculum/new` — enter a subject/level/goals/duration and generate a draft with AI,
-  or start blank
-- `/curriculum/[id]` — edit modules and topics inline
-- `POST /api/generate` — server route that calls Claude and returns a structured
-  module/topic outline as JSON
+## البنية التقنية
 
-## Notes / next steps
+- Next.js 16 (App Router) + TypeScript + Tailwind، واجهة عربية RTL
+- `src/lib/server/agents.ts` — الوكلاء الخمسة ومخرجاتها المهيكلة (Zod schemas)
+- `src/lib/server/pipeline.ts` — المنسق: ترتيب المراحل، التوازي، الحالة، التعافي من الأخطاء
+- `src/lib/server/llm.ts` — طبقة موحدة للنموذج (Claude أو Ollama)
+- `src/lib/server/extract.ts` — استخراج النص وتقسيمه وإصلاح العربية في PDF
+- `src/lib/server/store.ts` — التخزين على القرص
+- `src/proxy.ts` — الحماية بكلمة مرور
 
-- Persistence is client-side (`localStorage`) for now. Swap `src/lib/storage.ts` for a
-  real database (e.g. Postgres via Prisma, or Supabase) once you need multi-device or
-  multi-user access.
-- There's no auth yet — everything is local to the browser.
-- `src/app/api/generate/route.ts` is the only place that talks to the Claude API; adjust
-  the system prompt there to change how outlines are generated.
+### واجهات API
+| المسار | الوظيفة |
+|---|---|
+| `POST /api/reviews` | إنشاء مراجعة (multipart: `file` أو `text`، `title`، `frameworkId`) وبدء الوكلاء |
+| `GET /api/reviews` · `GET/DELETE /api/reviews/:id` | القائمة / التفاصيل / الحذف |
+| `POST /api/reviews/:id/run` | إعادة تشغيل الوكلاء |
+| `GET /api/reviews/:id/export?format=md\|json` | تصدير التقرير |
+| `GET/POST /api/frameworks` · `GET/PUT/DELETE /api/frameworks/:id` | إدارة أطر المعايير |
+
+يمكن ربط هذه الواجهات بأنظمة أخرى (مثلًا مجلد مشترك يرفع الملفات آليًا) لأتمتة أوسع.
+
+## حدود معروفة
+- ملفات PDF الممسوحة ضوئيًا (صور) تحتاج OCR قبل الرفع.
+- إصلاح العربية في PDF مبني على قواعد واختُبر على ملفات مولَّدة؛ راجع تبويب «النص المستخرج» عند
+  استخدام PDF، وفضّل ملف Word متى توفر.
+- التخزين بملفات JSON يناسب خادمًا واحدًا؛ للاستخدام الواسع استبدل `store.ts` بقاعدة بيانات.
+- المراجعة التي تنقطع بإعادة تشغيل الخادم تظهر كـ«متوقفة» ويمكن إعادة تشغيلها يدويًا.
+
+## تصميم منهج (الميزة السابقة)
+صفحة `/curriculum` ما زالت متاحة لتوليد مخطط منهج أولي بالذكاء الاصطناعي (تتطلب `ANTHROPIC_API_KEY`
+وتحفظ في المتصفح).
