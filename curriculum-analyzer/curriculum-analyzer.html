@@ -148,10 +148,190 @@ h1, h2, h3 { font-family: var(--font-heading); margin: 0; }
   color: var(--color-primary);
 }
 
+/* ---------- الرفع ---------- */
+.dropzone {
+  border: 2px dashed var(--color-muted);
+  border-radius: var(--radius);
+  padding: calc(var(--space-unit) * 5) calc(var(--space-unit) * 2);
+  text-align: center;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.is-over, .dropzone:hover { border-color: var(--color-accent); color: var(--color-text); }
+.dropzone strong { color: var(--color-primary); }
+
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-unit); margin: calc(var(--space-unit) * 2) 0; }
+
+.file-name { margin: var(--space-unit) 0; color: var(--color-muted); }
+
+.steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-unit);
+  padding: 0;
+  margin: calc(var(--space-unit) * 2) 0;
+  counter-reset: step;
+}
+
+.steps li {
+  flex: 1 1 140px;
+  padding: var(--space-unit) calc(var(--space-unit) * 1.5);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-muted);
+  border-inline-start: 4px solid var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.steps li::before { counter-increment: step; content: counter(step) ". "; }
+.steps li.is-active { color: var(--color-text); border-inline-start-color: var(--color-accent); }
+.steps li.is-done   { color: var(--color-success); border-inline-start-color: var(--color-success); }
+.steps li.is-error  { color: var(--color-danger); border-inline-start-color: var(--color-danger); }
+
+.alert {
+  padding: var(--space-unit) calc(var(--space-unit) * 2);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-unit);
+  border-inline-start: 4px solid var(--color-warning);
+  background: var(--color-bg);
+}
+
+.alert-danger  { border-inline-start-color: var(--color-danger); }
+.alert-success { border-inline-start-color: var(--color-success); }
+.alert code { font-family: monospace; color: var(--color-muted); }
+
+/* ---------- عناصر النماذج ---------- */
+.field { display: flex; flex-direction: column; gap: calc(var(--space-unit) / 2); margin-bottom: calc(var(--space-unit) * 2); }
+.field label { font-weight: 700; }
+
+input[type="text"], textarea, select {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-muted);
+  border-radius: var(--radius);
+  padding: var(--space-unit);
+}
+
+textarea { min-height: 120px; resize: vertical; }
+
+.btn-danger { background: var(--color-danger); border-color: var(--color-danger); color: var(--color-surface); }
+.btn-sm { font-size: 0.85rem; padding: calc(var(--space-unit) / 2) var(--space-unit); }
+
+/* ---------- الجداول ---------- */
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background: var(--color-surface);
+}
+
+th, td {
+  text-align: right;
+  padding: var(--space-unit);
+  border-bottom: 1px solid var(--color-bg);
+  vertical-align: top;
+}
+
+th { background: var(--color-bg); color: var(--color-primary); font-family: var(--font-heading); }
+
+td input[type="text"] { width: 100%; }
+
+.tag {
+  display: inline-block;
+  padding: 0 var(--space-unit);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: var(--color-surface);
+  background: var(--color-muted);
+  white-space: nowrap;
+}
+
+.tag-high   { background: var(--color-success); }
+.tag-medium { background: var(--color-warning); }
+.tag-low    { background: var(--color-muted); }
+
+.tag-bloom-1 { background: var(--bloom-1); }
+.tag-bloom-2 { background: var(--bloom-2); }
+.tag-bloom-3 { background: var(--bloom-3); }
+.tag-bloom-4 { background: var(--bloom-4); }
+.tag-bloom-5 { background: var(--bloom-5); }
+.tag-bloom-6 { background: var(--bloom-6); }
+
+.yes { color: var(--color-success); font-weight: 700; }
+.no  { color: var(--color-danger); font-weight: 700; }
+
+/* ---------- التقرير ---------- */
+.report { background: var(--color-surface); border-radius: var(--radius); padding: calc(var(--space-unit) * 3); }
+
+.report-header {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space-unit) * 2);
+  padding-bottom: calc(var(--space-unit) * 2);
+  border-bottom: 2px solid var(--color-primary);
+  margin-bottom: calc(var(--space-unit) * 3);
+}
+
+.report-logo { width: 64px; height: 64px; object-fit: contain; }
+.report-meta { color: var(--color-muted); font-size: 0.9rem; }
+
+.report-section { margin-bottom: calc(var(--space-unit) * 4); }
+.report-section h2 {
+  color: var(--color-primary);
+  font-size: 1.2rem;
+  border-inline-start: 4px solid var(--color-accent);
+  padding-inline-start: var(--space-unit);
+  margin-bottom: calc(var(--space-unit) * 2);
+}
+
+.report-footer {
+  border-top: 1px solid var(--color-muted);
+  padding-top: calc(var(--space-unit) * 2);
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: calc(var(--space-unit) * 2); }
+.summary-card { background: var(--color-bg); border-radius: var(--radius); padding: calc(var(--space-unit) * 2); text-align: center; }
+.summary-card .num { font-size: 2rem; font-weight: 700; color: var(--color-primary); font-family: var(--font-heading); }
+.summary-card .lbl { color: var(--color-muted); }
+
+.bloom-chart { width: 100%; max-width: 720px; height: auto; display: block; }
+.bloom-chart text { font-family: var(--font-body); fill: var(--color-text); font-size: 13px; }
+.bloom-chart .axis { stroke: var(--color-muted); stroke-width: 1; }
+
+.dev-results li { list-style: none; }
+.dev-pass::before { content: "✔ "; color: var(--color-success); }
+.dev-fail::before { content: "✘ "; color: var(--color-danger); }
+
+.reports-list { list-style: none; padding: 0; margin: 0; }
+.reports-list li { display: flex; align-items: center; gap: var(--space-unit); padding: var(--space-unit) 0; border-bottom: 1px solid var(--color-bg); }
+.reports-list li span { flex: 1; }
+
+.logo-preview { max-width: 120px; max-height: 80px; object-fit: contain; display: block; margin-top: var(--space-unit); }
+
+@media (max-width: 600px) {
+  .app-header { padding: var(--space-unit) calc(var(--space-unit) * 2); }
+  .tab-panel { padding: calc(var(--space-unit) * 2); }
+}
+
 /* ---------- 1ج. أنماط الطباعة ---------- */
 @media print {
-  .app-header, .tabs { display: none; }
+  .app-header, .tabs, .no-print, .tab-panel:not(#panel-results) { display: none !important; }
   body { background: var(--color-surface); }
+  .tab-panel { display: block !important; padding: 0; max-width: none; }
+  .report { padding: 0; }
+  .report-section { page-break-before: always; break-before: page; }
+  .report-section:first-of-type { page-break-before: auto; break-before: auto; }
+  table { font-size: 0.85rem; }
+  tr { page-break-inside: avoid; }
 }
 </style>
 </head>
@@ -177,25 +357,87 @@ h1, h2, h3 { font-family: var(--font-heading); margin: 0; }
 </nav>
 
 <main>
+  <!-- 7.1 تبويب الرفع -->
   <section class="tab-panel is-active" role="tabpanel" id="panel-upload" aria-labelledby="tab-upload">
     <div class="card">
       <h2>رفع المنهج</h2>
-      <p class="placeholder">تُبنى منطقة الرفع وشريط التقدم في م10.</p>
-      <button class="btn btn-secondary" id="btn-sample" type="button">جرّب على عينة</button>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="منطقة رفع الملف">
+        اسحب ملف المنهج هنا (PDF نصي، DOCX، TXT) أو <strong>انقر لاختيار ملف</strong>
+        <input type="file" id="file-input" accept=".pdf,.docx,.txt" hidden>
+      </div>
+      <p class="file-name" id="file-name">لم يُختر ملف بعد.</p>
+      <div class="actions">
+        <button class="btn" id="btn-analyze" type="button" disabled>حلّل</button>
+        <button class="btn btn-secondary" id="btn-sample" type="button">جرّب على عينة</button>
+        <button class="btn btn-secondary" id="btn-dev-tests" type="button" hidden>تشغيل الاختبارات</button>
+      </div>
+      <ol class="steps" id="steps" aria-label="خطوات التحليل">
+        <li data-step="1">القراءة</li>
+        <li data-step="2">الهيكلة</li>
+        <li data-step="3">تصنيف بلوم</li>
+        <li data-step="4">مطابقة المعايير</li>
+        <li data-step="5">الاكتمال والإحصاء</li>
+      </ol>
+      <div id="warnings" aria-live="polite"></div>
+      <div id="dev-results" class="dev-results" hidden></div>
     </div>
   </section>
 
+  <!-- 7.2 تبويب النتائج -->
   <section class="tab-panel" role="tabpanel" id="panel-results" aria-labelledby="tab-results">
-    <div class="card">
-      <h2>النتائج</h2>
-      <p class="placeholder">تُبنى بطاقات الملخص والجداول والتقرير في م11.</p>
+    <div class="actions no-print">
+      <button class="btn" id="btn-print" type="button" disabled>طباعة / حفظ PDF</button>
+      <button class="btn btn-secondary" id="btn-json" type="button" disabled>تنزيل JSON</button>
+      <button class="btn btn-secondary" id="btn-save" type="button" disabled>حفظ التقرير في المتصفح</button>
+    </div>
+    <div id="report" class="report">
+      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "رفع" أو جرّب العينة.</p>
     </div>
   </section>
 
+  <!-- 7.3 تبويب المعايير والإعدادات -->
   <section class="tab-panel" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
     <div class="card">
-      <h2>المعايير والإعدادات</h2>
-      <p class="placeholder">يُبنى جدول المعايير والشعار والتقارير المحفوظة في م12 وم13.</p>
+      <h2>معايير المادة</h2>
+      <p class="placeholder">كل تعديل يُحفظ فورًا في المتصفح. تُستخدم هذه المعايير في المطابقة إلى جانب بنود الإطار العام.</p>
+      <div class="table-wrap">
+        <table id="standards-table">
+          <thead><tr><th>الرمز</th><th>نص المعيار</th><th>المجال</th><th>الصف</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="btn-std-add" type="button">إضافة معيار</button>
+        <button class="btn btn-secondary" id="btn-std-export" type="button">تصدير JSON</button>
+        <label class="btn btn-secondary">استيراد JSON<input type="file" id="std-import" accept=".json" hidden></label>
+      </div>
+      <div class="field">
+        <label for="std-paste">لصق معايير متعددة (كل سطر معيار؛ يمكن أن يبدأ السطر بالرمز ثم مسافة)</label>
+        <textarea id="std-paste" placeholder="ع1 يذكر الطالب أجزاء النبات&#10;ع2 يشرح الطالب عملية التمثيل الضوئي"></textarea>
+        <div><button class="btn btn-secondary" id="btn-std-paste" type="button">إضافة الأسطر</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>الجهة والشعار</h2>
+      <div class="field">
+        <label for="org-name">اسم الجهة</label>
+        <input type="text" id="org-name" placeholder="مثال: وزارة التربية والتعليم — دائرة المناهج">
+      </div>
+      <div class="field">
+        <label>الشعار (صورة تُحفظ داخل المتصفح)</label>
+        <div class="actions">
+          <label class="btn btn-secondary">اختيار صورة<input type="file" id="logo-input" accept="image/*" hidden></label>
+          <button class="btn btn-secondary" id="btn-logo-clear" type="button">إزالة الشعار</button>
+        </div>
+        <img id="logo-preview" class="logo-preview" alt="" hidden>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>التقارير المحفوظة</h2>
+      <ul class="reports-list" id="reports-list"></ul>
+      <p class="placeholder" id="reports-empty">لا تقارير محفوظة.</p>
     </div>
   </section>
 </main>
@@ -779,38 +1021,346 @@ async function analyzeDocument(doc, userStandards = [], onStep = () => {}) {
 </script>
 
 <!-- ============================================================
-     الكتلة 5 (الجزء السلوكي): الواجهة والتقرير
-     م1: تبديل التبويبات فقط
+     الكتلة 5 (الجزء السلوكي): الواجهة والتقرير (القسمان 7 و8)
      ============================================================ -->
 <script>
+const APP_VERSION = '0.1.0';
+const STORAGE_KEYS = { settings: 'ca.settings', standards: 'ca.standards', reports: 'ca.reports' };
+const STEP_NAMES = ['القراءة', 'الهيكلة', 'تصنيف بلوم', 'مطابقة المعايير', 'الاكتمال والإحصاء'];
+
+const $ = id => document.getElementById(id);
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtDate = iso => new Date(iso).toLocaleString('ar-OM', { dateStyle: 'medium', timeStyle: 'short' });
+
+const state = { file: null, doc: null, analysis: null };
+
+// ---------- التخزين (localStorage) ----------
+const store = {
+  read(key, fallback) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+  },
+  write(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) {
+      const full = e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+      showAlert(full ? 'STORAGE_FULL' : 'STORAGE_ERROR',
+        full ? 'امتلأت مساحة التخزين في المتصفح. صدّر التقارير القديمة من تبويب الإعدادات ثم احذفها وأعد المحاولة.'
+             : 'تعذر الحفظ في المتصفح: ' + (e && e.message), 'danger');
+      return false;
+    }
+  }
+};
+
+let settings = store.read(STORAGE_KEYS.settings, { orgName: '', logoDataUrl: '' });
+let userStandards = store.read(STORAGE_KEYS.standards, []);
+
+// ---------- التبويبات ----------
 (function initTabs() {
   const tabs = Array.from(document.querySelectorAll('.tab-btn[role="tab"]'));
   const panels = Array.from(document.querySelectorAll('.tab-panel[role="tabpanel"]'));
-
-  function activate(tab) {
+  window.activateTab = function activateTab(id) {
+    const tab = typeof id === 'string' ? $(id) : id;
     tabs.forEach(t => t.setAttribute('aria-selected', String(t === tab)));
     panels.forEach(p => p.classList.toggle('is-active', p.id === tab.getAttribute('aria-controls')));
-  }
-
-  tabs.forEach(tab => tab.addEventListener('click', () => activate(tab)));
+  };
+  tabs.forEach(tab => tab.addEventListener('click', () => activateTab(tab)));
 })();
 
-// م4: زر "جرّب على عينة" يمرر العينة المدمجة للقارئ كملف TXT
-(function initSampleButton() {
-  const btn = document.getElementById('btn-sample');
-  btn.addEventListener('click', async () => {
-    btn.disabled = true;
+// ---------- التنبيهات والتحذيرات ----------
+function showAlert(code, message, kind = 'warning') {
+  const box = $('warnings');
+  const div = document.createElement('div');
+  div.className = 'alert alert-' + kind;
+  div.innerHTML = `<code>${escapeHtml(code)}</code> — ${escapeHtml(message)}`;
+  box.appendChild(div);
+  if (kind === 'danger') activateTab('tab-upload');
+}
+function clearAlerts() { $('warnings').innerHTML = ''; }
+
+// ---------- شريط التقدم ----------
+function setStep(n, status = 'active') {
+  document.querySelectorAll('#steps li').forEach(li => {
+    const s = Number(li.dataset.step);
+    li.classList.toggle('is-done', s < n || (status === 'done' && s === n));
+    li.classList.toggle('is-active', status === 'active' && s === n);
+    li.classList.toggle('is-error', status === 'error' && s === n);
+  });
+}
+function resetSteps() { document.querySelectorAll('#steps li').forEach(li => li.className = ''); }
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 30)));
+
+// ---------- خط التحليل من الواجهة ----------
+async function runAnalysis(file) {
+  clearAlerts(); resetSteps();
+  $('btn-analyze').disabled = true; $('btn-sample').disabled = true;
+  let step = 1;
+  try {
+    setStep(1); await nextFrame();
+    const doc = await readDocument(file);
+    setStep(1, 'done');
+    const analysis = await analyzeDocument(doc, userStandards, async n => { step = n; setStep(n); await nextFrame(); });
+    setStep(5, 'done');
+    state.file = file; state.doc = doc; state.analysis = analysis;
+    for (const w of analysis.warnings) showAlert(w.code, w.message, 'warning');
+    showAlert('DONE', `اكتمل التحليل: ${analysis.stats.units} وحدة، ${analysis.stats.lessons} درس، ${analysis.stats.objectives} هدف.`, 'success');
+    renderResults();
+    activateTab('tab-results');
+  } catch (e) {
+    setStep(step, 'error');
+    showAlert(e.code || 'ERROR', e.message || String(e), 'danger');
+    console.error(e);
+  } finally {
+    $('btn-analyze').disabled = !state.file && !$('file-input').files.length;
+    $('btn-sample').disabled = false;
+  }
+}
+
+(function initUpload() {
+  const zone = $('dropzone'), input = $('file-input');
+  const pick = file => {
+    if (!file) return;
+    state.file = file;
+    $('file-name').textContent = `الملف: ${file.name} (${(file.size / 1024).toFixed(0)} كيلوبايت)`;
+    $('btn-analyze').disabled = false;
+  };
+  zone.addEventListener('click', () => input.click());
+  zone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+  input.addEventListener('change', () => pick(input.files[0]));
+  ['dragenter', 'dragover'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('is-over'); }));
+  ['dragleave', 'drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('is-over'); }));
+  zone.addEventListener('drop', e => pick(e.dataTransfer.files[0]));
+  $('btn-analyze').addEventListener('click', () => state.file && runAnalysis(state.file));
+  $('btn-sample').addEventListener('click', () => {
+    const file = new File([SAMPLE_CURRICULUM], '2026-09-28-sample-curriculum.txt', { type: 'text/plain' });
+    $('file-name').textContent = 'العينة المدمجة: ' + file.name;
+    runAnalysis(file);
+  });
+})();
+
+// ---------- التقرير (القسم 8) ----------
+const confTag = c => `<span class="tag tag-${c}">${{ high: 'عالية', medium: 'متوسطة', low: 'منخفضة' }[c] || c}</span>`;
+const levelTag = (name, id) => `<span class="tag tag-bloom-${id || 0}">${escapeHtml(name)}</span>`;
+const yesNo = v => v ? '<span class="yes">موجود</span>' : '<span class="no">غير موجود</span>';
+
+function bloomChartSvg(counts) {
+  const levels = RULES.bloomLevels;
+  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+  const W = 720, H = 260, padL = 40, padB = 50, padT = 20, gap = 18;
+  const barW = (W - padL - gap * levels.length) / levels.length;
+  const max = Math.max(1, ...levels.map(l => counts[l.name] || 0));
+  const bars = levels.map((l, i) => {
+    const v = counts[l.name] || 0, h = (v / max) * (H - padB - padT);
+    const x = padL + i * (barW + gap), y = H - padB - h;
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" style="fill:var(--bloom-${l.id})"><title>${escapeHtml(l.name)}: ${v}</title></rect>
+      <text x="${x + barW / 2}" y="${y - 6}" text-anchor="middle">${v} (${Math.round((v / total) * 100)}%)</text>
+      <text x="${x + barW / 2}" y="${H - padB + 18}" text-anchor="middle">${escapeHtml(l.name)}</text>`;
+  }).join('');
+  const unknown = counts['غير محدد'] || 0;
+  return `<svg class="bloom-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="توزيع الأهداف على مستويات بلوم">
+    <line class="axis" x1="${padL}" y1="${H - padB}" x2="${W}" y2="${H - padB}"/>${bars}</svg>
+    <p class="placeholder">أهداف بمستوى غير محدد (فعل خارج القاموس): ${unknown}</p>`;
+}
+
+function renderReportHtml(analysis, doc, settings) {
+  const st = analysis.stats;
+  const lessonTitle = ref => { const u = analysis.structure.units[ref.unit]; const l = u && u.lessons[ref.lesson]; return l ? `${u.title} / ${l.title}` : ''; };
+  const objectivesRows = analysis.bloom.map(b => `<tr><td>${escapeHtml(b.objectiveRef.text)}</td><td>${escapeHtml(b.verb || '—')}</td><td>${levelTag(b.level, b.levelId)}</td><td>${confTag(b.confidence)}</td></tr>`).join('');
+  const completenessRows = analysis.completeness.map(c => `<tr><td>${escapeHtml(c.lessonRef.unitTitle)}</td><td>${escapeHtml(c.lessonRef.title)}</td><td>${yesNo(c.hasObjectives)}</td><td>${yesNo(c.hasActivities)}</td><td>${yesNo(c.hasAssessment)}</td><td>${yesNo(c.hasReferences)}</td></tr>`).join('');
+  const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
+  const warningsHtml = analysis.warnings.length
+    ? `<ul>${analysis.warnings.map(w => `<li><code>${escapeHtml(w.code)}</code> — ${escapeHtml(w.message)}</li>`).join('')}</ul>`
+    : '<p>لا تحذيرات.</p>';
+  const distRows = Object.entries(st.bloomDistribution).map(([k, v]) => `<tr><td>${escapeHtml(k)}</td><td>${st.bloomCounts[k] || 0}</td><td>${v}%</td></tr>`).join('');
+
+  return `
+  <div class="report-header">
+    ${settings.logoDataUrl ? `<img class="report-logo" src="${settings.logoDataUrl}" alt="الشعار">` : ''}
+    <div>
+      <h2>${escapeHtml(settings.orgName || 'تقرير تحليل المنهج')}</h2>
+      <div class="report-meta">الملف: ${escapeHtml(doc.meta.fileName)} · الصفحات: ${doc.meta.pageCount} · تاريخ التحليل: ${fmtDate(analysis.generatedAt)}</div>
+    </div>
+  </div>
+
+  <section class="report-section"><h2>الملخص</h2>
+    <div class="summary-cards">
+      <div class="summary-card"><div class="num">${st.units}</div><div class="lbl">الوحدات</div></div>
+      <div class="summary-card"><div class="num">${st.lessons}</div><div class="lbl">الدروس</div></div>
+      <div class="summary-card"><div class="num">${st.objectives}</div><div class="lbl">الأهداف</div></div>
+      <div class="summary-card"><div class="num">${st.words}</div><div class="lbl">الكلمات</div></div>
+    </div>
+  </section>
+
+  <section class="report-section"><h2>توزيع بلوم</h2>
+    ${bloomChartSvg(st.bloomCounts)}
+    <div class="table-wrap"><table><thead><tr><th>الهدف</th><th>الفعل</th><th>المستوى</th><th>الثقة</th></tr></thead><tbody>${objectivesRows || '<tr><td colspan="4">لم تُكتشف أهداف.</td></tr>'}</tbody></table></div>
+  </section>
+
+  <section class="report-section"><h2>مطابقة المعايير</h2>
+    <p class="placeholder">المطابقة لفظية (معامل جاكار) وتُعرض كـ"تطابق محتمل"؛ تحتاج تأكيدًا بشريًا.</p>
+    <div class="table-wrap"><table><thead><tr><th>الهدف</th><th>المعيار</th><th>المصدر</th><th>النسبة</th><th>الثقة</th></tr></thead><tbody>${matchRows || '<tr><td colspan="5">لا تطابقات فوق العتبة (15%).</td></tr>'}</tbody></table></div>
+  </section>
+
+  <section class="report-section"><h2>الاكتمال</h2>
+    <div class="table-wrap"><table><thead><tr><th>الوحدة</th><th>الدرس</th><th>الأهداف</th><th>الأنشطة</th><th>التقويم</th><th>المراجع</th></tr></thead><tbody>${completenessRows}</tbody></table></div>
+  </section>
+
+  <section class="report-section"><h2>الإحصاءات</h2>
+    <div class="table-wrap"><table><thead><tr><th>البند</th><th>القيمة</th></tr></thead><tbody>
+      <tr><td>الوحدات</td><td>${st.units}</td></tr><tr><td>الدروس</td><td>${st.lessons}</td></tr><tr><td>الأهداف</td><td>${st.objectives}</td></tr>
+      <tr><td>الكلمات (بعد التطبيع)</td><td>${st.words}</td></tr><tr><td>الصفحات</td><td>${st.pages}</td></tr>
+    </tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>مستوى بلوم</th><th>العدد</th><th>النسبة</th></tr></thead><tbody>${distRows}</tbody></table></div>
+  </section>
+
+  <section class="report-section"><h2>التحذيرات</h2>${warningsHtml}</section>
+
+  <div class="report-footer">محلّل المناهج — الإصدار ${APP_VERSION} · التحليل مبني على قواعد لفظية ويحتاج مراجعة بشرية.</div>`;
+}
+
+function renderResults() {
+  const has = !!state.analysis;
+  ['btn-print', 'btn-json', 'btn-save'].forEach(id => $(id).disabled = !has);
+  $('report').innerHTML = has ? renderReportHtml(state.analysis, state.doc, settings) : '<p class="placeholder">لا نتائج بعد.</p>';
+}
+
+function downloadBlob(name, content, type) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+const dateStamp = () => new Date().toISOString().slice(0, 10);
+
+(function initResultsButtons() {
+  $('btn-print').addEventListener('click', () => window.print());
+  $('btn-json').addEventListener('click', () => {
+    if (!state.analysis) return;
+    const payload = { version: APP_VERSION, document: state.doc.meta, analysis: state.analysis };
+    downloadBlob(`${dateStamp()}-analysis-${state.doc.meta.fileName.replace(/\.[^.]+$/, '')}.json`, JSON.stringify(payload, null, 2), 'application/json');
+  });
+  $('btn-save').addEventListener('click', () => {
+    if (!state.analysis) return;
+    const reports = store.read(STORAGE_KEYS.reports, []);
+    reports.unshift({ id: Date.now().toString(36), fileName: state.doc.meta.fileName, savedAt: new Date().toISOString(), docMeta: state.doc.meta, analysis: state.analysis });
+    if (store.write(STORAGE_KEYS.reports, reports)) { renderReportsList(); showAlert('SAVED', 'حُفظ التقرير في المتصفح.', 'success'); }
+  });
+})();
+
+// ---------- المعايير (7.3) ----------
+function saveStandards() { store.write(STORAGE_KEYS.standards, userStandards); }
+
+function renderStandards() {
+  const tbody = $('standards-table').querySelector('tbody');
+  tbody.innerHTML = userStandards.map((s, i) => `<tr data-i="${i}">
+    <td><input type="text" data-k="code" value="${escapeHtml(s.code)}" aria-label="الرمز"></td>
+    <td><input type="text" data-k="text" value="${escapeHtml(s.text)}" aria-label="نص المعيار"></td>
+    <td><input type="text" data-k="domain" value="${escapeHtml(s.domain)}" aria-label="المجال"></td>
+    <td><input type="text" data-k="grade" value="${escapeHtml(s.grade)}" aria-label="الصف"></td>
+    <td><button class="btn btn-danger btn-sm" data-del="${i}" type="button">حذف</button></td></tr>`).join('')
+    || '<tr><td colspan="5" class="placeholder">لا معايير بعد.</td></tr>';
+}
+
+function addStandards(list) {
+  for (const s of list) {
+    if (!s || !(s.text || '').trim()) continue;
+    userStandards.push({ id: 'U' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), code: s.code || '', text: s.text.trim(), domain: s.domain || '', grade: s.grade || '' });
+  }
+  saveStandards(); renderStandards();
+}
+
+(function initStandards() {
+  const table = $('standards-table');
+  table.addEventListener('input', e => {
+    const tr = e.target.closest('tr'); const k = e.target.dataset.k;
+    if (!tr || !k) return;
+    userStandards[Number(tr.dataset.i)][k] = e.target.value; saveStandards();
+  });
+  table.addEventListener('click', e => {
+    const del = e.target.dataset.del;
+    if (del === undefined) return;
+    userStandards.splice(Number(del), 1); saveStandards(); renderStandards();
+  });
+  $('btn-std-add').addEventListener('click', () => addStandards([{ code: '', text: 'معيار جديد', domain: '', grade: '' }]));
+  $('btn-std-paste').addEventListener('click', () => {
+    const lines = $('std-paste').value.split('\n').map(l => l.trim()).filter(Boolean);
+    addStandards(lines.map(l => { const m = /^(\S{1,12})\s+(.{5,})$/.exec(l); return m && /[\d٠-٩]/.test(m[1]) ? { code: m[1], text: m[2] } : { code: '', text: l }; }));
+    $('std-paste').value = '';
+  });
+  $('btn-std-export').addEventListener('click', () => downloadBlob(`${dateStamp()}-standards.json`, JSON.stringify(userStandards, null, 2), 'application/json'));
+  $('std-import').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
     try {
-      const file = new File([SAMPLE_CURRICULUM], '2026-09-28-sample-curriculum.txt', { type: 'text/plain' });
-      const doc = await readDocument(file);
-      window.lastDocument = doc;
-      console.log('[عينة] قُرئت:', doc.meta);
-      console.log('[عينة] النص:\n' + doc.pages.map(p => p.text).join('\n'));
-    } catch (e) {
-      console.error('[عينة] خطأ:', e.code || '', e.message);
-    } finally {
-      btn.disabled = false;
+      const data = JSON.parse(await f.text());
+      if (!Array.isArray(data)) throw new Error('الملف ليس مصفوفة معايير');
+      addStandards(data);
+    } catch (err) { showAlert('IMPORT_ERROR', 'تعذر استيراد الملف: ' + err.message, 'danger'); }
+    e.target.value = '';
+  });
+  renderStandards();
+})();
+
+// ---------- الجهة والشعار ----------
+function saveSettings() { store.write(STORAGE_KEYS.settings, settings); applyBranding(); }
+function applyBranding() {
+  $('app-org').textContent = settings.orgName || 'اسم الجهة';
+  const logo = $('app-logo'), prev = $('logo-preview');
+  if (settings.logoDataUrl) { logo.innerHTML = `<img src="${settings.logoDataUrl}" alt="الشعار">`; prev.src = settings.logoDataUrl; prev.hidden = false; }
+  else { logo.textContent = 'م'; prev.hidden = true; prev.removeAttribute('src'); }
+  if (state.analysis) renderResults();
+}
+
+(function initBranding() {
+  $('org-name').value = settings.orgName || '';
+  $('org-name').addEventListener('input', e => { settings.orgName = e.target.value; saveSettings(); });
+  $('logo-input').addEventListener('change', e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { settings.logoDataUrl = r.result; saveSettings(); };
+    r.readAsDataURL(f); e.target.value = '';
+  });
+  $('btn-logo-clear').addEventListener('click', () => { settings.logoDataUrl = ''; saveSettings(); });
+  applyBranding();
+})();
+
+// ---------- التقارير المحفوظة ----------
+function renderReportsList() {
+  const reports = store.read(STORAGE_KEYS.reports, []);
+  $('reports-empty').hidden = reports.length > 0;
+  $('reports-list').innerHTML = reports.map(r => `<li data-id="${r.id}">
+    <span><strong>${escapeHtml(r.fileName)}</strong> — ${fmtDate(r.savedAt)} — ${r.analysis.stats.objectives} هدف</span>
+    <button class="btn btn-secondary btn-sm" data-open="${r.id}" type="button">فتح</button>
+    <button class="btn btn-secondary btn-sm" data-export="${r.id}" type="button">تنزيل JSON</button>
+    <button class="btn btn-danger btn-sm" data-delete="${r.id}" type="button">حذف</button></li>`).join('');
+}
+
+(function initReports() {
+  $('reports-list').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const reports = store.read(STORAGE_KEYS.reports, []);
+    if (b.dataset.open) {
+      const r = reports.find(x => x.id === b.dataset.open); if (!r) return;
+      state.doc = { meta: r.docMeta, pages: [] }; state.analysis = r.analysis; state.file = null;
+      renderResults(); activateTab('tab-results');
+    } else if (b.dataset.export) {
+      const r = reports.find(x => x.id === b.dataset.export); if (!r) return;
+      downloadBlob(`${r.savedAt.slice(0, 10)}-analysis-${r.fileName.replace(/\.[^.]+$/, '')}.json`, JSON.stringify({ version: APP_VERSION, document: r.docMeta, analysis: r.analysis }, null, 2), 'application/json');
+    } else if (b.dataset.delete) {
+      store.write(STORAGE_KEYS.reports, reports.filter(x => x.id !== b.dataset.delete)); renderReportsList();
     }
+  });
+  renderReportsList();
+})();
+
+// ---------- وضع المطوّر (#dev) — م14 ----------
+(function initDevMode() {
+  const btn = $('btn-dev-tests');
+  const update = () => { btn.hidden = location.hash !== '#dev'; };
+  window.addEventListener('hashchange', update); update();
+  btn.addEventListener('click', async () => {
+    const box = $('dev-results'); box.hidden = false; box.innerHTML = '<p>جارٍ التشغيل…</p>';
+    const results = await runDevTests();
+    const pass = results.filter(r => r.ok).length;
+    box.innerHTML = `<p><strong>${pass} / ${results.length}</strong> نجح</p><ul>` +
+      results.map(r => `<li class="${r.ok ? 'dev-pass' : 'dev-fail'}">${escapeHtml(r.name)}${r.ok ? '' : ' — ' + escapeHtml(r.error)}</li>`).join('') + '</ul>';
   });
 })();
 </script>
@@ -890,7 +1440,55 @@ const SAMPLE_CURRICULUM = `منهج العلوم — الصف الخامس
 كتاب العلوم للصف الخامس، الفصل الرابع.
 `;
 
-// م14
+// م14: حالات اختبار القسم 11. كل حالة دالة تُرجع بلا خطأ عند النجاح وترمي عند الفشل.
+const assert = (cond, msg) => { if (!cond) throw new Error(msg); };
+const mkDoc = text => ({ meta: { fileName: 't.txt', fileType: 'txt', pageCount: 1, warnings: [] }, pages: [{ index: 0, text }] });
+const mkStruct = objectives => ({ units: [{ title: 'و', pageStart: 0, lessons: [{ title: 'د', objectives: objectives.map(text => ({ text, page: 0 })), activities: [], assessments: [], references: [] }] }], orphanText: '', warnings: [] });
+const readTxt = (name, text) => readDocument(new File([text], name, { type: 'text/plain' }));
+const REV = s => s.split('\n').map(l => Array.from(l).reverse().join('')).join('\n');
+const NORMAL_TXT = 'الوحدة الأولى: النباتات\n\n\nالدرس الأول من  أجزاء النبات\nالأهداف:\nأن يذكر الطالب أجزاء النبات التي في الحديقة.\nأن يشرح الطالب وظيفة الجذر على نحو صحيح.';
+
+const DEV_TESTS = [
+  // القارئ
+  { name: 'القارئ: نص TXT عادي', fn: async () => { const d = await readTxt('a.txt', NORMAL_TXT); assert(d.meta.pageCount === 1 && d.meta.warnings.length === 0, 'صفحة واحدة بلا تحذير'); assert(!d.pages[0].text.includes('  ') && !d.pages[0].text.includes('\n\n\n'), 'التطبيع'); } },
+  { name: 'القارئ: نص مقلوب يُصحَّح', fn: async () => { const d = await readTxt('b.txt', REV(NORMAL_TXT)); assert(d.meta.warnings.some(w => w.code === 'REVERSED_TEXT_FIXED'), 'تحذير REVERSED_TEXT_FIXED'); assert(d.pages[0].text.startsWith('الوحدة الأولى'), 'النص عاد سليمًا'); } },
+  { name: 'القارئ: نص فارغ يُرفض', fn: async () => { try { await readTxt('c.txt', ''); } catch (e) { assert(e.code === 'NO_TEXT', 'رمز NO_TEXT'); return; } assert(false, 'لم يُرفض'); } },
+  { name: 'القارئ: صيغة غير مدعومة', fn: async () => { try { await readTxt('c.xlsx', 'x'); } catch (e) { assert(e.code === 'UNSUPPORTED_TYPE', 'رمز UNSUPPORTED_TYPE'); return; } assert(false, 'لم يُرفض'); } },
+  { name: 'القارئ: تقسيم TXT الطويل إلى صفحات', fn: async () => { assert(paginateText('أ'.repeat(7000), 3000).length === 3, '3 صفحات'); } },
+  // المهيكِل
+  { name: 'المهيكِل: نص بوحدتين', fn: () => { const s = structure(mkDoc(SAMPLE_CURRICULUM)); assert(s.units.length === 2, 'وحدتان'); assert(s.units.flatMap(u => u.lessons).length === 4, 'أربعة دروس'); assert(s.warnings.length === 0, 'بلا تحذير'); } },
+  { name: 'المهيكِل: نص بلا عناوين', fn: () => { const s = structure(mkDoc('نص بلا عناوين\nأن يذكر الطالب شيئًا\nسطر عادي')); assert(s.units.length === 1 && s.units[0].title === 'المستند', 'وحدة واحدة "المستند"'); assert(s.warnings.some(w => w.code === 'NO_UNITS_DETECTED'), 'تحذير NO_UNITS_DETECTED'); } },
+  { name: 'المهيكِل: النص اليتيم لا يُهمل', fn: () => { const s = structure(mkDoc('مقدمة عامة\nالوحدة الأولى: أ\nالدرس الأول: ب')); assert(s.orphanText.includes('مقدمة عامة'), 'orphanText'); } },
+  // بلوم
+  { name: 'بلوم: 10 أهداف بأفعال معروفة', fn: () => {
+      const objs = ['أن يذكر الطالب','أن يشرح الطالب','أن يطبق الطالب','أن يحلل الطالب','أن يقيّم الطالب','أن يصمم الطالب','أن تعدد الطالبة','أن يفسر الطالب','أن يحسب الطالب','أن يبتكر الطالب'];
+      const r = classifyBloom(mkStruct(objs));
+      assert(r.every(x => x.levelId > 0), 'كلها مصنفة');
+      assert(r.filter(x => x.confidence === 'high').length >= 8, 'ثمانية على الأقل بثقة عالية');
+      assert(new Set(r.map(x => x.levelId)).size === 6, 'تغطي المستويات الستة'); } },
+  { name: 'بلوم: فعل غير معروف → غير محدد بلا تخمين', fn: () => { const r = classifyBloom(mkStruct(['أن يزركش الطالب اللوحة']))[0]; assert(r.level === 'غير محدد' && r.confidence === 'low' && r.levelId === 0, 'غير محدد/low'); } },
+  { name: 'بلوم: فعل مزدوج المستوى → الأدنى بثقة متوسطة', fn: () => { const r = classifyBloom(mkStruct(['أن يحدد الطالب المواد']))[0]; assert(r.level === 'تذكر' && r.confidence === 'medium', 'تذكر/medium'); } },
+  { name: 'بلوم: مطابقة بعد إزالة اللواحق → متوسطة', fn: () => { const r = classifyBloom(mkStruct(['أن يشرحها الطالب']))[0]; assert(r.level === 'فهم' && r.confidence === 'medium', 'فهم/medium'); } },
+  // المطابقة
+  { name: 'المطابقة: هدف ومعيار متطابقان لفظيًا', fn: () => { const r = matchStandards(mkStruct(['أن يذكر الطالب أجزاء النبات الرئيسية']), [{ id: 'U1', code: 'ع1', text: 'يذكر الطالب أجزاء النبات الرئيسية' }]).filter(x => x.source === 'user'); assert(r.length === 1 && r[0].confidence === 'high', 'high'); } },
+  { name: 'المطابقة: مختلفان تمامًا لا يُعرضان', fn: () => { const r = matchStandards(mkStruct(['أن يذكر الطالب أجزاء النبات']), [{ id: 'U2', code: 'ع2', text: 'الكسور العشرية وجمعها وطرحها' }]).filter(x => x.source === 'user'); assert(r.length === 0, 'لا نتيجة'); } },
+  { name: 'المطابقة: متشابهان جزئيًا → متوسطة أو منخفضة', fn: () => { const r = matchStandards(mkStruct(['أن يذكر الطالب أجزاء النبات الرئيسية']), [{ id: 'U3', code: 'ع3', text: 'يذكر الطالب أجزاء الزهرة' }]).filter(x => x.source === 'user'); assert(r.length === 1 && ['medium', 'low'].includes(r[0].confidence), 'medium/low: ' + JSON.stringify(r.map(x => x.score))); } },
+  { name: 'المطابقة: التطبيع العربي', fn: () => { assert(normalizeArabic('الأهدافُ والمهاراتِ') === 'اهداف مهارات', 'ال+همزة+تشكيل'); assert(normalizeArabic('مدرسة كبرى') === 'مدرسه كبري', 'ة→ه، ى→ي'); } },
+  // الاكتمال
+  { name: 'الاكتمال: درس كامل', fn: () => { const c = summarize({ units: [{ title: 'و', lessons: [{ title: 'د', objectives: [{}], activities: [{}], assessments: [{}], references: [{}] }] }], warnings: [] }, [], null).completeness[0]; assert(c.hasObjectives && c.hasActivities && c.hasAssessment && c.hasReferences, 'أربعة موجودة'); } },
+  { name: 'الاكتمال: درس ناقص', fn: () => { const c = summarize({ units: [{ title: 'و', lessons: [{ title: 'د', objectives: [], activities: [{}], assessments: [], references: [] }] }], warnings: [] }, [], null).completeness[0]; assert(!c.hasObjectives && c.hasActivities && !c.hasAssessment && !c.hasReferences, 'الأنشطة فقط'); } },
+  // العينة كاملة
+  { name: 'العينة: 2 وحدة، 4 دروس، 20 هدفًا، درس بلا تقويم', fn: async () => { const a = await analyzeDocument(await readTxt('s.txt', SAMPLE_CURRICULUM), []); assert(a.stats.units === 2 && a.stats.lessons === 4 && a.stats.objectives === 20, 'الأعداد'); assert(a.completeness.filter(c => !c.hasAssessment).length === 1, 'درس واحد بلا تقويم'); assert(Object.values(a.stats.bloomCounts).filter(v => v > 0).length >= 6, 'المستويات الستة ممثلة'); } },
+];
+
+async function runDevTests() {
+  const out = [];
+  for (const t of DEV_TESTS) {
+    try { await t.fn(); out.push({ name: t.name, ok: true }); }
+    catch (e) { out.push({ name: t.name, ok: false, error: e.message || String(e) }); }
+  }
+  return out;
+}
 </script>
 
 </body>
