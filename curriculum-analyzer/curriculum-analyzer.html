@@ -285,7 +285,140 @@ const RULES = {
      الكتلة 4: وحدات التحليل الخمس (القسم 6) — دوال نقية لا تلمس DOM
      ============================================================ -->
 <script>
-// م3: readDocument(file) → Document
+// ---------- م3: القارئ (6.1) ----------
+// readDocument(file) → Document { meta:{fileName,fileType,pageCount,readAt,warnings[]}, pages:[{index,text}] }
+
+class ReaderError extends Error {
+  constructor(code, message) { super(message); this.name = 'ReaderError'; this.code = code; }
+}
+
+const READER = {
+  supportedTypes: ['pdf', 'docx', 'txt'],
+  txtPageSize: 3000,            // تقسيم اصطناعي للصفحات في TXT
+  minArabicChars: 50,           // أقل من هذا → ملف ممسوح (صور لا نص)
+  commonWords: ['من', 'في', 'على', 'أن', 'التي'],   // لكشف النص المقلوب
+  arabicChar: /[؀-ۿ]/g
+};
+
+// امتداد الملف بأحرف صغيرة، أو '' إن لم يوجد
+function fileExtension(fileName) {
+  const m = /\.([a-z0-9]+)$/i.exec(fileName || '');
+  return m ? m[1].toLowerCase() : '';
+}
+
+function countArabicChars(text) {
+  return (text.match(READER.arabicChar) || []).length;
+}
+
+// عدد مرات ظهور الكلمات الشائعة ككلمات كاملة
+function countCommonWords(text) {
+  const words = text.split(/\s+/);
+  let n = 0;
+  for (const w of words) if (READER.commonWords.includes(w)) n++;
+  return n;
+}
+
+// قلب أحرف كل سطر على حدة (ترتيب الأسطر يبقى)
+function reverseLines(text) {
+  return text.split('\n').map(line => Array.from(line).reverse().join('')).join('\n');
+}
+
+// إن كانت الكلمات الشائعة أكثر بعد القلب → النص مقلوب
+function detectReversed(text) {
+  return countCommonWords(reverseLines(text)) > countCommonWords(text);
+}
+
+// التطبيع الأولي: أشكال العرض → أحرف أساسية (NFKC)، توحيد المسافات، إزالة الأسطر الفارغة المتتالية
+function normalizeText(text) {
+  return (text || '')
+    .normalize('NFKC')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t ]+/g, ' ')
+    .split('\n').map(l => l.trim()).join('\n')
+    .replace(/\n{2,}/g, '\n\n')
+    .trim();
+}
+
+// تقسيم نص طويل إلى صفحات اصطناعية عند حدود الأسطر قدر الإمكان
+function paginateText(text, pageSize = READER.txtPageSize) {
+  const pages = [];
+  let rest = text;
+  while (rest.length > pageSize) {
+    let cut = rest.lastIndexOf('\n', pageSize);
+    if (cut < pageSize / 2) cut = pageSize;
+    pages.push(rest.slice(0, cut));
+    rest = rest.slice(cut).replace(/^\n+/, '');
+  }
+  pages.push(rest);
+  return pages;
+}
+
+async function extractPdfPages(arrayBuffer) {
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const content = await (await pdf.getPage(i)).getTextContent();
+    // نجمع العناصر في أسطر حسب الإحداثي الرأسي حتى لا يضيع تقسيم الأسطر
+    let text = '', lastY = null;
+    for (const item of content.items) {
+      if (!('str' in item)) continue;
+      const y = item.transform ? item.transform[5] : null;
+      if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) text += '\n';
+      else if (text && !text.endsWith('\n')) text += ' ';
+      text += item.str;
+      if (item.hasEOL) text += '\n';
+      lastY = y;
+    }
+    pages.push(text);
+  }
+  return pages;
+}
+
+async function extractDocxText(arrayBuffer) {
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value || '';
+}
+
+async function readDocument(file) {
+  const fileName = file.name || '';
+  const fileType = fileExtension(fileName);
+  if (!READER.supportedTypes.includes(fileType)) {
+    throw new ReaderError('UNSUPPORTED_TYPE',
+      `الصيغة "${fileType || 'غير معروفة'}" غير مدعومة. الصيغ المقبولة: PDF نصي، DOCX، TXT.`);
+  }
+
+  const warnings = [];
+  let rawPages;
+  if (fileType === 'pdf') {
+    rawPages = await extractPdfPages(await file.arrayBuffer());
+  } else if (fileType === 'docx') {
+    rawPages = paginateText(await extractDocxText(await file.arrayBuffer()));
+  } else {
+    rawPages = paginateText(await file.text());
+  }
+
+  let pages = rawPages.map(normalizeText);
+
+  const arabicTotal = pages.reduce((n, t) => n + countArabicChars(t), 0);
+  if (arabicTotal < READER.minArabicChars) {
+    if (fileType === 'pdf') {
+      throw new ReaderError('SCANNED_PDF',
+        'الملف يبدو صورًا لا نصًا (ملف ممسوح). يلزم نسخة PDF نصية أو ملف DOCX.');
+    }
+    throw new ReaderError('NO_TEXT', 'الملف فارغ أو لا يحوي نصًا عربيًا كافيًا للتحليل.');
+  }
+
+  if (detectReversed(pages.join('\n'))) {
+    pages = pages.map(t => normalizeText(reverseLines(t)));
+    warnings.push({ code: 'REVERSED_TEXT_FIXED', message: 'كان النص العربي مقلوبًا وقُلب تلقائيًا؛ راجع النتائج.' });
+  }
+
+  return {
+    meta: { fileName, fileType, pageCount: pages.length, readAt: new Date().toISOString(), warnings },
+    pages: pages.map((text, index) => ({ index, text }))
+  };
+}
+
 // م6: structure(doc) → Structure
 // م7: classifyBloom(structure) → bloom[]
 // م8: matchStandards(structure, userStandards) → standards[]
