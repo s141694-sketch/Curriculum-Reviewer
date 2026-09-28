@@ -814,6 +814,25 @@ const FRAMEWORKS = [
       { id: 'relevant', code: 'R', text: 'ذو صلة (Relevant): مرتبط بأهداف الدرس والبرنامج.', hint: 'حكم بشري؛ لا يُفحص آليًا.' },
       { id: 'timebound', code: 'T', text: 'محدد زمنيًا (Time-bound): إطار زمني للأداء أو للتحقق.', hint: 'خلال، في نهاية الدرس، في خمس دقائق.' }
     ]
+  },
+  // ---------- ب7: معايير الاعتماد الأكاديمي العمانية — هيكل مؤقت ----------
+  // official: false عمدًا. البنود أدناه عناوين عامة لتجربة الآلية فقط، وليست نص الهيئة.
+  // يُستبدل بالنص الرسمي باستيراد ملف JSON يحمل id: 'oman-accreditation' (من تبويب الإعدادات) أو بتعديل هذه المصفوفة.
+  {
+    id: 'oman-accreditation', kind: 'standards',
+    name: 'معايير الاعتماد الأكاديمي العمانية (هيكل مؤقت)', nameEn: 'Oman academic accreditation standards (placeholder structure)',
+    source: 'لم يُستورد نص رسمي بعد. المرجع المنتظر: وثائق الهيئة العُمانية للاعتماد الأكاديمي وضمان جودة التعليم (معايير الاعتماد المؤسسي والبرامجي) والإطار الوطني للمؤهلات.', official: false,
+    notes: 'كل بند هنا مؤقت ويُعرض بوسم "مؤقت". قائمة التحقق في التقرير تبحث عن دليل لفظي في المنهج لكل بند، وتبقى المطابقة النهائية حكمًا بشريًا.',
+    items: [
+      { id: 'P1', code: 'برامجي‑1', category: 'الاعتماد البرامجي', text: 'أهداف البرنامج ومخرجات التعلم محددة وقابلة للقياس ومتسقة مع رسالة المؤسسة', official: false },
+      { id: 'P2', code: 'برامجي‑2', category: 'الاعتماد البرامجي', text: 'المنهج الدراسي متسق مع مخرجات التعلم من حيث المحتوى والتسلسل والعمق', official: false },
+      { id: 'P3', code: 'برامجي‑3', category: 'الاعتماد البرامجي', text: 'أساليب التدريس والتدريب مناسبة لتحقيق مخرجات التعلم', official: false },
+      { id: 'P4', code: 'برامجي‑4', category: 'الاعتماد البرامجي', text: 'أساليب التقويم متنوعة وعادلة وتقيس مخرجات التعلم المعلنة', official: false },
+      { id: 'P5', code: 'برامجي‑5', category: 'الاعتماد البرامجي', text: 'مصادر التعلم والمراجع والمعينات التدريبية كافية ومحدّثة', official: false },
+      { id: 'I1', code: 'مؤسسي‑1', category: 'الاعتماد المؤسسي', text: 'وجود نظام لضمان الجودة ومراجعة البرامج وتحسينها دوريًا', official: false },
+      { id: 'I2', code: 'مؤسسي‑2', category: 'الاعتماد المؤسسي', text: 'تأهيل هيئة التدريس والمدربين وتطويرهم المهني', official: false },
+      { id: 'Q1', code: 'مؤهلات‑1', category: 'الإطار الوطني للمؤهلات', text: 'مواءمة مستوى المؤهل ومخرجاته مع واصفات المستوى في الإطار الوطني للمؤهلات', official: false }
+    ]
   }
 ];
 
@@ -1305,11 +1324,12 @@ function scoreConfidence(score) {
   return null;
 }
 
-function matchStandards(struct, userStandards = []) {
+function matchStandards(struct, userStandards = [], frameworks = []) {
   const pool = [
     ...RULES.omanFramework.map(s => ({ id: s.id, text: s.text, label: s.category, source: 'framework' })),
     ...RULES.skills21.map(s => ({ id: s.id, text: s.text, label: s.category, source: 'framework' })),
-    ...userStandards.map(s => ({ id: s.id || s.code, text: [s.code, s.text].filter(Boolean).join(' '), label: s.domain || 'معيار المادة', source: 'user' }))
+    ...userStandards.map(s => ({ id: s.id || s.code, text: [s.code, s.text].filter(Boolean).join(' '), label: s.domain || 'معيار المادة', source: 'user' })),
+    ...frameworks.filter(f => f.kind === 'standards').flatMap(f => f.items.map(it => ({ id: it.code || it.id, text: it.text, label: [f.name, it.category].filter(Boolean).join(' / '), source: 'accreditation', placeholder: !(f.official && it.official !== false) })))
   ].map(s => ({ ...s, tokens: tokenSet(s.text) }));
 
   const out = [];
@@ -1320,7 +1340,7 @@ function matchStandards(struct, userStandards = []) {
       const confidence = scoreConfidence(score);
       if (!confidence) continue;
       out.push({ objectiveRef: { unit: ui, lesson: li, index: oi, text: o.text },
-        standardId: s.id, standardText: s.text, standardLabel: s.label, source: s.source,
+        standardId: s.id, standardText: s.text, standardLabel: s.label, source: s.source, placeholder: !!s.placeholder,
         score: Math.round(score * 100) / 100, confidence });
     }
   })));
@@ -1354,14 +1374,102 @@ function summarize(struct, bloom, doc) {
   return { completeness, stats: { units: struct.units.length, lessons, objectives, words, pages: doc ? doc.meta.pageCount : 0, bloomDistribution, bloomCounts: dist, domainCounts } };
 }
 
+// ---------- ب6: جودة صياغة الأهداف وبُعد المعرفة ----------
+// checkObjectives(structure, bloom) → [{ objectiveRef, components:{an,verb,learner,content,condition,criterion}, score, errors[], dimension }]
+const QUALITY_PATTERNS = {
+  learner:   /(?:المتدرب|المتدربة|المتدربون|المتدربين|الطالب|الطالبة|الطلاب|الطلبة|المتعلم|المتعلمة|المتعلمون|المتعلمين|الدارس|الدارسون|التلميذ|التلاميذ|الضابط|الجندي)/,
+  condition: /(?:باستخدام|باستعمال|بدون الرجوع|دون الرجوع|دون مساعدة|بعد (?:قراءة|مشاهدة|عرض|دراسة|الاطلاع)|في ضوء|على ضوء|حسب|وفق|وفقًا|من خلال|اعتمادًا على|معتمدًا على|بالاعتماد على|بمساعدة|بالرجوع إلى|عند (?:إعطائه|تزويده|عرض)|إذا أُعطي|معطًى)/,
+  criterion: /(?:بدقة|بدون أخطاء|بلا أخطاء|دون أخطاء|بنسبة|على الأقل|على الأكثر|خلال (?:\S+ )?(?:دقائق|دقيقة|ساعة|ساعات)|في (?:\S+ )?(?:دقائق|دقيقة)|بشكل (?:صحيح|جيد|سليم|كامل)|صحيحًا|صحيحة|وافيًا|وافية|مميزًا|كاملًا|بطلاقة|مقبولًا|بإتقان|بكفاءة|بنجاح|100 ?%|\d+ ?%|[٠-٩]+ ?%)/,
+  teacherSubject: /^(?:[\d٠-٩]{1,2}\s*[\.\-–)][\s.\-–)]*)?(?:أن|ان)\s+\S+\s+(?:الموجه|المعلم|المدرب|المدرس|المحاضر|المعلمة|المدربة)(?![ء-ي])/,
+  process:   /(?:يعرف|يتعلم|يتعرف على|يعلم)\s+(?:\S+\s+)?(?:كيفية|كيف|طريقة)/,
+  topic:     /^(?:[\d٠-٩]{1,2}\s*[\.\-–)][\s.\-–)]*)?(?:أن|ان)\s+(?:يدرس|يتناول|يتعرض|يأخذ|يقرأ عن|يتطرق)/,
+  unmeasurableVerbs: ['يحب', 'يفهم', 'يدرك', 'يعي', 'يستمتع', 'يؤمن', 'يشعر', 'يستوعب', 'يستطيع', 'يتعلم', 'يقتنع', 'يتذوق', 'يحس', 'يعتقد']
+};
+
+function objectiveBody(text) {
+  return stripTashkeel(text).replace(/^[\d٠-٩]{1,2}\s*[\.\-–)][\s.\-–)]*/, '').trim();
+}
+
+function guessDimension(text) {
+  const fw = RULES.frameworks.find(f => f.id === 'bloom-revised');
+  if (!fw) return null;
+  const t = normalizeArabic(text);
+  let best = null, bestHits = 0;
+  for (const d of fw.dimensions) {
+    const hits = d.keywords.filter(k => t.includes(normalizeArabic(k))).length;
+    if (hits > bestHits) { best = d; bestHits = hits; }
+  }
+  return best ? { id: best.id, name: best.name, confidence: 'low' } : null;
+}
+
+function checkObjectives(struct, bloom) {
+  const byRef = new Map(bloom.map(b => [`${b.objectiveRef.unit}-${b.objectiveRef.lesson}-${b.objectiveRef.index}`, b]));
+  const out = [];
+  struct.units.forEach((u, ui) => u.lessons.forEach((l, li) => l.objectives.forEach((o, oi) => {
+    const b = byRef.get(`${ui}-${li}-${oi}`) || {};
+    const body = objectiveBody(o.text);
+    const words = body.split(/\s+/);
+    const verbNorm = unifyHamza(stripTashkeel(b.verb || '')).replace(/^ت/, 'ي');
+    const learnerMatch = QUALITY_PATTERNS.learner.exec(body);
+    const afterLearner = learnerMatch ? body.slice(learnerMatch.index + learnerMatch[0].length).trim() : body.replace(/^(?:أن|ان)\s+\S+\s*/, '');
+    const components = {
+      an: /^(?:أن|ان)\s/.test(body),
+      verb: !!b.verb && !!b.domain,                       // فعل مضارع مصنَّف (قابل للملاحظة)
+      learner: !!learnerMatch,
+      content: afterLearner.replace(/[.،:]/g, '').split(/\s+/).filter(Boolean).length >= 2,
+      condition: QUALITY_PATTERNS.condition.test(body),
+      criterion: QUALITY_PATTERNS.criterion.test(body)
+    };
+    const errors = [];
+    const plain = stripTashkeel(o.text);
+    if (QUALITY_PATTERNS.teacherSubject.test(plain)) errors.push('teacher-activity');
+    if (QUALITY_PATTERNS.process.test(body)) errors.push('process');
+    if (QUALITY_PATTERNS.topic.test(plain)) errors.push('topic');
+    // أكثر من ناتج: فعلان مصنَّفان يفصلهما "و" أو "ثم"
+    const verbTokens = words.filter(w => /^(?:و|ثم)?[يت][ء-ي]{2,}$/.test(w) && lookupVerb(w.replace(/^(?:و|ثم)/, '')));
+    if (/\sثم\s+[يت][ء-ي]{2,}/.test(body)) errors.push('multi');                       // "… ثم يعربه"
+    else if (verbTokens.filter(w => /^و/.test(w)).length >= 1 && verbTokens.length >= 2) errors.push('multi');   // "يذكر … ويشرح …"
+    if (QUALITY_PATTERNS.unmeasurableVerbs.includes(verbNorm) || (b.verb && !b.domain)) errors.push('unmeasurable');
+    const score = Object.values(components).filter(Boolean).length;
+    out.push({ objectiveRef: { unit: ui, lesson: li, index: oi, text: o.text }, components, score, errors, dimension: b.domain === 'cognitive' ? guessDimension(body) : null });
+  })));
+  return out;
+}
+
+// مصفوفة جدول التصنيف: مستوى بلوم × بُعد المعرفة (للأهداف المعرفية)
+function taxonomyMatrix(bloom, quality) {
+  const dims = (RULES.frameworks.find(f => f.id === 'bloom-revised') || { dimensions: [] }).dimensions.map(d => d.id).concat(['none']);
+  const m = {};
+  for (const lvl of RULES.bloomLevels) { m[lvl.id] = {}; for (const d of dims) m[lvl.id][d] = 0; }
+  quality.forEach((q, i) => { const b = bloom[i]; if (!b || b.domain !== 'cognitive') return; m[b.levelId][q.dimension ? q.dimension.id : 'none']++; });
+  return { dims, matrix: m };
+}
+
+// ---------- ب7: قائمة تحقق المنهج ضد أطر المعايير ----------
+// accreditationChecklist(doc, frameworks) → [{ frameworkId, frameworkName, official, item, evidence: n, best: {text, score} | null }]
+function accreditationChecklist(doc, frameworks = []) {
+  const lines = [];
+  for (const p of doc.pages) for (const l of p.text.split('\n')) { const t = l.trim(); if (t.length >= 15) lines.push({ text: t, page: p.index, tokens: tokenSet(t) }); }
+  const out = [];
+  for (const f of frameworks.filter(x => x.kind === 'standards')) for (const it of f.items) {
+    const tokens = tokenSet(it.text);
+    let evidence = 0, best = null;
+    for (const l of lines) { const sc = jaccard(tokens, l.tokens); if (sc >= MATCH_THRESHOLDS.low) { evidence++; if (!best || sc > best.score) best = { text: l.text, page: l.page, score: Math.round(sc * 100) / 100 }; } }
+    out.push({ frameworkId: f.id, frameworkName: f.name, official: !!(f.official && it.official !== false), item: it, evidence, best });
+  }
+  return out;
+}
+
 // ---------- خط الأنابيب الكامل ----------
 // analyzeDocument(doc, userStandards, onStep) → Analysis (القسم 5.3)
-async function analyzeDocument(doc, userStandards = [], onStep = () => {}) {
+async function analyzeDocument(doc, userStandards = [], onStep = () => {}, frameworks = []) {
   onStep(2); const struct = structure(doc);
   onStep(3); const bloom = classifyBloom(struct);
-  onStep(4); const standards = matchStandards(struct, userStandards);
+  onStep(4); const standards = matchStandards(struct, userStandards, frameworks);
   onStep(5); const { completeness, stats } = summarize(struct, bloom, doc);
-  return { bloom, standards, completeness, stats, structure: struct,
+  const quality = checkObjectives(struct, bloom);
+  const checklist = accreditationChecklist(doc, frameworks);
+  return { bloom, standards, completeness, stats, quality, taxonomyMatrix: taxonomyMatrix(bloom, quality), checklist, structure: struct,
     warnings: [...doc.meta.warnings, ...struct.warnings], generatedAt: new Date().toISOString() };
 }
 </script>
@@ -1370,7 +1478,7 @@ async function analyzeDocument(doc, userStandards = [], onStep = () => {}) {
      الكتلة 5 (الجزء السلوكي): الواجهة والتقرير (القسمان 7 و8)
      ============================================================ -->
 <script>
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const STORAGE_KEYS = { settings: 'ca.settings', standards: 'ca.standards', reports: 'ca.reports', frameworks: 'ca.frameworks' };
 const STEP_NAMES = ['القراءة', 'الهيكلة', 'تصنيف بلوم', 'مطابقة المعايير', 'الاكتمال والإحصاء'];
 
@@ -1455,7 +1563,7 @@ async function runAnalysis(file) {
     setStep(1); await nextFrame();
     const doc = await readDocument(file);
     setStep(1, 'done');
-    const analysis = await analyzeDocument(doc, userStandards, async n => { step = n; setStep(n); await nextFrame(); });
+    const analysis = await analyzeDocument(doc, userStandards, async n => { step = n; setStep(n); await nextFrame(); }, getFrameworks(userFrameworks));
     setStep(5, 'done');
     state.file = file; state.doc = doc; state.analysis = analysis;
     for (const w of analysis.warnings) showAlert(w.code, w.message, 'warning');
@@ -1533,7 +1641,17 @@ function renderReportHtml(analysis, doc, settings) {
   const lessonTitle = ref => { const u = analysis.structure.units[ref.unit]; const l = u && u.lessons[ref.lesson]; return l ? `${u.title} / ${l.title}` : ''; };
   const objectivesRows = analysis.bloom.map(b => `<tr><td>${escapeHtml(b.objectiveRef.text)}</td><td>${escapeHtml(b.verb || '—')}</td><td>${domainTag(b.domain)}</td><td>${levelTag(displayLevel(b), b.domain === 'cognitive' ? b.levelId : 0)}</td><td>${confTag(b.confidence)}</td></tr>`).join('');
   const completenessRows = analysis.completeness.map(c => `<tr><td>${escapeHtml(c.lessonRef.unitTitle)}</td><td>${escapeHtml(c.lessonRef.title)}</td><td>${yesNo(c.hasObjectives)}</td><td>${yesNo(c.hasActivities)}</td><td>${yesNo(c.hasAssessment)}</td><td>${yesNo(c.hasReferences)}</td></tr>`).join('');
-  const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}${m.source === 'framework' && OMAN_FRAMEWORK_IS_PLACEHOLDER && !/القرن 21/.test(m.standardLabel) ? ' <span class="tag tag-low">بند مؤقت</span>' : ''}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
+  const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : m.source === 'accreditation' ? 'معايير الاعتماد' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}${(m.source === 'framework' && OMAN_FRAMEWORK_IS_PLACEHOLDER && !/القرن 21/.test(m.standardLabel)) || m.placeholder ? ' <span class="tag tag-low">بند مؤقت</span>' : ''}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
+  // ب6: جودة الصياغة والمصفوفة
+  const compNames = { an: 'أنْ', verb: 'فعل سلوكي', learner: 'المتعلم', content: 'المحتوى', condition: 'شرط الأداء', criterion: 'معيار الأداء' };
+  const errorNames = Object.fromEntries(((RULES.frameworks.find(f => f.id === 'objective-errors') || { items: [] }).items).map(it => [it.id, it.text]));
+  const quality = analysis.quality || [];
+  const qualityRows = quality.map(q => `<tr><td>${escapeHtml(q.objectiveRef.text)}</td>${Object.keys(compNames).map(k => `<td>${q.components[k] ? '<span class="yes">✓</span>' : '<span class="no">✗</span>'}</td>`).join('')}<td>${q.score}/6</td><td>${q.dimension ? escapeHtml(q.dimension.name) : '—'}</td><td>${q.errors.length ? q.errors.map(e => `<span class="tag tag-medium" title="${escapeHtml(errorNames[e] || e)}">${escapeHtml(errorNames[e] || e)}</span>`).join(' ') : '<span class="yes">لا</span>'}</td></tr>`).join('');
+  const compTotals = Object.keys(compNames).map(k => `<tr><td>${compNames[k]}</td><td>${quality.filter(q => q.components[k]).length}</td><td>${quality.length ? Math.round(100 * quality.filter(q => q.components[k]).length / quality.length) : 0}%</td></tr>`).join('');
+  const errTotals = Object.keys(errorNames).map(e => `<tr><td>${escapeHtml(errorNames[e])}</td><td>${quality.filter(q => q.errors.includes(e)).length}</td></tr>`).join('');
+  const tm = analysis.taxonomyMatrix;
+  const dimNames = Object.fromEntries(((RULES.frameworks.find(f => f.id === 'bloom-revised') || { dimensions: [] }).dimensions).map(d => [d.id, d.name]));
+  const matrixHtml = tm ? `<div class="table-wrap"><table><thead><tr><th>المستوى \ بُعد المعرفة</th>${tm.dims.map(d => `<th>${escapeHtml(dimNames[d] || 'غير محدد')}</th>`).join('')}</tr></thead><tbody>${activeLevelDisplay().map(l => `<tr><td>${escapeHtml(l.name)}</td>${tm.dims.map(d => `<td>${tm.matrix[l.id][d]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '';
   const warningsHtml = analysis.warnings.length
     ? `<ul>${analysis.warnings.map(w => `<li><code>${escapeHtml(w.code)}</code> — ${escapeHtml(w.message)}</li>`).join('')}</ul>`
     : '<p>لا تحذيرات.</p>';
@@ -1567,9 +1685,30 @@ function renderReportHtml(analysis, doc, settings) {
     <div class="table-wrap"><table><thead><tr><th>الهدف</th><th>الفعل</th><th>المجال</th><th>المستوى</th><th>الثقة</th></tr></thead><tbody>${objectivesRows || '<tr><td colspan="5">لم تُكتشف أهداف.</td></tr>'}</tbody></table></div>
   </section>
 
+  <section class="report-section"><h2>جودة صياغة الأهداف</h2>
+    <p class="placeholder">فحص لفظي لأركان الهدف السلوكي الستة (وثيقة الدورة، الدرس الثامن) والأخطاء الشائعة الخمسة. بُعد المعرفة تخمين بكلمات مفتاحية بثقة منخفضة دائمًا. القابلية للتحقيق والصلة (SMART) حكم بشري لا يُفحص آليًا.</p>
+    <div class="summary-cards">
+      <div class="summary-card"><div class="num">${quality.length ? (quality.reduce((a, q) => a + q.score, 0) / quality.length).toFixed(1) : '—'}</div><div class="lbl">متوسط الأركان / 6</div></div>
+      <div class="summary-card"><div class="num">${quality.filter(q => q.score === 6).length}</div><div class="lbl">أهداف مكتملة الأركان</div></div>
+      <div class="summary-card"><div class="num">${quality.filter(q => q.errors.length).length}</div><div class="lbl">أهداف فيها خطأ شائع</div></div>
+      <div class="summary-card"><div class="num">${quality.filter(q => q.components.criterion).length}</div><div class="lbl">بمعيار أداء</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>الركن</th><th>موجود في</th><th>النسبة</th></tr></thead><tbody>${compTotals}</tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>الخطأ الشائع</th><th>عدد الأهداف</th></tr></thead><tbody>${errTotals}</tbody></table></div>
+    <h3>جدول التصنيف: مستوى بلوم × بُعد المعرفة (الأهداف المعرفية)</h3>
+    ${matrixHtml}
+    <h3>تفصيل الأهداف</h3>
+    <div class="table-wrap"><table><thead><tr><th>الهدف</th>${Object.values(compNames).map(n => `<th>${n}</th>`).join('')}<th>الدرجة</th><th>بُعد المعرفة</th><th>خطأ شائع</th></tr></thead><tbody>${qualityRows || '<tr><td colspan="10">لا أهداف.</td></tr>'}</tbody></table></div>
+  </section>
+
   <section class="report-section"><h2>مطابقة المعايير</h2>
     <p class="placeholder">المطابقة لفظية (معامل جاكار) وتُعرض كـ"تطابق محتمل"؛ تحتاج تأكيدًا بشريًا.</p>
     <div class="table-wrap"><table><thead><tr><th>الهدف</th><th>المعيار</th><th>المصدر</th><th>النسبة</th><th>الثقة</th></tr></thead><tbody>${matchRows || '<tr><td colspan="5">لا تطابقات فوق العتبة (15%).</td></tr>'}</tbody></table></div>
+  </section>
+
+  <section class="report-section"><h2>قائمة تحقق المنهج ضد معايير الاعتماد</h2>
+    <p class="placeholder">لكل بند: عدد أسطر المنهج التي تشبهه لفظيًا (≥ 15%) وأقربها. "دليل لفظي" لا يعني استيفاء البند؛ الحكم بشري. البنود الموسومة "مؤقت" ليست نصًا رسميًا.</p>
+    ${(analysis.checklist || []).length ? `<div class="table-wrap"><table><thead><tr><th>الإطار / الفئة</th><th>الرمز</th><th>البند</th><th>دليل لفظي</th><th>أقرب سطر (الصفحة)</th></tr></thead><tbody>${analysis.checklist.map(c => `<tr><td>${escapeHtml(c.frameworkName)}${c.item.category ? ' / ' + escapeHtml(c.item.category) : ''}${c.official ? '' : ' <span class="tag tag-low">مؤقت</span>'}</td><td>${escapeHtml(c.item.code || c.item.id)}</td><td>${escapeHtml(c.item.text)}</td><td>${c.evidence ? `<span class="yes">${c.evidence} سطر</span>` : '<span class="no">لا دليل</span>'}</td><td>${c.best ? `${escapeHtml(c.best.text.slice(0, 90))}${c.best.text.length > 90 ? '…' : ''} <span class="placeholder">(ص ${c.best.page + 1}، ${Math.round(c.best.score * 100)}%)</span>` : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p>لا أطر معايير مفعّلة.</p>'}
   </section>
 
   <section class="report-section"><h2>الاكتمال</h2>
@@ -1978,7 +2117,25 @@ const DEV_TESTS = [
   { name: 'المجالات: فعل غير قابل للقياس يبقى غير محدد (يحب)', fn: () => { const r = classifyBloom(mkStruct(['أن يحب المتدرب الأكاديمية.']))[0]; assert(r.domain === null && r.level === 'غير محدد', 'غير محدد'); } },
   { name: 'التصنيف الفعّال: الأصلي يعرض التركيب قبل التقويم', fn: () => { const keep = settings.activeTaxonomy; settings.activeTaxonomy = 'original'; const d = activeLevelDisplay(); settings.activeTaxonomy = keep; assert(d[4].id === 6 && d[4].name === 'التركيب' && d[5].id === 5 && d[5].name === 'التقويم', JSON.stringify(d)); } },
   { name: 'المرجع: البحث بالفعل يجد "يحلل" في بلوم وDOK وSOLO', fn: () => { const ids = searchVerb('يحلل').map(h => h.framework.id); assert(ids.includes('bloom-revised') && ids.includes('dok') && ids.includes('solo'), JSON.stringify(ids)); assert(searchVerb('تحلل').length === searchVerb('يحلل').length, 'صيغة تـ'); assert(searchVerb('يزركش').length === 0, 'لا نتيجة'); } },
-  { name: 'المرجع: تسعة أطر مدمجة تُعرض ببطاقات', fn: () => { assert(FRAMEWORKS.length === 9, 'العدد ' + FRAMEWORKS.length); assert(document.querySelectorAll('#ref-frameworks .ref-card').length === getFrameworks(userFrameworks).length, 'البطاقات'); } },
+  { name: 'المرجع: عشرة أطر مدمجة تُعرض ببطاقات', fn: () => { assert(FRAMEWORKS.length === 10, 'العدد ' + FRAMEWORKS.length); assert(document.querySelectorAll('#ref-frameworks .ref-card').length === getFrameworks(userFrameworks).length, 'البطاقات'); } },
+  // ب6: جودة الصياغة
+  { name: 'الجودة: هدف مكتمل الأركان (مثال الوثيقة) = 6/6', fn: () => { const st = mkStruct(['أن يعدد المتدرب وظائف ثلاث للقوة البحرية حسب كتيب دورة قيادة بدون أخطاء.']); const q = checkObjectives(st, classifyBloom(st))[0]; assert(q.score === 6 && q.errors.length === 0, JSON.stringify(q)); } },
+  { name: 'الجودة: هدف بلا شرط ولا معيار = 4/6', fn: () => { const st = mkStruct(['أن يذكر الطالب أجزاء النبات الرئيسية.']); const q = checkObjectives(st, classifyBloom(st))[0]; assert(q.score === 4 && !q.components.condition && !q.components.criterion, JSON.stringify(q.components)); } },
+  { name: 'الجودة: الأخطاء الشائعة الخمسة تُكتشف على أمثلة الوثيقة', fn: () => {
+      const ex = [['أنْ يدرب الموجه المتدرب على قراءة الخارطة.', 'teacher-activity'], ['أنْ يعرف المتدرب كيفية استخدام البوصلة.', 'process'], ['أنْ يدرس المتدرب قاعدة فيثاغورس في حساب المثلثات.', 'topic'], ['أنْ يمثل المتدرب للمبتدأ في جملة مفيدة ثم يعربه.', 'multi'], ['أنْ يحب المتدرب الأكاديمية.', 'unmeasurable']];
+      const st = mkStruct(ex.map(e => e[0])); const q = checkObjectives(st, classifyBloom(st));
+      ex.forEach((e, i) => assert(q[i].errors.includes(e[1]), e[1] + ' ← ' + JSON.stringify(q[i].errors))); } },
+  { name: 'الجودة: بُعد المعرفة يُخمَّن بثقة منخفضة', fn: () => { const st = mkStruct(['أن يشرح الطالب مفهوم التمثيل الضوئي.', 'أن يعدد الطالب أجزاء النبات.']); const q = checkObjectives(st, classifyBloom(st)); assert(q[0].dimension && q[0].dimension.id === 'conceptual' && q[0].dimension.confidence === 'low', JSON.stringify(q[0].dimension)); assert(q[1].dimension && q[1].dimension.id === 'factual', JSON.stringify(q[1].dimension)); } },
+  // ب7: معايير الاعتماد
+  { name: 'الاعتماد: الإطار المؤقت موسوم غير رسمي وبنوده تدخل المطابقة وقائمة التحقق', fn: async () => {
+      const acc = FRAMEWORKS.find(f => f.id === 'oman-accreditation'); assert(acc && acc.official === false && acc.items.every(i => i.official === false), 'الوسم');
+      const d = await readTxt('s.txt', SAMPLE_CURRICULUM); const a = await analyzeDocument(d, [], () => {}, getFrameworks([]));
+      assert(a.checklist.length === acc.items.length, 'قائمة التحقق ' + a.checklist.length); assert(a.checklist.every(c => c.official === false), 'كل البنود مؤقتة');
+      const st = mkStruct(['أهداف البرنامج ومخرجات التعلم محددة وقابلة للقياس.']); const m = matchStandards(st, [], getFrameworks([])).filter(x => x.source === 'accreditation'); assert(m.length >= 1 && m[0].placeholder === true, 'مطابقة اعتماد ' + JSON.stringify(m[0])); } },
+  { name: 'الاعتماد: استيراد نص رسمي بالمعرّف نفسه يزيل وسم "مؤقت"', fn: async () => {
+      const official = { id: 'oman-accreditation', kind: 'standards', name: 'اختبار رسمي', source: 'اختبار', official: true, items: [{ id: 'X1', code: 'X1', text: 'أهداف البرنامج ومخرجات التعلم محددة وقابلة للقياس' }] };
+      const fws = getFrameworks([official]); const d = await readTxt('s.txt', SAMPLE_CURRICULUM); const a = await analyzeDocument(d, [], () => {}, fws);
+      assert(a.checklist.length === 1 && a.checklist[0].official === true, JSON.stringify(a.checklist)); } },
   // العينة كاملة
   { name: 'العينة: 2 وحدة، 4 دروس، 20 هدفًا، درس بلا تقويم', fn: async () => { const a = await analyzeDocument(await readTxt('s.txt', SAMPLE_CURRICULUM), []); assert(a.stats.units === 2 && a.stats.lessons === 4 && a.stats.objectives === 20, 'الأعداد'); assert(a.completeness.filter(c => !c.hasAssessment).length === 1, 'درس واحد بلا تقويم'); assert(Object.values(a.stats.bloomCounts).filter(v => v > 0).length >= 6, 'المستويات الستة ممثلة'); } },
 ];
