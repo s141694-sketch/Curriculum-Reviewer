@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>محلّل المناهج</title>
+
+<!-- ============================================================
+     الكتلة 1: الأنماط
+     1أ. متغيرات التصميم (القسم 9) — الموضع الوحيد لأي لون أو خط
+     1ب. أنماط الواجهة
+     1ج. أنماط الطباعة
+     ============================================================ -->
+<style>
+/* ---------- 1أ. متغيرات التصميم (ألوان محايدة مؤقتة حتى تصل الهوية) ---------- */
+:root {
+  --color-primary:   #2f4858;
+  --color-secondary: #5b7c8d;
+  --color-accent:    #c98a2f;
+  --color-bg:        #f4f5f7;
+  --color-surface:   #ffffff;
+  --color-text:      #1f2933;
+  --color-muted:     #6b7280;
+  --color-success:   #2e7d32;
+  --color-warning:   #b26a00;
+  --color-danger:    #c62828;
+
+  --font-heading: "Tajawal", "Noto Naskh Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-body:    "Tajawal", "Noto Naskh Arabic", "Segoe UI", Tahoma, sans-serif;
+
+  --radius:     8px;
+  --space-unit: 8px;
+
+  /* مستويات بلوم الستة: تذكر، فهم، تطبيق، تحليل، تقويم، إبداع */
+  --bloom-1: #9aa5b1;
+  --bloom-2: #7b8fa1;
+  --bloom-3: #5b7c8d;
+  --bloom-4: #3f6579;
+  --bloom-5: #2f4858;
+  --bloom-6: #c98a2f;
+}
+
+/* ---------- 1ب. أنماط الواجهة ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+h1, h2, h3 { font-family: var(--font-heading); margin: 0; }
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space-unit) * 2);
+  padding: calc(var(--space-unit) * 2) calc(var(--space-unit) * 3);
+  background: var(--color-primary);
+  color: var(--color-surface);
+}
+
+.app-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.app-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+.app-title { font-size: 1.4rem; font-weight: 700; }
+.app-org   { font-size: 0.9rem; opacity: 0.85; }
+
+.tabs {
+  display: flex;
+  gap: var(--space-unit);
+  padding: 0 calc(var(--space-unit) * 3);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-muted);
+}
+
+.tab-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  padding: calc(var(--space-unit) * 1.5) calc(var(--space-unit) * 2);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover { color: var(--color-text); }
+
+.tab-btn[aria-selected="true"] {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-accent);
+  font-weight: 700;
+}
+
+.tab-panel {
+  display: none;
+  padding: calc(var(--space-unit) * 3);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.tab-panel.is-active { display: block; }
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: calc(var(--space-unit) * 3);
+  margin-bottom: calc(var(--space-unit) * 2);
+}
+
+.placeholder { color: var(--color-muted); }
+
+/* ---------- 1ج. أنماط الطباعة ---------- */
+@media print {
+  .app-header, .tabs { display: none; }
+  body { background: var(--color-surface); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     الكتلة 5 (الجزء البصري): الواجهة
+     الشريط العلوي والتبويبات الثلاث
+     ============================================================ -->
+<header class="app-header">
+  <div class="app-logo" id="app-logo" aria-label="الشعار">م</div>
+  <div>
+    <h1 class="app-title">محلّل المناهج</h1>
+    <div class="app-org" id="app-org">اسم الجهة</div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="أقسام الأداة">
+  <button class="tab-btn" role="tab" id="tab-upload"    aria-controls="panel-upload"    aria-selected="true"  type="button">رفع</button>
+  <button class="tab-btn" role="tab" id="tab-results"   aria-controls="panel-results"   aria-selected="false" type="button">النتائج</button>
+  <button class="tab-btn" role="tab" id="tab-settings"  aria-controls="panel-settings"  aria-selected="false" type="button">المعايير والإعدادات</button>
+</nav>
+
+<main>
+  <section class="tab-panel is-active" role="tabpanel" id="panel-upload" aria-labelledby="tab-upload">
+    <div class="card">
+      <h2>رفع المنهج</h2>
+      <p class="placeholder">تُبنى منطقة الرفع وشريط التقدم في م10.</p>
+    </div>
+  </section>
+
+  <section class="tab-panel" role="tabpanel" id="panel-results" aria-labelledby="tab-results">
+    <div class="card">
+      <h2>النتائج</h2>
+      <p class="placeholder">تُبنى بطاقات الملخص والجداول والتقرير في م11.</p>
+    </div>
+  </section>
+
+  <section class="tab-panel" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
+    <div class="card">
+      <h2>المعايير والإعدادات</h2>
+      <p class="placeholder">يُبنى جدول المعايير والشعار والتقارير المحفوظة في م12 وم13.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ============================================================
+     الكتلة 2: المكتبات المدمجة (pdf.js + worker كـ blob، mammoth.js)
+     تُدمج في م2. لا <script src> إلى الشبكة.
+     ============================================================ -->
+<script id="lib-pdfjs" type="text/plain"></script>
+<script id="lib-mammoth" type="text/plain"></script>
+
+<!-- ============================================================
+     الكتلة 3: بيانات القواعد
+     قاموس أفعال بلوم، بنود الإطار العماني، مهارات القرن 21، أنماط الهيكلة
+     تُملأ في م5.
+     ============================================================ -->
+<script>
+const RULES = {
+  bloomVerbs: {},          // م5
+  omanFramework: [],       // م5
+  skills21: [],            // م5
+  stopWords: [],           // م5
+  structurePatterns: []    // م5
+};
+</script>
+
+<!-- ============================================================
+     الكتلة 4: وحدات التحليل الخمس (القسم 6) — دوال نقية لا تلمس DOM
+     ============================================================ -->
+<script>
+// م3: readDocument(file) → Document
+// م6: structure(doc) → Structure
+// م7: classifyBloom(structure) → bloom[]
+// م8: matchStandards(structure, userStandards) → standards[]
+// م9: summarize(structure, bloom) → { completeness, stats }
+</script>
+
+<!-- ============================================================
+     الكتلة 5 (الجزء السلوكي): الواجهة والتقرير
+     م1: تبديل التبويبات فقط
+     ============================================================ -->
+<script>
+(function initTabs() {
+  const tabs = Array.from(document.querySelectorAll('.tab-btn[role="tab"]'));
+  const panels = Array.from(document.querySelectorAll('.tab-panel[role="tabpanel"]'));
+
+  function activate(tab) {
+    tabs.forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+    panels.forEach(p => p.classList.toggle('is-active', p.id === tab.getAttribute('aria-controls')));
+  }
+
+  tabs.forEach(tab => tab.addEventListener('click', () => activate(tab)));
+})();
+</script>
+
+<!-- ============================================================
+     الكتلة 6: حالات الاختبار المدمجة (القسم 11)
+     تُفعَّل بـ #dev في م14.
+     ============================================================ -->
+<script>
+// م14
+</script>
+
+</body>
+</html>
