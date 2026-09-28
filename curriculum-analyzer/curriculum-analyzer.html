@@ -267,6 +267,22 @@ td input[type="text"] { width: 100%; }
 .yes { color: var(--color-success); font-weight: 700; }
 .no  { color: var(--color-danger); font-weight: 700; }
 
+/* ---------- المرجع ---------- */
+.ref-card { margin-bottom: calc(var(--space-unit) * 2); }
+.ref-card summary { cursor: pointer; font-family: var(--font-heading); font-weight: 700; color: var(--color-primary); font-size: 1.1rem; padding: var(--space-unit) 0; }
+.ref-card summary .en { color: var(--color-muted); font-weight: 400; font-size: 0.9rem; }
+.ref-meta { color: var(--color-muted); font-size: 0.9rem; margin: var(--space-unit) 0; }
+.ref-level { border-inline-start: 4px solid var(--color-muted); padding: var(--space-unit) calc(var(--space-unit) * 2); margin: var(--space-unit) 0; background: var(--color-bg); border-radius: var(--radius); }
+.ref-level h3 { font-size: 1rem; color: var(--color-text); }
+.ref-level h3 .en { color: var(--color-muted); font-weight: 400; font-size: 0.85rem; }
+.ref-verbs { display: flex; flex-wrap: wrap; gap: calc(var(--space-unit) / 2); margin: var(--space-unit) 0; }
+.ref-verbs .tag { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-muted); }
+.ref-example { color: var(--color-muted); font-size: 0.9rem; margin: 0; }
+.ref-bloom-1 { border-inline-start-color: var(--bloom-1); } .ref-bloom-2 { border-inline-start-color: var(--bloom-2); }
+.ref-bloom-3 { border-inline-start-color: var(--bloom-3); } .ref-bloom-4 { border-inline-start-color: var(--bloom-4); }
+.ref-bloom-5 { border-inline-start-color: var(--bloom-5); } .ref-bloom-6 { border-inline-start-color: var(--bloom-6); }
+.ref-hit { padding: var(--space-unit) 0; border-bottom: 1px solid var(--color-bg); }
+
 /* ---------- التقرير ---------- */
 .report { background: var(--color-surface); border-radius: var(--radius); padding: calc(var(--space-unit) * 3); }
 
@@ -353,6 +369,7 @@ td input[type="text"] { width: 100%; }
 <nav class="tabs" role="tablist" aria-label="أقسام الأداة">
   <button class="tab-btn" role="tab" id="tab-upload"    aria-controls="panel-upload"    aria-selected="true"  type="button">رفع</button>
   <button class="tab-btn" role="tab" id="tab-results"   aria-controls="panel-results"   aria-selected="false" type="button">النتائج</button>
+  <button class="tab-btn" role="tab" id="tab-reference" aria-controls="panel-reference" aria-selected="false" type="button">المرجع</button>
   <button class="tab-btn" role="tab" id="tab-settings"  aria-controls="panel-settings"  aria-selected="false" type="button">المعايير والإعدادات</button>
 </nav>
 
@@ -402,6 +419,17 @@ td input[type="text"] { width: 100%; }
     <div id="report" class="report">
       <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "رفع" أو جرّب العينة.</p>
     </div>
+  </section>
+
+  <!-- ب5 تبويب المرجع -->
+  <section class="tab-panel" role="tabpanel" id="panel-reference" aria-labelledby="tab-reference">
+    <div class="card">
+      <h2>ابحث بالفعل</h2>
+      <p class="placeholder">اكتب فعلًا مضارعًا (مثل: يحلل) لترى مستواه في كل إطار. المطابقة لفظية على الفعل المطبّع.</p>
+      <div class="field"><input type="text" id="ref-search" placeholder="يحلل" autocomplete="off" aria-label="بحث بالفعل"></div>
+      <div id="ref-search-results"></div>
+    </div>
+    <div id="ref-frameworks"></div>
   </section>
 
   <!-- 7.3 تبويب المعايير والإعدادات -->
@@ -746,6 +774,45 @@ const FRAMEWORKS = [
       { id: 'topic', text: 'تحديد موضوعات التعلم بدلًا من نتائج التعلم.', example: 'أنْ يدرس المتدرب قاعدة فيثاغورس في حساب المثلثات.' },
       { id: 'multi', text: 'وجود أكثر من ناتج في عبارة الهدف.', example: 'أنْ يمثل المتدرب للمبتدأ في جملة مفيدة ثم يعربه.' },
       { id: 'unmeasurable', text: 'عدم إمكانية قياس وتقويم الهدف السلوكي وملاحظته في البيئة الصفية.', example: 'أنْ يحب المتدرب الأكاديمية.' }
+    ]
+  },
+  // ---------- ب4: أطر عالمية إضافية (ترجمة المصطلحات غير رسمية؛ المصطلح الإنجليزي بجانبها) ----------
+  {
+    id: 'dok', kind: 'taxonomy',
+    name: 'عمق المعرفة (ويب)', nameEn: "Webb's Depth of Knowledge (DOK)",
+    source: 'Webb, N. L. (1997). Criteria for Alignment of Expectations and Assessments in Mathematics and Science Education. NISE Research Monograph 6.', official: true, translation: 'unofficial',
+    notes: 'يصف تعقيد التفكير الذي يتطلبه المهمة لا صعوبتها؛ المستوى يتحدد بما يُطلب من المتعلم فعله بالمعرفة، لا بالفعل وحده.',
+    levels: [
+      { id: 1, name: 'الاستدعاء والاستنساخ', nameEn: 'Recall and Reproduction', definition: 'استدعاء حقيقة أو مصطلح أو تنفيذ إجراء بسيط ذي خطوة واحدة.', verbs: ['يذكر', 'يعرّف', 'يحدد', 'يسمي', 'يحسب', 'يقيس', 'يتعرف', 'يستدعي'], examples: ['أن يذكر المتدرب وحدات قياس السرعة البحرية.'] },
+      { id: 2, name: 'المهارات والمفاهيم', nameEn: 'Skills and Concepts', definition: 'معالجة ذهنية تتجاوز الاستدعاء: خطوات متعددة، تصنيف، تنظيم، تلخيص، تفسير بيانات.', verbs: ['يصنف', 'يقارن', 'يلخص', 'يفسر', 'ينظم', 'يقدر', 'يتنبأ', 'يجمع', 'يعرض'], examples: ['أن يصنف المتدرب المعينات التدريبية حسب نوعها وحسب الحاسة التي تخاطبها.'] },
+      { id: 3, name: 'التفكير الاستراتيجي', nameEn: 'Strategic Thinking', definition: 'استدلال وتخطيط واستخدام أدلة؛ مشكلات لها أكثر من مسار حل وتتطلب تبريرًا.', verbs: ['يستنتج', 'يبرر', 'يحقق', 'يبني', 'يقيم', 'يستقصي', 'يصوغ', 'يطور خطة'], examples: ['أن يبرر المتدرب اختيار أسلوب تدريبي لموقف محدد بالأدلة.'] },
+      { id: 4, name: 'التفكير الممتد', nameEn: 'Extended Thinking', definition: 'استقصاء ممتد يربط مصادر ومفاهيم متعددة عبر وقت أطول، وينتج عملًا أصيلًا.', verbs: ['يصمم', 'يربط', 'يحلل', 'يثبت', 'ينشئ', 'يطبق مفاهيم', 'يركب', 'ينقد'], examples: ['أن يصمم المتدرب برنامجًا تدريبيًا لوحدة كاملة مبررًا كل عنصر فيه بمعايير الوثيقة.'] }
+    ]
+  },
+  {
+    id: 'solo', kind: 'taxonomy',
+    name: 'بنية نواتج التعلم الملاحَظة (SOLO)', nameEn: 'SOLO Taxonomy (Biggs & Collis)',
+    source: 'Biggs, J. B. & Collis, K. F. (1982). Evaluating the Quality of Learning: The SOLO Taxonomy.', official: true, translation: 'unofficial',
+    notes: 'يصف تعقيد بنية الفهم: من عدم الفهم إلى عنصر واحد، إلى عناصر متعددة، إلى ربطها، إلى التعميم خارجها.',
+    levels: [
+      { id: 1, name: 'ما قبل البنيوي', nameEn: 'Prestructural', definition: 'لا فهم ذو صلة؛ الاستجابة مشتتة أو خاطئة.', verbs: [], examples: [] },
+      { id: 2, name: 'أحادي البنية', nameEn: 'Unistructural', definition: 'يتناول جانبًا واحدًا ذا صلة.', verbs: ['يحدد', 'يسمي', 'يتبع إجراء', 'يذكر', 'يتعرف'], examples: ['أن يسمي المتدرب ركنًا واحدًا من أركان الهدف السلوكي.'] },
+      { id: 3, name: 'متعدد البنية', nameEn: 'Multistructural', definition: 'يتناول عدة جوانب مستقلة دون ربط بينها.', verbs: ['يصف', 'يعدد', 'يجمع', 'يصنف', 'يسرد', 'يلخص'], examples: ['أن يعدد المتدرب أركان الهدف السلوكي الستة.'] },
+      { id: 4, name: 'علائقي', nameEn: 'Relational', definition: 'يربط الجوانب في بنية متماسكة ويرى الكل.', verbs: ['يقارن', 'يحلل', 'يفسر', 'يربط', 'يطبق', 'يعلل', 'يوضح العلاقة'], examples: ['أن يفسر المتدرب كيف يؤثر غياب معيار الأداء في قابلية الهدف للقياس.'] },
+      { id: 5, name: 'تجريدي موسّع', nameEn: 'Extended Abstract', definition: 'يعمم البنية إلى مجال جديد ويولّد فرضيات أو مبادئ أوسع.', verbs: ['ينظّر', 'يعمم', 'يفترض', 'يبتكر', 'يتأمل', 'يتنبأ', 'يقيّم نقديًا'], examples: ['أن يقترح المتدرب معيارًا جديدًا لجودة الأهداف يصلح لمجالات تدريب مختلفة ويبرره.'] }
+    ]
+  },
+  {
+    id: 'smart', kind: 'checklist',
+    name: 'معايير SMART لصياغة الأهداف', nameEn: 'SMART objectives',
+    source: 'صيغة شائعة تُنسب إلى Doran, G. T. (1981). "There\'s a S.M.A.R.T. way to write management\'s goals and objectives." Management Review, 70(11).', official: true, translation: 'unofficial',
+    notes: 'تكمّل أركان الهدف السلوكي: الركنان "شرط الأداء" و"معيار الأداء" يحققان القابلية للقياس والزمن.',
+    items: [
+      { id: 'specific', code: 'S', text: 'محدد (Specific): سلوك واحد واضح ومحتوى محدد.', hint: 'فعل واحد + محتوى واحد.' },
+      { id: 'measurable', code: 'M', text: 'قابل للقياس (Measurable): معيار أداء يمكن ملاحظته أو عدّه.', hint: 'بدقة، بدون أخطاء، بنسبة، على الأقل.' },
+      { id: 'achievable', code: 'A', text: 'قابل للتحقيق (Achievable): يناسب مستوى المتعلم والموارد.', hint: 'حكم بشري؛ لا يُفحص آليًا.' },
+      { id: 'relevant', code: 'R', text: 'ذو صلة (Relevant): مرتبط بأهداف الدرس والبرنامج.', hint: 'حكم بشري؛ لا يُفحص آليًا.' },
+      { id: 'timebound', code: 'T', text: 'محدد زمنيًا (Time-bound): إطار زمني للأداء أو للتحقق.', hint: 'خلال، في نهاية الدرس، في خمس دقائق.' }
     ]
   }
 ];
@@ -1604,6 +1671,81 @@ function addStandards(list) {
   renderStandards();
 })();
 
+// ---------- تبويب المرجع (ب5) ----------
+const badge = (text, cls = '') => `<span class="tag ${cls}">${escapeHtml(text)}</span>`;
+
+function frameworkBadges(f) {
+  const out = [];
+  out.push(f.official ? badge('مصدر موثّق', 'tag-high') : badge('مؤقت — غير رسمي', 'tag-low'));
+  if (f.translation === 'unofficial') out.push(badge('ترجمة غير رسمية للمصطلحات', 'tag-medium'));
+  if (f.user) out.push(badge('مستورد'));
+  if (f.domain) out.push(badge('المجال: ' + (DOMAIN_NAMES[f.domain] || f.domain)));
+  return out.join(' ');
+}
+
+function copyText(text, btn) {
+  const done = () => { const t = btn.textContent; btn.textContent = 'نُسخ ✔'; setTimeout(() => btn.textContent = t, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => fallback());
+  else fallback();
+  function fallback() { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch {} ta.remove(); }
+}
+
+function renderLevel(f, l) {
+  const bloomCls = (f.id === 'bloom-revised' || f.id === 'bloom-original') ? ' ref-bloom-' + l.id : '';
+  // مستويات بلوم المعدَّل تأخذ أفعالها من القاموس الفعّال
+  const verbs = (l.verbs && l.verbs.length) ? l.verbs : (f.id === 'bloom-revised' ? (RULES.bloomLevels.find(x => x.id === l.id) || {}).verbs || [] : []);
+  return `<div class="ref-level${bloomCls}">
+    <h3>${l.id}. ${escapeHtml(l.name)} ${l.nameEn ? `<span class="en">${escapeHtml(l.nameEn)}</span>` : ''}</h3>
+    <p>${escapeHtml(l.definition || '')}</p>
+    ${verbs.length ? `<div class="ref-verbs">${[...new Set(verbs)].map(v => badge(v)).join('')}</div>
+    <button class="btn btn-secondary btn-sm" type="button" data-copy="${escapeHtml([...new Set(verbs)].join('، '))}">نسخ الأفعال</button>` : ''}
+    ${(l.examples || []).map(e => `<p class="ref-example">مثال: ${escapeHtml(e)}</p>`).join('')}
+  </div>`;
+}
+
+function renderFrameworkCard(f) {
+  let body = '';
+  if (f.kind === 'taxonomy') body = f.levels.map(l => renderLevel(f, l)).join('');
+  else body = `<ol>${f.items.map(it => `<li><strong>${it.code ? escapeHtml(it.code) + ' — ' : ''}</strong>${escapeHtml(it.text)}${it.hint ? ` <span class="placeholder">(${escapeHtml(it.hint)})</span>` : ''}${it.example ? `<br><span class="ref-example">مثال خاطئ: ${escapeHtml(it.example)}</span>` : ''}${it.official === false ? ' ' + badge('مؤقت', 'tag-low') : ''}</li>`).join('')}</ol>`;
+  if (f.dimensions) body += `<h3>أبعاد المعرفة</h3>` + f.dimensions.map(d => `<div class="ref-level"><h3>${escapeHtml(d.name)} <span class="en">${escapeHtml(d.nameEn || '')}</span></h3><p>${escapeHtml(d.definition)}</p></div>`).join('');
+  return `<details class="card ref-card" id="ref-${escapeHtml(f.id)}">
+    <summary>${escapeHtml(f.name)} ${f.nameEn ? `<span class="en">${escapeHtml(f.nameEn)}</span>` : ''}</summary>
+    <div class="ref-meta">${frameworkBadges(f)}<br>المصدر: ${escapeHtml(f.source || '—')}${f.notes ? `<br>${escapeHtml(f.notes)}` : ''}</div>
+    ${body}
+  </details>`;
+}
+
+function renderReference() {
+  $('ref-frameworks').innerHTML = getFrameworks(userFrameworks).map(renderFrameworkCard).join('');
+}
+
+// بحث بالفعل عبر كل الأطر التصنيفية (وقاموس بلوم الفعّال)
+function searchVerb(query) {
+  const q = unifyHamza(stripTashkeel(query.trim())).replace(/^ت/, 'ي');
+  if (q.length < 3) return [];
+  const hits = [];
+  const norm = v => unifyHamza(stripTashkeel(v.split(' ')[0]));
+  for (const f of getFrameworks(userFrameworks)) {
+    if (f.kind !== 'taxonomy') continue;
+    for (const l of f.levels) {
+      const verbs = (l.verbs && l.verbs.length) ? l.verbs : (f.id === 'bloom-revised' ? (RULES.bloomLevels.find(x => x.id === l.id) || {}).verbs || [] : []);
+      if (verbs.some(v => norm(v) === q)) hits.push({ framework: f, level: l });
+    }
+  }
+  return hits;
+}
+
+(function initReference() {
+  renderReference();
+  $('ref-frameworks').addEventListener('click', e => { const b = e.target.closest('[data-copy]'); if (b) copyText(b.dataset.copy, b); });
+  $('ref-search').addEventListener('input', e => {
+    const hits = searchVerb(e.target.value);
+    $('ref-search-results').innerHTML = e.target.value.trim().length < 3 ? '' : (hits.length
+      ? hits.map(h => `<div class="ref-hit"><strong>${escapeHtml(h.framework.name)}</strong> ← المستوى ${h.level.id}: ${escapeHtml(h.level.name)}${h.level.nameEn ? ` <span class="placeholder">(${escapeHtml(h.level.nameEn)})</span>` : ''}</div>`).join('')
+      : '<p class="placeholder">لا يوجد هذا الفعل في أي إطار مدمج. جرّب صيغة الغائب (يـ) بلا ضمائر.</p>');
+  });
+})();
+
 // ---------- الأطر المرجعية (ب2) ----------
 function saveFrameworks() { store.write(STORAGE_KEYS.frameworks, userFrameworks); }
 function renderFrameworksList() {
@@ -1618,7 +1760,7 @@ function importFrameworks(data) {
     if (errs.length) rejected.push(`${f && f.id ? f.id : '?'}: ${errs.join('، ')}`);
     else { userFrameworks = userFrameworks.filter(x => x.id !== f.id); userFrameworks.push(f); accepted.push(f.id); }
   }
-  saveFrameworks(); renderFrameworksList();
+  saveFrameworks(); renderFrameworksList(); renderReference();
   return { accepted, rejected };
 }
 (function initFrameworks() {
@@ -1634,7 +1776,7 @@ function importFrameworks(data) {
     e.target.value = '';
   });
   $('btn-fw-export').addEventListener('click', () => downloadBlob(`${dateStamp()}-frameworks.json`, JSON.stringify(getFrameworks(userFrameworks), null, 2), 'application/json'));
-  $('fw-list').addEventListener('click', e => { const id = e.target.dataset.fwDel; if (!id) return; userFrameworks = userFrameworks.filter(x => x.id !== id); saveFrameworks(); renderFrameworksList(); });
+  $('fw-list').addEventListener('click', e => { const id = e.target.dataset.fwDel; if (!id) return; userFrameworks = userFrameworks.filter(x => x.id !== id); saveFrameworks(); renderFrameworksList(); renderReference(); });
   renderFrameworksList();
 })();
 
@@ -1835,6 +1977,8 @@ const DEV_TESTS = [
   { name: 'المجالات: الفعل المعرفي يسبق الوجداني (يقترح → إبداع)', fn: () => { const r = classifyBloom(mkStruct(['أن يقترح الطالب حلولًا.']))[0]; assert(r.domain === 'cognitive' && r.level === 'إبداع', JSON.stringify([r.domain, r.level])); } },
   { name: 'المجالات: فعل غير قابل للقياس يبقى غير محدد (يحب)', fn: () => { const r = classifyBloom(mkStruct(['أن يحب المتدرب الأكاديمية.']))[0]; assert(r.domain === null && r.level === 'غير محدد', 'غير محدد'); } },
   { name: 'التصنيف الفعّال: الأصلي يعرض التركيب قبل التقويم', fn: () => { const keep = settings.activeTaxonomy; settings.activeTaxonomy = 'original'; const d = activeLevelDisplay(); settings.activeTaxonomy = keep; assert(d[4].id === 6 && d[4].name === 'التركيب' && d[5].id === 5 && d[5].name === 'التقويم', JSON.stringify(d)); } },
+  { name: 'المرجع: البحث بالفعل يجد "يحلل" في بلوم وDOK وSOLO', fn: () => { const ids = searchVerb('يحلل').map(h => h.framework.id); assert(ids.includes('bloom-revised') && ids.includes('dok') && ids.includes('solo'), JSON.stringify(ids)); assert(searchVerb('تحلل').length === searchVerb('يحلل').length, 'صيغة تـ'); assert(searchVerb('يزركش').length === 0, 'لا نتيجة'); } },
+  { name: 'المرجع: تسعة أطر مدمجة تُعرض ببطاقات', fn: () => { assert(FRAMEWORKS.length === 9, 'العدد ' + FRAMEWORKS.length); assert(document.querySelectorAll('#ref-frameworks .ref-card').length === getFrameworks(userFrameworks).length, 'البطاقات'); } },
   // العينة كاملة
   { name: 'العينة: 2 وحدة، 4 دروس، 20 هدفًا، درس بلا تقويم', fn: async () => { const a = await analyzeDocument(await readTxt('s.txt', SAMPLE_CURRICULUM), []); assert(a.stats.units === 2 && a.stats.lessons === 4 && a.stats.objectives === 20, 'الأعداد'); assert(a.completeness.filter(c => !c.hasAssessment).length === 1, 'درس واحد بلا تقويم'); assert(Object.values(a.stats.bloomCounts).filter(v => v > 0).length >= 6, 'المستويات الستة ممثلة'); } },
 ];
