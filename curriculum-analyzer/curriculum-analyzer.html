@@ -460,8 +460,8 @@ td input[type="text"] { width: 100%; }
       <div class="field">
         <label for="taxonomy-select">تصنيف بلوم المستخدم في التقرير</label>
         <select id="taxonomy-select">
+          <option value="original">الأصلي (Bloom 1956، المعتمد في وثيقة الدورة): التركيب ثم التقويم — الافتراضي</option>
           <option value="revised">المعدَّل (Anderson & Krathwohl 2001): تقويم ثم إبداع</option>
-          <option value="original">الأصلي (Bloom 1956، المعتمد في وثيقة الدورة): التركيب ثم التقويم</option>
         </select>
       </div>
       <p class="placeholder">الأطر المدمجة تظهر في تبويب "المرجع". يمكنك استيراد أطر إضافية بصيغة JSON بالنموذج الموحّد (إطار واحد أو مصفوفة)؛ الإطار الذي يحمل معرّف إطار مدمج يستبدله.</p>
@@ -1508,7 +1508,7 @@ const store = {
 let settings = store.read(STORAGE_KEYS.settings, { orgName: '', logoDataUrl: '' });
 let userStandards = store.read(STORAGE_KEYS.standards, []);
 let userFrameworks = store.read(STORAGE_KEYS.frameworks, []);
-if (!settings.activeTaxonomy) settings.activeTaxonomy = 'revised';
+if (!settings.activeTaxonomy) settings.activeTaxonomy = 'original';   // الافتراضي: الأصلي (قرار المالك 2026-09-28)
 
 // ---------- التبويبات ----------
 (function initTabs() {
