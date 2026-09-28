@@ -133,16 +133,16 @@ export default function CurriculumEditorPage() {
             className="relative flex flex-col gap-1 rounded-2xl border border-line bg-white p-4 lg:sticky lg:top-6 lg:w-72 lg:shrink-0"
           >
             <span
-              className="absolute top-9 right-[29px] bottom-9 border-r-2 border-dashed border-gold"
+              className="harak-course absolute top-9 right-[29px] bottom-9 w-0.5"
               aria-hidden="true"
             />
             {curriculum.modules.map((module, index) => (
               <a
                 key={module.id}
                 href={`#${module.id}`}
-                className="relative flex items-center gap-3 rounded-xl px-2.5 py-2 hover:bg-sand"
+                className="group relative flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-sand"
               >
-                <span className="size-3 shrink-0 rounded-full border-2 border-navy bg-white" aria-hidden="true" />
+                <span className="size-3 shrink-0 rounded-full border-2 border-navy bg-white transition-colors group-hover:bg-navy" aria-hidden="true" />
                 <span className="flex flex-col">
                   <span className="text-xs text-muted">الوحدة {index + 1}</span>
                   <span className="text-sm font-semibold text-navy">{module.title || "وحدة بلا عنوان"}</span>
@@ -157,7 +157,7 @@ export default function CurriculumEditorPage() {
             <div
               key={module.id}
               id={module.id}
-              className="relative flex scroll-mt-6 flex-col gap-4 overflow-hidden rounded-2xl border border-line bg-white p-6"
+              className="harak-card relative flex scroll-mt-6 flex-col gap-4 overflow-hidden rounded-2xl border border-line bg-white p-6"
             >
               <span className="absolute inset-x-0 top-0 h-1 bg-gold" aria-hidden="true" />
               <div className="flex items-center justify-between gap-2">

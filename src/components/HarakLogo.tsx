@@ -24,7 +24,7 @@ export function CompassNeedle({
       height={height}
       viewBox="0 0 48 176"
       aria-hidden="true"
-      className={className}
+      className={className ? `harak-needle ${className}` : "harak-needle"}
     >
       <polygon points="24,0 24,88 8,88" fill={nl} />
       <polygon points="24,0 40,88 24,88" fill={nr} />
@@ -55,7 +55,7 @@ export function HarakWordmark({
     <span
       role="img"
       aria-label="حراك"
-      className={`inline-flex items-baseline font-display font-bold leading-[1.25] ${className}`}
+      className={`harak-wordmark inline-flex items-baseline font-display font-bold leading-[1.25] ${className}`}
       style={{ fontSize: size, gap: size * 0.07 }}
     >
       <span aria-hidden="true">حر</span>

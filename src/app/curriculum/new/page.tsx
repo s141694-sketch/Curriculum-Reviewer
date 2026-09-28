@@ -152,7 +152,7 @@ export default function NewCurriculumPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 rounded-xl bg-maroon px-6 py-3.5 font-semibold text-white hover:bg-maroon-soft disabled:opacity-70"
+            className="harak-press flex items-center gap-2 rounded-xl bg-maroon px-6 py-3.5 font-semibold text-white hover:bg-maroon-soft disabled:opacity-70"
           >
             {loading ? (
               <>
@@ -166,7 +166,7 @@ export default function NewCurriculumPage() {
           <button
             type="button"
             onClick={handleSkip}
-            className="rounded-xl border-[1.5px] border-navy px-6 py-3.5 font-semibold text-navy hover:bg-sand"
+            className="harak-press rounded-xl border-[1.5px] border-navy px-6 py-3.5 font-semibold text-navy hover:bg-sand"
           >
             البدء من صفحة فارغة
           </button>
@@ -176,7 +176,7 @@ export default function NewCurriculumPage() {
       <aside className="relative flex flex-col gap-7 overflow-hidden rounded-3xl bg-navy p-8 text-ivory lg:w-96">
         <svg
           viewBox="-150 -150 300 300"
-          className="pointer-events-none absolute -bottom-28 -left-28 size-80 opacity-25"
+          className="harak-rose pointer-events-none absolute -bottom-28 -left-28 size-80 opacity-25"
           aria-hidden="true"
         >
           <circle r="140" fill="none" stroke="#D4AD6A" strokeWidth="1.5" />

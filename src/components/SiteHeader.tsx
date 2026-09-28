@@ -15,9 +15,9 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-line bg-white">
+    <header className="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between gap-6 px-6">
-        <Link href="/" aria-label="حراك — الصفحة الرئيسية" className="flex items-center gap-4 text-navy">
+        <Link href="/" aria-label="حراك — الصفحة الرئيسية" className="group flex items-center gap-4 text-navy">
           <HarakWordmark size={36} />
           <span className="h-11 w-px bg-gold" aria-hidden="true" />
           <Image
@@ -35,7 +35,7 @@ export function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={active ? "text-maroon" : "text-navy hover:text-maroon"}
+                className={`harak-nav ${active ? "text-maroon" : "text-navy hover:text-maroon"}`}
               >
                 {link.label}
               </Link>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { El_Messiri, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
+import { Wallpaper } from "@/components/Wallpaper";
 import "./globals.css";
 
 const messiri = El_Messiri({
@@ -32,7 +33,8 @@ export default function RootLayout({
       dir="rtl"
       className={`${messiri.variable} ${plexArabic.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-ivory font-sans text-ink">
+      <body className="isolate flex min-h-full flex-col font-sans text-ink">
+        <Wallpaper />
         <SiteHeader />
         {children}
       </body>

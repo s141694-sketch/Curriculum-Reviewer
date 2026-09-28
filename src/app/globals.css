@@ -42,8 +42,74 @@
 }
 
 body {
-  background: var(--harak-ivory);
+  /* ivory ground with a faint chart-grid of sand dots */
+  background-color: var(--harak-ivory);
+  background-image: radial-gradient(var(--harak-line) 1px, transparent 1.2px);
+  background-size: 28px 28px;
   color: var(--harak-ink);
+}
+
+/* Slow turn of the wallpaper compass roses. */
+@keyframes harak-rose {
+  to { transform: rotate(360deg); }
+}
+.harak-rose { animation: harak-rose 240s linear infinite; transform-origin: 50% 50%; }
+.harak-rose-reverse { animation: harak-rose 320s linear infinite reverse; transform-origin: 50% 50%; }
+
+/* The wordmark's needle swings when its link or card is hovered. */
+.harak-needle { transform-origin: 50% 50%; }
+.group:hover .harak-needle,
+a:hover > .harak-wordmark .harak-needle {
+  animation: harak-seek 1.2s cubic-bezier(0.45, 0.05, 0.3, 1) 1;
+}
+
+/* Lift-on-hover for cards, and a gentle press for buttons. */
+.harak-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.harak-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--harak-gold);
+  box-shadow: 0 12px 28px rgba(27, 31, 75, 0.1);
+}
+.harak-press { transition: background-color 0.15s ease, transform 0.15s ease; }
+.harak-press:active { transform: scale(0.98); }
+
+/* Nav links: maroon underline that draws in from the right (RTL). */
+.harak-nav {
+  position: relative;
+  padding-bottom: 4px;
+  transition: color 0.15s ease;
+}
+.harak-nav::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: var(--harak-maroon);
+  transition: width 0.25s ease;
+}
+.harak-nav:hover::after,
+.harak-nav[aria-current="page"]::after { width: 100%; }
+
+/* Route line between modules: dashes drift like a plotted course. */
+@keyframes harak-course {
+  to { background-position: 0 -16px; }
+}
+.harak-course {
+  background-image: linear-gradient(to bottom, var(--harak-gold) 50%, transparent 50%);
+  background-size: 2px 16px;
+  animation: harak-course 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .harak-rose, .harak-rose-reverse, .harak-course,
+  .group:hover .harak-needle, a:hover > .harak-wordmark .harak-needle {
+    animation: none;
+  }
+  .harak-card:hover { transform: none; }
 }
 
 :focus-visible {

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Curriculum } from "@/types/curriculum";
 import { deleteCurriculum, listCurricula } from "@/lib/storage";
-import { CompassNeedle, Diamond } from "@/components/HarakLogo";
+import { Diamond } from "@/components/HarakLogo";
+import { HeroCompass } from "@/components/HeroCompass";
 
 export default function HomePage() {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
@@ -38,13 +39,13 @@ export default function HomePage() {
           <div className="mt-2 flex flex-wrap gap-3">
             <Link
               href="/curriculum/new"
-              className="rounded-xl bg-maroon px-6 py-3.5 font-semibold text-white hover:bg-maroon-soft"
+              className="harak-press rounded-xl bg-maroon px-6 py-3.5 font-semibold text-white hover:bg-maroon-soft"
             >
               ابدأ منهجاً جديداً
             </Link>
           </div>
         </div>
-        <CompassHero />
+        <HeroCompass />
       </section>
 
       <section className="flex flex-col gap-5">
@@ -63,7 +64,7 @@ export default function HomePage() {
             {curricula.map((curriculum) => (
               <li
                 key={curriculum.id}
-                className="relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-white p-5"
+                className="harak-card relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-white p-5"
               >
                 <span className="absolute inset-x-0 top-0 h-1 bg-gold" aria-hidden="true" />
                 <Link href={`/curriculum/${curriculum.id}`} className="flex flex-1 flex-col gap-1.5">
@@ -87,22 +88,5 @@ export default function HomePage() {
         )}
       </section>
     </main>
-  );
-}
-
-function CompassHero() {
-  return (
-    <div className="relative hidden size-80 shrink-0 place-items-center md:grid lg:size-96" aria-hidden="true">
-      <svg viewBox="-230 -230 460 460" className="absolute inset-0 size-full">
-        <circle r="222" fill="#FFFFFF" stroke="#E3D9C4" strokeWidth="2" />
-        <circle r="196" fill="none" stroke="#1B1F4B" strokeOpacity="0.15" strokeDasharray="2 9" />
-        <circle r="150" fill="none" stroke="#D4AD6A" strokeWidth="2" />
-        <line x1="0" y1="-222" x2="0" y2="-200" stroke="#1B1F4B" strokeWidth="3" />
-        <line x1="0" y1="200" x2="0" y2="222" stroke="#1B1F4B" strokeWidth="3" />
-        <line x1="-222" y1="0" x2="-200" y2="0" stroke="#1B1F4B" strokeWidth="3" />
-        <line x1="200" y1="0" x2="222" y2="0" stroke="#1B1F4B" strokeWidth="3" />
-      </svg>
-      <CompassNeedle height={260} className="relative" />
-    </div>
   );
 }
