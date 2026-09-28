@@ -381,6 +381,15 @@ td input[type="text"] { width: 100%; }
       <div id="warnings" aria-live="polite"></div>
       <div id="dev-results" class="dev-results" hidden></div>
     </div>
+    <div class="card">
+      <h2>كيف تعمل الأداة</h2>
+      <ul>
+        <li>تعمل بالكامل داخل المتصفح بلا إنترنت ولا خادم؛ لا يغادر ملفك جهازك.</li>
+        <li>الصيغ المقبولة: PDF نصي (لا ممسوح)، DOCX، TXT. الأضمن للعربية: DOCX.</li>
+        <li>التحليل بقواعد لفظية: تصنيف أفعال الأهداف على مستويات بلوم، مطابقة لفظية مع المعايير، واكتمال عناصر كل درس. النتائج تحتاج مراجعة بشرية.</li>
+        <li>أضف معايير مادتك واسم الجهة والشعار من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>
+      </ul>
+    </div>
   </section>
 
   <!-- 7.2 تبويب النتائج -->
@@ -572,6 +581,7 @@ const BLOOM_LEVELS = [
 ];
 
 // بنود الإطار العام العماني — placeholder: صياغة عامة مؤقتة إلى أن تُراجع البنود الرسمية
+const OMAN_FRAMEWORK_IS_PLACEHOLDER = true;   // اجعله false بعد إدخال البنود الرسمية
 const OMAN_FRAMEWORK = [
   { id: 'K1', category: 'معارف', text: 'اكتساب المفاهيم والحقائق والمبادئ الأساسية في المادة الدراسية' },
   { id: 'K2', category: 'معارف', text: 'فهم العلاقات بين المفاهيم وربطها بالحياة اليومية والبيئة العمانية' },
@@ -1166,7 +1176,16 @@ let userStandards = store.read(STORAGE_KEYS.standards, []);
     tabs.forEach(t => t.setAttribute('aria-selected', String(t === tab)));
     panels.forEach(p => p.classList.toggle('is-active', p.id === tab.getAttribute('aria-controls')));
   };
-  tabs.forEach(tab => tab.addEventListener('click', () => activateTab(tab)));
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => activateTab(tab));
+    tab.addEventListener('keydown', e => {
+      const dir = e.key === 'ArrowLeft' ? 1 : e.key === 'ArrowRight' ? -1 : 0;   // في RTL السهم الأيسر يتقدم
+      if (!dir) return;
+      e.preventDefault();
+      const next = tabs[(i + dir + tabs.length) % tabs.length];
+      activateTab(next); next.focus();
+    });
+  });
 })();
 
 // ---------- التنبيهات والتحذيرات ----------
@@ -1174,7 +1193,7 @@ function showAlert(code, message, kind = 'warning') {
   const box = $('warnings');
   const div = document.createElement('div');
   div.className = 'alert alert-' + kind;
-  div.innerHTML = `<code>${escapeHtml(code)}</code> — ${escapeHtml(message)}`;
+  div.innerHTML = kind === 'success' ? escapeHtml(message) : `<code>${escapeHtml(code)}</code> — ${escapeHtml(message)}`;
   box.appendChild(div);
   if (kind === 'danger') activateTab('tab-upload');
 }
@@ -1269,7 +1288,7 @@ function renderReportHtml(analysis, doc, settings) {
   const lessonTitle = ref => { const u = analysis.structure.units[ref.unit]; const l = u && u.lessons[ref.lesson]; return l ? `${u.title} / ${l.title}` : ''; };
   const objectivesRows = analysis.bloom.map(b => `<tr><td>${escapeHtml(b.objectiveRef.text)}</td><td>${escapeHtml(b.verb || '—')}</td><td>${levelTag(b.level, b.levelId)}</td><td>${confTag(b.confidence)}</td></tr>`).join('');
   const completenessRows = analysis.completeness.map(c => `<tr><td>${escapeHtml(c.lessonRef.unitTitle)}</td><td>${escapeHtml(c.lessonRef.title)}</td><td>${yesNo(c.hasObjectives)}</td><td>${yesNo(c.hasActivities)}</td><td>${yesNo(c.hasAssessment)}</td><td>${yesNo(c.hasReferences)}</td></tr>`).join('');
-  const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
+  const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}${m.source === 'framework' && OMAN_FRAMEWORK_IS_PLACEHOLDER && !/القرن 21/.test(m.standardLabel) ? ' <span class="tag tag-low">بند مؤقت</span>' : ''}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
   const warningsHtml = analysis.warnings.length
     ? `<ul>${analysis.warnings.map(w => `<li><code>${escapeHtml(w.code)}</code> — ${escapeHtml(w.message)}</li>`).join('')}</ul>`
     : '<p>لا تحذيرات.</p>';
