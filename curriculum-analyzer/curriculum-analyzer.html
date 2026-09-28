@@ -552,7 +552,7 @@ const BLOOM_LEVELS = [
   { id: 3, name: 'تطبيق', verbs: [
     'يطبق','يستخدم','يحسب','يرسم','ينفذ','يحل','يوظف','يجري','يمارس','يجرب','يعد','يكمل','يعدل',
     'يقيس','يبني','يظهر','يستعمل','ينتج','يشغل','يتبع','يخطط','يعالج','يكتشف','يتوصل','يستثمر',
-    'يجهز','يعبئ','يجدول','يحضر','يرتب','يستخرج','يختار'
+    'يجهز','يعبئ','يجدول','يحضر','يرتب','يستخرج','يختار','يتقن'
   ]},
   { id: 4, name: 'تحليل', verbs: [
     'يحلل','يقارن','يميز','يصنف','يفرق','يفحص','يستنتج','يربط','يفكك','يجزئ','يستقصي','يختبر',
@@ -610,10 +610,13 @@ const STOP_WORDS = [
 // أنماط الهيكلة: كلها في مصفوفة واحدة. type: unit | lesson | objectives | activities | assessments | references
 // heading: يطابق سطر العنوان الذي يفتح القسم. item: يطابق سطرًا مفردًا يُصنَّف مباشرة ولو خارج قسمه.
 const STRUCTURE_PATTERNS = [
-  { type: 'unit',        heading: /^(?:الوحدة|وحدة)\s*(?:رقم\s*)?[\d٠-٩]*\s*[:\-–—]?\s*\S/ },
-  { type: 'lesson',      heading: /^(?:الدرس|درس)\s*(?:رقم\s*)?[\d٠-٩]*\s*[:\-–—]?\s*\S/ },
-  { type: 'lesson',      heading: /^[\d٠-٩]{1,2}\s*[\.\-–)]\s*\S/, numbered: true },
-  { type: 'objectives',  heading: /^(?:الأهداف|الاهداف|أهداف التعلم|اهداف التعلم|نواتج التعلم|أهداف الدرس|اهداف الدرس|الأهداف السلوكية|نتاجات التعلم)\s*:?\s*$/ },
+  { type: 'unit',        heading: /^(?:الوحدة|وحدة|الفصل|الباب)\s*(?:رقم\s*)?[\d٠-٩]*\s*[:\-–—]?\s*\S/ },
+  { type: 'lesson',      heading: /^(?:الدرس|درس|المحاضرة|الورشة)\s*(?:رقم\s*)?[\d٠-٩]*\s*[:\-–—]?\s*[ء-ي\d٠-٩]/ },
+  // عنوان درس مبعثر الترتيب (سطر مبرَّر من PDF): قصير ويحوي "الدرس" + كلمة ترتيب في أي موضع
+  { type: 'lesson',      heading: /^(?![\d٠-٩])(?=.{0,70}$)(?=.*\sالدرس\s+(?:ال[ء-ي]+|[\d٠-٩]+))(?=.*[:\-–—])/ },
+  // عنوان مرقّم بعد وحدة؛ لا يُعدّ درسًا إن كان نصه هدفًا (يبدأ بـ"أن" أو بفعل مضارع)
+  { type: 'lesson',      heading: /^[\d٠-٩]{1,2}\s*[\.\-–)][\s.\-–)]*(?!(?:أن|ان)\s|[يت][ء-ي]{2,}(?![ء-ي]))[ء-ي\d٠-٩]/, numbered: true },
+  { type: 'objectives',  heading: /^(?:الأهداف|الاهداف|أهداف التعلم|اهداف التعلم|نواتج التعلم|أهداف الدرس|اهداف الدرس|الأهداف السلوكية|الاهداف السلوكية|الأهداف الخاصة|نتاجات التعلم)\s*:?\s*$|يتوقع من (?:المتدرب|الطالب|المتعلم|الدارس)|^بعد (?:نهاية|انتهاء|دراسة) (?:هذا )?(?:الدرس|الوحدة)/ },
   { type: 'activities',  heading: /^(?:الأنشطة|الانشطة|أنشطة|انشطة|التطبيقات|نشاط|تطبيق)\s*:?\s*$/,
                          item:    /^(?:نشاط|تطبيق)(?![ء-ي])/ },
   { type: 'assessments', heading: /^(?:التقويم|تقويم|التقييم|أسئلة|اسئلة|الأسئلة|الاسئلة|اختبار|الاختبار)\s*:?\s*$/,
@@ -622,7 +625,9 @@ const STRUCTURE_PATTERNS = [
 ];
 
 // سطر هدف: يبدأ بـ"أن" أو بفعل مضارع (يـ/تـ + ثلاثة أحرف على الأقل)
-const OBJECTIVE_LINE = /^(?:أن|ان)\s+\S|^[يت][ء-ي]{2,}(?![ء-ي])/;
+const OBJECTIVE_LINE = /^(?:[\d٠-٩]{1,2}\s*[\.\-–)][\s.\-–)]*)?(?:(?:أن|ان)\s+\S|[يت][ء-ي]{2,}(?![ء-ي]))/;
+// هدف مبعثر الترتيب (سطر مبرَّر من PDF): يبدأ برقم ويحوي "أن" + فعل مضارع في أي موضع
+const OBJECTIVE_LINE_LOOSE = /^[\d٠-٩]{1,2}(?:\s|[\.\-–)]).*(?:^|\s)(?:أن|ان)\s+[يت][ء-ي]{2,}/;
 
 const RULES = {
   bloomLevels: BLOOM_LEVELS,
@@ -630,7 +635,8 @@ const RULES = {
   skills21: SKILLS_21,
   stopWords: STOP_WORDS,
   structurePatterns: STRUCTURE_PATTERNS,
-  objectiveLine: OBJECTIVE_LINE
+  objectiveLine: OBJECTIVE_LINE,
+  objectiveLineLoose: OBJECTIVE_LINE_LOOSE
 };
 </script>
 
@@ -774,6 +780,31 @@ async function extractPdfPages(arrayBuffer, warnings = []) {
   return pages;
 }
 
+// إصلاح لام-ألف المقلوبة من خطوط PDF المعطوبة: "األهداف"→"الأهداف"، "االنتباه"→"الانتباه"، و"ال" المفردة→"لا"
+function repairLamAlef(text) {
+  let count = 0;
+  const fixed = text
+    .replace(/ا([اأإآ])ل/g, (m, alef) => { count++; return 'ال' + alef; })
+    .replace(/(^|[\s(])ال(?=[\s).,،:؛!؟]|$)/gm, (m, pre) => { count++; return pre + 'لا'; });
+  return { text: fixed, count };
+}
+
+// حذف رأس/تذييل الصفحات: سطر قصير يتكرر في أغلب الصفحات، أو سطر أرقام فقط
+function removeRepeatedLines(pages, minPages = 5, ratio = 0.6) {
+  if (pages.length < minPages) return { pages, removed: 0 };
+  const freq = new Map();
+  const key = x => stripTashkeel(x.trim());
+  for (const t of pages) for (const l of new Set(t.split('\n').map(key).filter(x => x && x.length <= 40))) freq.set(l, (freq.get(l) || 0) + 1);
+  const repeated = new Set([...freq].filter(([, n]) => n / pages.length >= ratio).map(([l]) => l));
+  let removed = 0;
+  const out = pages.map(t => t.split('\n').filter(l => {
+    const x = key(l);
+    if (repeated.has(x) || /^[\d٠-٩\s\-–.]+$/.test(x) && x) { removed++; return false; }
+    return true;
+  }).join('\n'));
+  return { pages: out, removed };
+}
+
 async function extractDocxText(arrayBuffer) {
   const result = await mammoth.extractRawText({ arrayBuffer });
   return result.value || '';
@@ -797,6 +828,13 @@ async function readDocument(file) {
     rawPages = paginateText(await file.text());
   }
 
+  if (fileType === 'pdf') {
+    const rep = removeRepeatedLines(rawPages);
+    if (rep.removed) warnings.push({ code: 'PDF_HEADERS_REMOVED', message: `حُذف ${rep.removed} سطرًا مكررًا (رأس/تذييل أو أرقام صفحات).` });
+    let lig = 0;
+    rawPages = rep.pages.map(t => { const r = repairLamAlef(t); lig += r.count; return r.text; });
+    if (lig) warnings.push({ code: 'PDF_LIGATURE_FIXED', message: `أُصلحت ${lig} حالة لام-ألف مقلوبة ناتجة عن خط PDF؛ قد تبقى أخطاء أخرى في الخط (كشيدة أو حروف مستبدلة).` });
+  }
   let pages = rawPages.map(normalizeText);
 
   const arabicTotal = pages.reduce((n, t) => n + countArabicChars(t), 0);
@@ -855,7 +893,9 @@ function countWords(text) {
 }
 
 // ---------- م6: المهيكِل (6.2) ----------
-// structure(doc) → Structure { units:[{title,pageStart,lessons:[...]}], orphanText, warnings[] }
+// structure(doc) → Structure { units:[{title,pageStart,implicit,lessons:[...]}], orphanText, warnings[] }
+
+const SECTION_TYPES = ['objectives', 'activities', 'assessments', 'references'];
 
 function matchPattern(line, type, kind = 'heading') {
   for (const p of RULES.structurePatterns) {
@@ -869,6 +909,11 @@ function newLesson(title, page, implicit = false) {
   return { title, page, implicit, objectives: [], activities: [], assessments: [], references: [] };
 }
 
+const lessonIsEmpty = l => SECTION_TYPES.every(t => l[t].length === 0);
+const titleKey = x => Array.from(unifyHamza(stripTashkeel(x)).replace(/[^ء-ي\d٠-٩]/g, '')).sort().join('');
+const sameTitle = (a, b) => titleKey(a) === titleKey(b);
+const cleanTitle = line => line.replace(/\s*:\s*$/, '');
+
 function structure(doc) {
   const warnings = [];
   const units = [];
@@ -881,34 +926,48 @@ function structure(doc) {
     if (line) lines.push({ line, page: p.index });
   }
 
-  const openUnit = (title, page) => { unit = { title, pageStart: page, lessons: [] }; units.push(unit); lesson = null; section = null; };
-  const openLesson = (title, page, implicit) => { lesson = newLesson(title, page, implicit); unit.lessons.push(lesson); section = null; };
+  const openUnit = (title, page, implicit = false) => { unit = { title, pageStart: page, implicit, lessons: [] }; units.push(unit); lesson = null; section = null; };
+  const openLesson = (title, page, implicit = false) => {
+    // درس ضمني فارغ (أنشأه عنوان قسم سابق) يُستبدل ويبقى قسمه المفتوح
+    if (lesson && lesson.implicit && lessonIsEmpty(lesson)) unit.lessons.pop(); else section = null;
+    lesson = newLesson(title, page, implicit); unit.lessons.push(lesson);
+  };
+  // بلا وحدة صريحة: وحدة ضمنية واحدة بعنوان "المستند"
+  const ensureUnit = page => { if (!unit) { openUnit('المستند', page, true); warnings.push({ code: 'NO_UNITS_DETECTED', message: 'لم تُكتشف وحدات؛ عومل الملف كله كوحدة واحدة بعنوان "المستند".' }); } };
   const ensureLesson = page => { if (!lesson) openLesson(unit.title, page, true); };
 
   for (const { line, page } of lines) {
-    if (matchPattern(line, 'unit')) { openUnit(line.replace(/\s*:\s*$/, ''), page); continue; }
-    if (!unit) { orphan.push(line); continue; }
+    if (matchPattern(line, 'unit')) { openUnit(cleanTitle(line), page); continue; }
 
     const lessonPat = matchPattern(line, 'lesson');
     // العنوان المرقّم يُعدّ درسًا فقط خارج الأقسام وإن كان قصيرًا
-    if (lessonPat && (!lessonPat.numbered || (section === null && line.length < 80))) {
-      openLesson(line.replace(/\s*:\s*$/, ''), page, false); continue;
+    const hasExplicitLessons = unit && unit.lessons.some(l => !l.implicit && !l.numbered);
+    if (lessonPat && (!lessonPat.numbered || (unit && section === null && line.length < 80 && !hasExplicitLessons))) {
+      ensureUnit(page);
+      const title = cleanTitle(line);
+      // تكرار عنوان الدرس الحالي (مثلًا في بداية محتواه) لا يفتح درسًا جديدًا
+      if (lesson && !lesson.implicit && sameTitle(title, lesson.title)) {
+        if (/^(?:الدرس|درس)/.test(title) && !/^(?:الدرس|درس)/.test(lesson.title)) lesson.title = title;
+        section = null; continue;
+      }
+      openLesson(title, page); lesson.numbered = !!lessonPat.numbered; continue;
     }
 
-    let opened = false;
-    for (const type of ['objectives', 'activities', 'assessments', 'references']) {
-      if (matchPattern(line, type)) { ensureLesson(page); section = type; opened = true; break; }
-    }
-    if (opened) continue;
+    const sectionType = SECTION_TYPES.find(t => matchPattern(line, t));
+    if (sectionType) { ensureUnit(page); ensureLesson(page); section = sectionType; continue; }
 
+    if (!unit) { orphan.push(line); continue; }
     ensureLesson(page);
+
     // سطر يُصنَّف مباشرة بنمط العنصر (نشاط/تقويم) ولو خارج قسمه
     const itemType = ['activities', 'assessments'].find(t => matchPattern(line, t, 'item'));
     if (itemType) { lesson[itemType].push({ text: line, page }); section = itemType; continue; }
 
     if (section === 'objectives') {
-      if (RULES.objectiveLine.test(line)) lesson.objectives.push({ text: line, page });
-      else section = null;   // انتهت قائمة الأهداف عند أول سطر لا يشبه هدفًا
+      const last = lesson.objectives[lesson.objectives.length - 1];
+      if (RULES.objectiveLine.test(line) || RULES.objectiveLineLoose.test(line)) lesson.objectives.push({ text: line, page });
+      else if (/[:：]\s*$/.test(line) || /^[\d٠-٩]{1,2}\s*[\.\-–)]/.test(line) || !last || line.length > 120) { section = null; orphan.push(line); }
+      else last.text += ' ' + line;   // سطر التفاف يكمل الهدف السابق
     } else if (section) {
       lesson[section].push({ text: line, page });
     } else {
@@ -917,20 +976,10 @@ function structure(doc) {
   }
 
   if (!units.length) {
-    warnings.push({ code: 'NO_UNITS_DETECTED', message: 'لم تُكتشف وحدات؛ عومل الملف كله كوحدة واحدة بعنوان "المستند".' });
-    const all = { title: 'المستند', pageStart: 0, lessons: [newLesson('المستند', 0, true)] };
-    const l = all.lessons[0];
-    let sec = null;
-    for (const { line, page } of lines) {
-      const type = ['objectives', 'activities', 'assessments', 'references'].find(t => matchPattern(line, t));
-      if (type) { sec = type; continue; }
-      const itemType = ['activities', 'assessments'].find(t => matchPattern(line, t, 'item'));
-      if (itemType) { l[itemType].push({ text: line, page }); sec = itemType; continue; }
-      if (sec === 'objectives' && !RULES.objectiveLine.test(line)) sec = null;
-      if (sec) l[sec].push({ text: line, page });
-      else if (RULES.objectiveLine.test(line) && /^(?:أن|ان)\s/.test(line)) l.objectives.push({ text: line, page });
-    }
-    return { units: [all], orphanText: '', warnings };
+    warnings.push({ code: 'NO_UNITS_DETECTED', message: 'لم تُكتشف وحدات ولا دروس؛ عومل الملف كله كوحدة واحدة بعنوان "المستند".' });
+    const l = newLesson('المستند', 0, true);
+    for (const { line, page } of lines) if (/^(?:أن|ان)\s/.test(line)) l.objectives.push({ text: line, page });
+    return { units: [{ title: 'المستند', pageStart: 0, implicit: true, lessons: [l] }], orphanText: '', warnings };
   }
 
   return { units, orphanText: orphan.join('\n'), warnings };
@@ -976,6 +1025,13 @@ function lookupVerb(word) {
   stem = stripSuffixes(stem, VERB_SUFFIXES);
   const loose = BLOOM_INDEX.get(stem) || BLOOM_INDEX.get(stem.replace(/^ت/, 'ي'));
   if (loose) return { levels: loose, exact: false };
+  // ملاذ أخير: خطوط PDF المعطوبة تُخرج الكشيدة حرف "د" (يبددين = يبين)؛ نجرب حذفها ونطابق بثقة متوسطة
+  if (w.includes('د')) {
+    for (const cand of [w.replace(/د{2,}/g, ''), w.replace(/د{2,}/g, 'دد'), w.replace(/د/g, '')]) {
+      const hit = BLOOM_INDEX.get(cand) || BLOOM_INDEX.get(cand.replace(/^ت/, 'ي'));
+      if (hit) return { levels: hit, exact: false, repaired: true };
+    }
+  }
   return null;
 }
 
