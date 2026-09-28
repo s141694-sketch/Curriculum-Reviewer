@@ -687,7 +687,9 @@ function normalizeText(text) {
     .normalize('NFKC')
     .replace(/\r\n?/g, '\n')
     .replace(/[ \t ]+/g, ' ')
-    .split('\n').map(l => l.trim()).join('\n')
+    .split('\n').map(l => l.trim())
+    .map(l => /[\u0621-\u064A\u0660-\u0669A-Za-z0-9]/.test(l) ? l : '')
+    .join('\n')
     .replace(/\n{2,}/g, '\n\n')
     .trim();
 }
@@ -706,15 +708,59 @@ function paginateText(text, pageSize = READER.txtPageSize) {
   return pages;
 }
 
-async function extractPdfPages(arrayBuffer) {
+// تجميع عناصر pdf.js في أسطر حسب الإحداثي الرأسي
+function groupPdfLines(items) {
+  const lines = [];
+  for (const item of items) {
+    if (!('str' in item) || !item.str) continue;
+    const y = item.transform[5];
+    const tol = Math.max(2, (item.height || 0) * 0.4);   // التشكيل يرتفع قليلًا عن سطره
+    let line = lines.find(l => Math.abs(l.y - y) <= tol);
+    if (!line) { line = { y, items: [] }; lines.push(line); }
+    line.items.push(item);
+  }
+  return lines.sort((a, b) => b.y - a.y);
+}
+
+// صفحة "مفككة": أغلب عناصرها حرف عربي واحد (pdf.js يخرج كل حرف عنصرًا مستقلًا)
+function isGlyphSplit(items) {
+  const textual = items.filter(i => i.str && i.str.trim());
+  if (textual.length < 10) return false;
+  const single = textual.filter(i => /^[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]$/.test(i.str.trim())).length;
+  return single / textual.length > 0.5;
+}
+
+// إعادة بناء سطر عربي من مواضع الحروف: من اليمين إلى اليسار، والفجوة الكبيرة مسافة
+function rebuildLineFromPositions(items) {
+  const sorted = [...items].sort((a, b) => b.transform[4] - a.transform[4]);
+  let out = '', prev = null;
+  for (const it of sorted) {
+    // pdf.js يخرج المسافات عناصر مستقلة؛ ذات العرض صفر مجرد ضجيج حول التشكيل
+    if (/^\s+$/.test(it.str)) { if (it.width > 0) out += ' '; continue; }
+    if (prev) {
+      const gap = prev.transform[4] - (it.transform[4] + it.width);
+      if (gap > Math.max(2.5, (it.height || 0) * 0.2)) out += ' ';
+    }
+    out += it.str; prev = it;
+  }
+  return out;
+}
+
+async function extractPdfPages(arrayBuffer, warnings = []) {
   const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
   const pages = [];
+  let rebuilt = 0;
   for (let i = 1; i <= pdf.numPages; i++) {
     const content = await (await pdf.getPage(i)).getTextContent();
-    // نجمع العناصر في أسطر حسب الإحداثي الرأسي حتى لا يضيع تقسيم الأسطر
+    const items = content.items.filter(it => 'str' in it);
+    if (isGlyphSplit(items)) {
+      rebuilt++;
+      pages.push(groupPdfLines(items).map(l => rebuildLineFromPositions(l.items)).join('\n'));
+      continue;
+    }
+    // المسار العادي: العناصر كلمات، نحافظ على تقسيم الأسطر
     let text = '', lastY = null;
-    for (const item of content.items) {
-      if (!('str' in item)) continue;
+    for (const item of items) {
       const y = item.transform ? item.transform[5] : null;
       if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) text += '\n';
       else if (text && !text.endsWith('\n')) text += ' ';
@@ -724,6 +770,7 @@ async function extractPdfPages(arrayBuffer) {
     }
     pages.push(text);
   }
+  if (rebuilt) warnings.push({ code: 'PDF_TEXT_REBUILT', message: `أُعيد بناء النص العربي من مواضع الحروف في ${rebuilt} صفحة لأن pdf.js أخرجه مفككًا؛ راجع النتائج.` });
   return pages;
 }
 
@@ -743,7 +790,7 @@ async function readDocument(file) {
   const warnings = [];
   let rawPages;
   if (fileType === 'pdf') {
-    rawPages = await extractPdfPages(await file.arrayBuffer());
+    rawPages = await extractPdfPages(await file.arrayBuffer(), warnings);
   } else if (fileType === 'docx') {
     rawPages = paginateText(await extractDocxText(await file.arrayBuffer()));
   } else {
@@ -1448,6 +1495,9 @@ const readTxt = (name, text) => readDocument(new File([text], name, { type: 'tex
 const REV = s => s.split('\n').map(l => Array.from(l).reverse().join('')).join('\n');
 const NORMAL_TXT = 'الوحدة الأولى: النباتات\n\n\nالدرس الأول من  أجزاء النبات\nالأهداف:\nأن يذكر الطالب أجزاء النبات التي في الحديقة.\nأن يشرح الطالب وظيفة الجذر على نحو صحيح.';
 
+// ملف PDF صغير (صفحة واحدة، 5 أسطر عربية) لاختبار مسار PDF بلا ملفات خارجية
+const DEV_PDF_B64 = 'JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PC9UaXRsZSAoMjAyNi0wOS0yOC1zYW1wbGUuaHRtbCkKL0NyZWF0b3IgKE1vemlsbGEvNS4wIFwoWDExOyBMaW51eCB4ODZfNjRcKSBBcHBsZVdlYktpdC81MzcuMzYgXChLSFRNTCwgbGlrZSBHZWNrb1wpIEhlYWRsZXNzQ2hyb21lLzE0MS4wLjAuMCBTYWZhcmkvNTM3LjM2KQovUHJvZHVjZXIgKFNraWEvUERGIG0xNDEpCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNjA5MjgxOTEzMjQrMDAnMDAnKQovTW9kRGF0ZSAoRDoyMDI2MDkyODE5MTMyNCswMCcwMCcpPj4KZW5kb2JqCjMgMCBvYmoKPDwvY2EgMQovQk0gL05vcm1hbD4+CmVuZG9iago1IDAgb2JqCjw8L0ZpbHRlciAvRmxhdGVEZWNvZGUKL0xlbmd0aCA1NjQ+PiBzdHJlYW0KeJztVk1r20AQve+vmHPBq5nZD61ACPQZekghiaBn47gppXEb2yn9+UVWY7RNUq38ATnEpxXym9mZ996MJKtk9wMEhJkcPDrN0jlY3IsHMSNAYO2UVKwZlCGWBtZL8fkDrMSDUJLY7EL0pxlJZKMStAqwC4G7l9cX0B/WdyK6UHC3EdGnH6ub7fpxsYU0jS7LjxUgZFlRlaJoRXS9/LVcb5a35df5egPFZSmiRgM5aL8I6u9MYBllYl1sgA209yJFY1wG7TcR3fycr9I0yhfbx/n3dvl7C2lTNw1ajjPIMujypKRd//e6i/86JB9CEgqBHJDFeZAyAKLtEFJzCEQPIVWyh3S9M4ioEKka6aFOvLz5kXljGsun0bIaBmjohYsbE4+R3wyD5DqElsojvwqp1WOyDiH//7Tsn+q2j/PcOzTVOyZh6diRAqvP6Z23omqjm30rXw+k2BNIiLK59ATi56YnR6Gx1QmVbgmNaU6v9qN1yFN1GLOSaNkAoep12HcrD2DrkAI9CdcmqCdjnAT0RU32J7Jk1+1U0vzUmDH5sDeYXR1Snbfc6hCI8pqRnykLe2PAhTClyLvY8YP371p5n4tnmYtjXfVbdNRXxkm5Ux6kCNL/KBFjBBwgbc+mVZCB0Mtipzu7GlTWb6pOXhQwIfXkCWmsZFSkgBztJ2TAXjygyn/EfOwXbxDlhwxzTyXluea/Z8zSW4bxu7NfWCDF6d2tvLxF0DaYbNUrcbU7/gGR/SrUCmVuZHN0cmVhbQplbmRvYmoKMiAwIG9iago8PC9UeXBlIC9QYWdlCi9SZXNvdXJjZXMgPDwvUHJvY1NldCBbL1BERiAvVGV4dCAvSW1hZ2VCIC9JbWFnZUMgL0ltYWdlSV0KL0V4dEdTdGF0ZSA8PC9HMyAzIDAgUj4+Ci9Gb250IDw8L0Y0IDQgMCBSPj4+PgovTWVkaWFCb3ggWzAgMCA1OTUuOTE5OTggODQyLjg4XQovQ29udGVudHMgNSAwIFIKL1N0cnVjdFBhcmVudHMgMAovVGFicyAvUwovUGFyZW50IDYgMCBSPj4KZW5kb2JqCjYgMCBvYmoKPDwvVHlwZSAvUGFnZXMKL0NvdW50IDEKL0tpZHMgWzIgMCBSXT4+CmVuZG9iagoxMCAwIG9iago8PC9UeXBlIC9TdHJ1Y3RFbGVtCi9TIC9Ob25TdHJ1Y3QKL1AgOSAwIFIKL1BnIDIgMCBSCi9LIDA+PgplbmRvYmoKOSAwIG9iago8PC9UeXBlIC9TdHJ1Y3RFbGVtCi9TIC9QCi9QIDggMCBSCi9LIDEwIDAgUj4+CmVuZG9iagoxMiAwIG9iago8PC9UeXBlIC9TdHJ1Y3RFbGVtCi9TIC9Ob25TdHJ1Y3QKL1AgMTEgMCBSCi9QZyAyIDAgUgovSyAxPj4KZW5kb2JqCjExIDAgb2JqCjw8L1R5cGUgL1N0cnVjdEVsZW0KL1MgL1AKL1AgOCAwIFIKL0sgMTIgMCBSPj4KZW5kb2JqCjE0IDAgb2JqCjw8L1R5cGUgL1N0cnVjdEVsZW0KL1MgL05vblN0cnVjdAovUCAxMyAwIFIKL1BnIDIgMCBSCi9LIDI+PgplbmRvYmoKMTMgMCBvYmoKPDwvVHlwZSAvU3RydWN0RWxlbQovUyAvUAovUCA4IDAgUgovSyAxNCAwIFI+PgplbmRvYmoKMTYgMCBvYmoKPDwvVHlwZSAvU3RydWN0RWxlbQovUyAvTm9uU3RydWN0Ci9QIDE1IDAgUgovUGcgMiAwIFIKL0sgMz4+CmVuZG9iagoxNSAwIG9iago8PC9UeXBlIC9TdHJ1Y3RFbGVtCi9TIC9QCi9QIDggMCBSCi9LIDE2IDAgUj4+CmVuZG9i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ReUPuihqfMMGZ+M7SPLmONqjERX+1OjcZMe+2MnPnr8jX4M9PZwju4eLFIbZj/Fi6euubevms/zzFzdq7F8KZW5kc3RyZWFtCmVuZG9iago0IDAgb2JqCjw8L1R5cGUgL0ZvbnQKL1N1YnR5cGUgL1R5cGUwCi9CYXNlRm9udCAvQUFBQUFBK0RlamFWdVNhbnMKL0VuY29kaW5nIC9JZGVudGl0eS1ICi9EZXNjZW5kYW50Rm9udHMgWzI0IDAgUl0KL1RvVW5pY29kZSAyNSAwIFI+PgplbmRvYmoKeHJlZgowIDI2CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDAxNSAwMDAwMCBuIAowMDAwMDAwOTYzIDAwMDAwIG4gCjAwMDAwMDAyOTIgMDAwMDAgbiAKMDAwMDAwOTk4MCAwMDAwMCBuIAowMDAwMDAwMzI5IDAwMDAwIG4gCjAwMDAwMDExODkgMDAwMDAgbiAKMDAwMDAwMjE2MiAwMDAwMCBuIAowMDAwMDAxOTQyIDAwMDAwIG4gCjAwMDAwMDEzMjAgMDAwMDAgbiAKMDAwMDAwMTI0NCAwMDAwMCBuIAowMDAwMDAxNDU5IDAwMDAwIG4gCjAwMDAwMDEzODIgMDAwMDAgbiAKMDAwMDAwMTU5OSAwMDAwMCBuIAowMDAwMDAxNTIyIDAwMDAwIG4gCjAwMDAwMDE3MzkgMDAwMDAgbiAKMDAwMDAwMTY2MiAwMDAwMCBuIAowMDAwMDAxODc5IDAwMDAwIG4gCjAwMDAwMDE4MDIgMDAwMDAgbiAKMDAwMDAwMjA1NCAwMDAwMCBuIAowMDAwMDAyMTA3IDAwMDAwIG4gCjAwMDAwMDIyNTIgMDAwMDAgbiAKMDAwMDAwMjQ0OSAwMDAwMCBuIAowMDAwMDA4NDYxIDAwMDAwIG4gCjAwMDAwMDg3MDUgMDAwMDAgbiAKMDAwMDAwOTQ3NiAwMDAwMCBuIAp0cmFpbGVyCjw8L1NpemUgMjYKL1Jvb3QgMjEgMCBSCi9JbmZvIDEgMCBSPj4Kc3RhcnR4cmVmCjEwMTIyCiUlRU9GCg==';
+
 const DEV_TESTS = [
   // القارئ
   { name: 'القارئ: نص TXT عادي', fn: async () => { const d = await readTxt('a.txt', NORMAL_TXT); assert(d.meta.pageCount === 1 && d.meta.warnings.length === 0, 'صفحة واحدة بلا تحذير'); assert(!d.pages[0].text.includes('  ') && !d.pages[0].text.includes('\n\n\n'), 'التطبيع'); } },
@@ -1477,6 +1527,13 @@ const DEV_TESTS = [
   // الاكتمال
   { name: 'الاكتمال: درس كامل', fn: () => { const c = summarize({ units: [{ title: 'و', lessons: [{ title: 'د', objectives: [{}], activities: [{}], assessments: [{}], references: [{}] }] }], warnings: [] }, [], null).completeness[0]; assert(c.hasObjectives && c.hasActivities && c.hasAssessment && c.hasReferences, 'أربعة موجودة'); } },
   { name: 'الاكتمال: درس ناقص', fn: () => { const c = summarize({ units: [{ title: 'و', lessons: [{ title: 'د', objectives: [], activities: [{}], assessments: [], references: [] }] }], warnings: [] }, [], null).completeness[0]; assert(!c.hasObjectives && c.hasActivities && !c.hasAssessment && !c.hasReferences, 'الأنشطة فقط'); } },
+  // PDF مفكك (مولّد من Chromium، كل حرف عنصر مستقل) يُعاد بناؤه من مواضع الحروف
+  { name: 'القارئ: PDF عربي مفكك يُعاد بناؤه', fn: async () => {
+      const bytes = Uint8Array.from(atob(DEV_PDF_B64), c => c.charCodeAt(0));
+      const d = await readDocument(new File([bytes], 'dev.pdf', { type: 'application/pdf' }));
+      assert(d.meta.warnings.some(w => w.code === 'PDF_TEXT_REBUILT'), 'تحذير PDF_TEXT_REBUILT');
+      assert(d.pages[0].text.startsWith('الوحدة الأولى: النباتات'), 'السطر الأول سليم: ' + d.pages[0].text.slice(0, 30));
+      const a = await analyzeDocument(d, []); assert(a.stats.objectives === 2, 'هدفان'); } },
   // العينة كاملة
   { name: 'العينة: 2 وحدة، 4 دروس، 20 هدفًا، درس بلا تقويم', fn: async () => { const a = await analyzeDocument(await readTxt('s.txt', SAMPLE_CURRICULUM), []); assert(a.stats.units === 2 && a.stats.lessons === 4 && a.stats.objectives === 20, 'الأعداد'); assert(a.completeness.filter(c => !c.hasAssessment).length === 1, 'درس واحد بلا تقويم'); assert(Object.values(a.stats.bloomCounts).filter(v => v > 0).length >= 6, 'المستويات الستة ممثلة'); } },
 ];
