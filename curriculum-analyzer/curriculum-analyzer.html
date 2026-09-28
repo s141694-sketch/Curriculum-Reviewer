@@ -428,6 +428,23 @@ td input[type="text"] { width: 100%; }
     </div>
 
     <div class="card">
+      <h2>الأطر المرجعية</h2>
+      <div class="field">
+        <label for="taxonomy-select">تصنيف بلوم المستخدم في التقرير</label>
+        <select id="taxonomy-select">
+          <option value="revised">المعدَّل (Anderson & Krathwohl 2001): تقويم ثم إبداع</option>
+          <option value="original">الأصلي (Bloom 1956، المعتمد في وثيقة الدورة): التركيب ثم التقويم</option>
+        </select>
+      </div>
+      <p class="placeholder">الأطر المدمجة تظهر في تبويب "المرجع". يمكنك استيراد أطر إضافية بصيغة JSON بالنموذج الموحّد (إطار واحد أو مصفوفة)؛ الإطار الذي يحمل معرّف إطار مدمج يستبدله.</p>
+      <div class="actions">
+        <label class="btn btn-secondary">استيراد أطر JSON<input type="file" id="fw-import" accept=".json" hidden></label>
+        <button class="btn btn-secondary" id="btn-fw-export" type="button">تصدير كل الأطر JSON</button>
+      </div>
+      <ul class="reports-list" id="fw-list"></ul>
+    </div>
+
+    <div class="card">
       <h2>الجهة والشعار</h2>
       <div class="field">
         <label for="org-name">اسم الجهة</label>
@@ -639,8 +656,123 @@ const OBJECTIVE_LINE = /^(?:[\d٠-٩]{1,2}\s*[\.\-–)][\s.\-–)]*)?(?:(?:أن|
 // هدف مبعثر الترتيب (سطر مبرَّر من PDF): يبدأ برقم ويحوي "أن" + فعل مضارع في أي موضع
 const OBJECTIVE_LINE_LOOSE = /^[\d٠-٩]{1,2}(?:\s|[\.\-–)]).*(?:^|\s)(?:أن|ان)\s+[يت][ء-ي]{2,}/;
 
+// ---------- ب2/ب3: الأطر المرجعية (النموذج الموحّد، القسم 3 من مواصفات المرحلة الثانية) ----------
+// official: true فقط لنص من مرجع منشور معروف أو وثيقة قدّمها المالك. الترجمات العربية للمصطلحات الأجنبية غير رسمية.
+const LOCAL_SOURCE = 'دورة المهارات التدريبية، مدرسة تدريب الدراسات التأسيسية والإنماء المهني (2024) — الدرس الثامن: صياغة الأهداف السلوكية';
+
+const FRAMEWORKS = [
+  {
+    id: 'bloom-revised', kind: 'taxonomy', domain: 'cognitive',
+    name: 'تصنيف بلوم المعدَّل — المجال المعرفي', nameEn: "Revised Bloom's Taxonomy (Cognitive)",
+    source: 'Anderson, L. W. & Krathwohl, D. R. (2001). A Taxonomy for Learning, Teaching, and Assessing.', official: true, translation: 'unofficial',
+    notes: 'المستويان الأعلى: تقويم (5) ثم إبداع (6). أسماء المستويات أفعال (Remember … Create). يُستخدم مع أبعاد المعرفة الأربعة لتكوين جدول التصنيف.',
+    levels: [
+      { id: 1, name: 'تذكر', nameEn: 'Remember', definition: 'استرجاع المعرفة ذات الصلة من الذاكرة طويلة المدى: التعرف والاستدعاء.', examples: ['أن يذكر الطالب أجزاء النبات الرئيسية.', 'أن يعدد المتدرب مراحل دورة الماء.'] },
+      { id: 2, name: 'فهم', nameEn: 'Understand', definition: 'بناء المعنى من الرسائل التعليمية: التفسير، التمثيل، التصنيف، التلخيص، الاستنتاج، المقارنة، الشرح.', examples: ['أن يشرح الطالب كيف تمتص الجذور الماء.', 'أن يلخص المتدرب ما يحدث في كل مرحلة.'] },
+      { id: 3, name: 'تطبيق', nameEn: 'Apply', definition: 'تنفيذ إجراء أو استخدامه في موقف مألوف أو جديد.', examples: ['أن يحسب الطالب كمية الماء المستهلكة أسبوعيًا.', 'أن يستخدم المتدرب نموذجًا لمحاكاة الدورة.'] },
+      { id: 4, name: 'تحليل', nameEn: 'Analyze', definition: 'تفكيك المادة إلى أجزائها وتحديد علاقة الأجزاء ببعضها وبالبنية الكلية: التمييز، التنظيم، العزو.', examples: ['أن يحلل الطالب أثر ارتفاع الحرارة على التبخر.', 'أن يميز المتدرب بين مجالات الأهداف.'] },
+      { id: 5, name: 'تقويم', nameEn: 'Evaluate', definition: 'إصدار أحكام بناءً على معايير ومحكات: الفحص والنقد.', examples: ['أن يقيّم الطالب نتائج تجربة زميله ويحكم على صحتها.', 'أن يبرر المتدرب اختيار أسلوب التدريب.'] },
+      { id: 6, name: 'إبداع', nameEn: 'Create', definition: 'وضع العناصر معًا لتكوين كل جديد متماسك أو منتج أصيل: التوليد، التخطيط، الإنتاج.', examples: ['أن يصمم الطالب تجربة تثبت حاجة النبات إلى الضوء.', 'أن يبتكر المتدرب ملصقًا توعويًا.'] }
+    ],
+    dimensions: [
+      { id: 'factual', name: 'معرفة وقائعية', nameEn: 'Factual', definition: 'العناصر الأساسية التي يجب معرفتها: المصطلحات والتفاصيل والحقائق.', keywords: ['مصطلح', 'مصطلحات', 'حقيقة', 'حقائق', 'تعريف', 'اسم', 'أسماء', 'رمز', 'رموز', 'تاريخ', 'عدد', 'أجزاء', 'عناصر', 'مكونات'] },
+      { id: 'conceptual', name: 'معرفة مفاهيمية', nameEn: 'Conceptual', definition: 'العلاقات بين العناصر داخل بنية أكبر: التصنيفات والمبادئ والنظريات والنماذج.', keywords: ['مفهوم', 'مفاهيم', 'مبدأ', 'مبادئ', 'نظرية', 'نظريات', 'نموذج', 'نماذج', 'علاقة', 'علاقات', 'تصنيف', 'قانون', 'قوانين', 'أهمية', 'خصائص', 'أنواع', 'مجالات'] },
+      { id: 'procedural', name: 'معرفة إجرائية', nameEn: 'Procedural', definition: 'كيفية عمل شيء: المهارات والخوارزميات والتقنيات والطرائق ومعايير استخدامها.', keywords: ['كيفية', 'خطوات', 'إجراء', 'إجراءات', 'طريقة', 'طرائق', 'أسلوب', 'أساليب', 'مهارة', 'مهارات', 'تقنية', 'تقنيات', 'استخدام', 'تشغيل', 'صياغة', 'إعداد'] },
+      { id: 'metacognitive', name: 'معرفة ما وراء معرفية', nameEn: 'Metacognitive', definition: 'المعرفة عن المعرفة والتفكير عمومًا وعن الذات: الاستراتيجيات، المهام، المعرفة الذاتية.', keywords: ['استراتيجية', 'استراتيجيات', 'ذاتي', 'ذاته', 'نفسه', 'تفكيره', 'تعلمه', 'خطة تعلم', 'نقاط قوته', 'نقاط ضعفه', 'يراقب'] }
+    ]
+  },
+  {
+    id: 'bloom-original', kind: 'taxonomy', domain: 'cognitive',
+    name: 'تصنيف بلوم الأصلي — المجال المعرفي (الإدراكي)', nameEn: "Bloom's Taxonomy (1956, Cognitive)",
+    source: 'Bloom, B. S. et al. (1956). Taxonomy of Educational Objectives, Handbook I. — والمستويات وأمثلتها كما في: ' + LOCAL_SOURCE, official: true,
+    notes: 'المعتمد في وثيقة الدورة: التركيب مستوى 5 والتقويم مستوى 6. قاموس الأفعال مشترك مع المعدَّل (إبداع ≡ التركيب).',
+    levels: [
+      { id: 1, name: 'التذكر أو المعرفة', nameEn: 'Knowledge', definition: 'معرفة المعلومات والحقائق والقوانين والنظريات.', verbs: ['يذكر', 'يسمي', 'يحدد', 'يعدد'], examples: ['أن يعدد المتدرب وظائف ثلاث للقوة البحرية حسب كتيب دورة قيادة بدون أخطاء.'] },
+      { id: 2, name: 'الفهم', nameEn: 'Comprehension', definition: 'تعبير الفرد عما تعلم من معارف واستخدامها.', verbs: ['يفسر', 'يشرح', 'يستنتج', 'يترجم'], examples: ['أن يشرح المتدرب مفهومي القيادة والسيطرة للقوة البحرية على ضوء كتيب قيادة شرحًا وافيًا.'] },
+      { id: 3, name: 'التطبيق', nameEn: 'Application', definition: 'القدرة على استخدام ما تعلم في مواقف جديدة.', verbs: ['يستخدم', 'يجدول', 'يحسب', 'يمثل'], examples: ['أن يستخدم المتدرب معرفته بالرموز البحرية اللغوية عند التخاطب مع سفن أخرى حسب كتيب قسم الاتصالات استخدامًا صحيحًا.'] },
+      { id: 4, name: 'التحليل', nameEn: 'Analysis', definition: 'القدرة على تحليل المادة إلى عناصرها الأساسية المكونة لها.', verbs: ['يربط', 'يفرق', 'يحدد العناصر الرئيسة', 'يصنف'], examples: ['أن يصنف المتدرب المواد المراد تخزينها حسب قوانين ومتطلبات التصنيفات المعمول بها في البحرية السلطانية العمانية تصنيفًا مميزًا.'] },
+      { id: 5, name: 'التركيب', nameEn: 'Synthesis', definition: 'القدرة على وضع الأجزاء معًا لتكوين كل جديد.', verbs: ['يبتكر', 'يصنف', 'يصمم', 'يربط'], examples: ['أن يصمم المتدرب خطة للسلامة العامة في المشاغل الميكانيكية في ضوء قراءاته السابقة وخبرات عمليات السلامة في الورش وبدون أخطاء.'] },
+      { id: 6, name: 'التقويم', nameEn: 'Evaluation', definition: 'القدرة على إصدار الحكم على شيء ما.', verbs: ['يقدر', 'يقارن', 'يثمن', 'يحاكم', 'ينقد'], examples: ['أن يدافع المتدرب عن الأثر الذي يؤثره التدريب العملي في سفن البحرية لتنمية قدرة المتدرب في خمس دقائق على الأكثر.'] }
+    ]
+  },
+  {
+    id: 'affective', kind: 'taxonomy', domain: 'affective',
+    name: 'المجال الانفعالي (الوجداني)', nameEn: 'Affective Domain (Krathwohl)',
+    source: 'Krathwohl, Bloom & Masia (1964). Handbook II: Affective Domain. — والمستويات كما في: ' + LOCAL_SOURCE, official: true,
+    notes: 'يختص بالميول والاتجاهات والقيم. يُقوَّم غالبًا بالملاحظة وأسئلة المواقف. صياغة أهدافه القابلة للقياس أصعب.',
+    levels: [
+      { id: 1, name: 'التقبل', nameEn: 'Receiving', definition: 'يهتم المتدرب بوجود متغيرات معينة ويتقبلها.', verbs: ['يختار', 'يجيب', 'يصف', 'يصغي', 'ينتبه', 'يتابع', 'يهتم', 'يتقبل'], examples: ['أن يصغي المتدرب باهتمام لعرض زميله.'] },
+      { id: 2, name: 'الاستجابة', nameEn: 'Responding', definition: 'المشاركة الإيجابية للمتدرب.', verbs: ['يقرر', 'يكتب', 'يروي', 'يناقش', 'يشارك', 'يتطوع', 'يجيب', 'يساعد', 'يمارس'], examples: ['أن يشارك المتدرب في مناقشة الحالة الدراسية.'] },
+      { id: 3, name: 'التقييم', nameEn: 'Valuing', definition: 'القيمة التي يعطيها المتدرب لشيء معين.', verbs: ['يفرق', 'يساهم', 'يقترح', 'يدعم', 'يبرر', 'يتبنى', 'يبادر', 'يلتزم', 'يقدر'], examples: ['أن يلتزم المتدرب بقواعد السلامة دون تذكير.'] },
+      { id: 4, name: 'التنظيم', nameEn: 'Organization', definition: 'التنظيم القيمي، ويشير إلى الجمع بين أكثر من قيمة.', verbs: ['يركب', 'يغير', 'يدعم', 'ينظم', 'يوازن', 'يرتب', 'يوفق', 'يدافع'], examples: ['أن يوازن المتدرب بين متطلبات الوقت وجودة العمل.'] },
+      { id: 5, name: 'التمييز (تكامل القيمة مع السلوك)', nameEn: 'Characterization', definition: 'تكوين نظام قيمي لدى المتدرب يضبط سلوكه فترة من الزمن.', verbs: ['يتحقق', 'يؤدي', 'يعدل', 'يميز', 'يتصرف', 'يثابر', 'يتحلى'], examples: ['أن يتحلى المتدرب بالانضباط في جميع مواقف التدريب.'] }
+    ]
+  },
+  {
+    id: 'psychomotor', kind: 'taxonomy', domain: 'psychomotor',
+    name: 'المجال المهاري (النفس‑حركي)', nameEn: 'Psychomotor Domain (Simpson)',
+    source: 'Simpson, E. J. (1972). The Classification of Educational Objectives in the Psychomotor Domain. — والمستويات كما في: ' + LOCAL_SOURCE, official: true,
+    notes: 'سيمبسون سبعة مستويات؛ وثيقة الدورة تدمج "الآلية" و"الاستجابة الظاهرة المعقدة" في مستوى واحد فتصبح ستة.',
+    levels: [
+      { id: 1, name: 'الملاحظة أو الاستقبال (الإدراك الحسي)', nameEn: 'Perception', definition: 'عملية الإدراك الحسي والإحساس العضوي الذي يؤدي إلى النشاط الحركي.', verbs: ['يربط', 'يحدد', 'يفاضل', 'يلاحظ', 'يكتشف', 'يستشعر', 'يميز'], examples: ['أن يلاحظ المتدرب مؤشرات عطل المحرك من الصوت.'] },
+      { id: 2, name: 'التهيئة', nameEn: 'Set', definition: 'الاستعداد والتهيئة الفعلية لسلوك معين.', verbs: ['يبدأ', 'يحرك', 'يظهر', 'يستعد', 'يتهيأ', 'يتخذ وضعًا'], examples: ['أن يتخذ المتدرب الوضع الصحيح قبل رفع الحمل.'] },
+      { id: 3, name: 'الاستجابة الموجهة', nameEn: 'Guided response', definition: 'التقليد أو المحاكاة والمحاولة والخطأ.', verbs: ['يطبق', 'ينظم', 'يفكك', 'يقلد', 'يحاكي', 'يتبع', 'يجرب', 'يعيد'], examples: ['أن يحاكي المتدرب خطوات تفكيك القطعة كما عرضها المدرب.'] },
+      { id: 4, name: 'الآلية (الميكانيكية)', nameEn: 'Mechanism', definition: 'مستوى الأداء بعد تعلم المهارة بدقة وبراعة.', verbs: ['يفحص', 'يعمل', 'يجمع', 'يشغل', 'يضبط', 'يقيس', 'يركب', 'ينفذ'], examples: ['أن يشغل المتدرب الجهاز وفق دليل التشغيل دون مساعدة.'] },
+      { id: 5, name: 'الاستجابة الظاهرة المعقدة', nameEn: 'Complex overt response', definition: 'أداء ماهر لأنماط حركية معقدة بدقة وسرعة وثقة (في وثيقة الدورة مدمج مع الآلية).', verbs: ['يتقن', 'يؤدي', 'ينفذ بدقة', 'ينسق', 'يعالج', 'يصلح'], examples: ['أن ينفذ المتدرب إجراءات الطوارئ كاملة في الزمن المحدد.'] },
+      { id: 6, name: 'التكيف أو التعديل', nameEn: 'Adaptation', definition: 'تطوير الفرد للمهارة وتقديم نماذج مختلفة تبعًا للمواقف المختلفة.', verbs: ['يكيف', 'يعدل', 'ينوع', 'يلائم', 'يغير', 'يعيد ترتيب'], examples: ['أن يعدل المتدرب أسلوب الربط تبعًا لنوع الحبل المتاح.'] },
+      { id: 7, name: 'الإبداع أو الابتكار', nameEn: 'Origination', definition: 'عملية إبداع المتدرب وتطوير المهارة لمهارات حركية جديدة.', verbs: ['يطور', 'يصمم', 'يبتكر', 'ينشئ', 'يبني', 'يؤلف'], examples: ['أن يبتكر المتدرب طريقة جديدة لتثبيت المعدة في الظروف الصعبة.'] }
+    ]
+  },
+  {
+    id: 'objective-structure', kind: 'checklist',
+    name: 'أركان الهدف السلوكي', nameEn: 'Behavioral objective components (ABCD)',
+    source: LOCAL_SOURCE + ' — وتقابل صيغة Mager/ABCD (Audience, Behavior, Condition, Degree).', official: true,
+    items: [
+      { id: 'an', text: '"أنْ": للتأكيد على ملاحظة السلوك أو الأداء المتوقع.', hint: 'يبدأ الهدف بـ"أن".' },
+      { id: 'verb', text: 'فعل سلوكي: فعل مضارع يمكن ملاحظته في البيئة الصفية وغير غامض.', hint: 'فعل مضارع من قوائم الأفعال، لا "يعرف/يفهم/يدرك/يحب".' },
+      { id: 'learner', text: 'المتدرب (أو الطالب/المتعلم): من يؤدي السلوك.', hint: 'ذكر المتعلم صراحة.' },
+      { id: 'content', text: 'المحتوى التعليمي: الجزء من موضوع الدرس الذي يُعالج سلوكيًا.', hint: 'ما الذي يُتعلم؟' },
+      { id: 'condition', text: 'شرط الأداء: الشرط الذي يجب أن يُلاحظ الأداء من خلاله (باستخدام…، دون الرجوع إلى…، بعد قراءة…).', hint: 'كلمات مثل: باستخدام، دون، بعد، في ضوء، حسب، وفق.' },
+      { id: 'criterion', text: 'معيار الأداء: المعيار الذي في ضوئه يكون الأداء مقبولًا (بدقة، بطلاقة، بشكل جيد، بدون أخطاء، في خمس دقائق).', hint: 'كلمات مثل: بدقة، بدون أخطاء، خلال، على الأقل، بنسبة.' }
+    ]
+  },
+  {
+    id: 'objective-errors', kind: 'checklist',
+    name: 'أخطاء شائعة في صياغة الأهداف السلوكية', nameEn: 'Common errors in writing objectives',
+    source: LOCAL_SOURCE, official: true,
+    items: [
+      { id: 'teacher-activity', text: 'وصف نشاط الموجه بدلًا من نتائج التعليم وسلوك المتدرب.', example: 'أنْ يدرب الموجه المتدرب على قراءة الخارطة.' },
+      { id: 'process', text: 'وصف عملية التعلم بدلًا من نتائج التعلم.', example: 'أنْ يَعْرِفَ المتدرب كيفية استخدام البوصلة.' },
+      { id: 'topic', text: 'تحديد موضوعات التعلم بدلًا من نتائج التعلم.', example: 'أنْ يدرس المتدرب قاعدة فيثاغورس في حساب المثلثات.' },
+      { id: 'multi', text: 'وجود أكثر من ناتج في عبارة الهدف.', example: 'أنْ يمثل المتدرب للمبتدأ في جملة مفيدة ثم يعربه.' },
+      { id: 'unmeasurable', text: 'عدم إمكانية قياس وتقويم الهدف السلوكي وملاحظته في البيئة الصفية.', example: 'أنْ يحب المتدرب الأكاديمية.' }
+    ]
+  }
+];
+
+// أطر المستخدم (localStorage) تُدمج مع المدمجة؛ المعرّف المكرر يستبدل المدمج
+function getFrameworks(userFrameworks = []) {
+  const map = new Map(FRAMEWORKS.map(f => [f.id, f]));
+  for (const f of userFrameworks) if (f && f.id) map.set(f.id, { ...f, user: true });
+  return [...map.values()];
+}
+
+// التحقق من سلامة إطار مستورد (النموذج الموحّد)
+function validateFramework(f) {
+  const errors = [];
+  if (!f || typeof f !== 'object') return ['ليس كائنًا'];
+  if (!f.id || !/^[a-z0-9\-_]+$/i.test(f.id)) errors.push('id مفقود أو غير صالح (أحرف لاتينية وأرقام وشرطات)');
+  if (!f.name) errors.push('name مفقود');
+  if (!['taxonomy', 'checklist', 'standards'].includes(f.kind)) errors.push('kind يجب أن يكون taxonomy أو checklist أو standards');
+  if (!f.source) errors.push('source مفقود');
+  if (f.kind === 'taxonomy' && !(Array.isArray(f.levels) && f.levels.length)) errors.push('taxonomy يحتاج levels[]');
+  if (f.kind !== 'taxonomy' && !(Array.isArray(f.items) && f.items.length)) errors.push(f.kind + ' يحتاج items[]');
+  return errors;
+}
+
 const RULES = {
   bloomLevels: BLOOM_LEVELS,
+  frameworks: FRAMEWORKS,
   omanFramework: OMAN_FRAMEWORK,
   skills21: SKILLS_21,
   stopWords: STOP_WORDS,
@@ -1047,17 +1179,49 @@ function lookupVerb(word) {
 
 function levelName(id) { const l = RULES.bloomLevels.find(x => x.id === id); return l ? l.name : 'غير محدد'; }
 
+// فهارس أفعال المجالين الوجداني والنفس‑حركي من الأطر المدمجة: فعل مطبّع → { levelId, levelName }
+const DOMAIN_INDEX = (() => {
+  const out = {};
+  for (const domain of ['affective', 'psychomotor']) {
+    const fw = RULES.frameworks.find(f => f.kind === 'taxonomy' && f.domain === domain);
+    const idx = new Map();
+    if (fw) for (const lvl of fw.levels) for (const v of lvl.verbs || []) {
+      const key = unifyHamza(stripTashkeel(v.split(' ')[0]));
+      if (!idx.has(key)) idx.set(key, { levelId: lvl.id, levelName: lvl.name });
+    }
+    out[domain] = idx;
+  }
+  return out;
+})();
+
+const DOMAIN_NAMES = { cognitive: 'معرفي', affective: 'وجداني', psychomotor: 'نفس‑حركي' };
+
+function lookupDomainVerb(word) {
+  const w = unifyHamza(stripTashkeel(word)).replace(/^ت/, 'ي');
+  const stem = stripSuffixes(stripSuffixes(w, PRONOUN_SUFFIXES), VERB_SUFFIXES);
+  for (const domain of ['affective', 'psychomotor']) {
+    const idx = DOMAIN_INDEX[domain];
+    const hit = idx.get(w) || idx.get(stem);
+    if (hit) return { domain, ...hit, exact: !!idx.get(w) };
+  }
+  return null;
+}
+
 function classifyBloom(struct) {
   const out = [];
   struct.units.forEach((u, ui) => u.lessons.forEach((l, li) => l.objectives.forEach((o, oi) => {
     const verb = extractVerb(o.text);
     const hit = verb ? lookupVerb(verb) : null;
-    let levelId = 0, confidence = 'low';
+    let levelId = 0, confidence = 'low', domain = null, level = 'غير محدد';
     if (hit) {
-      levelId = hit.levels[0];
+      levelId = hit.levels[0]; domain = 'cognitive'; level = levelName(levelId);
       confidence = hit.exact && hit.levels.length === 1 ? 'high' : 'medium';
+    } else if (verb) {
+      // ليس فعلًا معرفيًا: نجرب المجالين الوجداني والنفس‑حركي
+      const d = lookupDomainVerb(verb);
+      if (d) { domain = d.domain; level = d.levelName; confidence = d.exact ? 'high' : 'medium'; }
     }
-    out.push({ objectiveRef: { unit: ui, lesson: li, index: oi, text: o.text }, verb, level: levelName(levelId), levelId, confidence });
+    out.push({ objectiveRef: { unit: ui, lesson: li, index: oi, text: o.text }, verb, level, levelId, domain, confidence });
   })));
   return out;
 }
@@ -1112,13 +1276,15 @@ function summarize(struct, bloom, doc) {
   const dist = {};
   for (const lvl of RULES.bloomLevels) dist[lvl.name] = 0;
   dist['غير محدد'] = 0;
-  for (const b of bloom) dist[b.level] = (dist[b.level] || 0) + 1;
+  for (const b of bloom) { const k = b.domain === 'cognitive' ? b.level : (b.domain ? DOMAIN_NAMES[b.domain] : 'غير محدد'); dist[k] = (dist[k] || 0) + 1; }
   const total = bloom.length || 1;
   const bloomDistribution = {};
   for (const k of Object.keys(dist)) bloomDistribution[k] = Math.round((dist[k] / total) * 1000) / 10;
 
+  const domainCounts = { cognitive: 0, affective: 0, psychomotor: 0, none: 0 };
+  for (const b of bloom) domainCounts[b.domain || 'none']++;
   const words = doc ? doc.pages.reduce((n, p) => n + countWords(p.text), 0) : 0;
-  return { completeness, stats: { units: struct.units.length, lessons, objectives, words, pages: doc ? doc.meta.pageCount : 0, bloomDistribution, bloomCounts: dist } };
+  return { completeness, stats: { units: struct.units.length, lessons, objectives, words, pages: doc ? doc.meta.pageCount : 0, bloomDistribution, bloomCounts: dist, domainCounts } };
 }
 
 // ---------- خط الأنابيب الكامل ----------
@@ -1138,7 +1304,7 @@ async function analyzeDocument(doc, userStandards = [], onStep = () => {}) {
      ============================================================ -->
 <script>
 const APP_VERSION = '1.0.0';
-const STORAGE_KEYS = { settings: 'ca.settings', standards: 'ca.standards', reports: 'ca.reports' };
+const STORAGE_KEYS = { settings: 'ca.settings', standards: 'ca.standards', reports: 'ca.reports', frameworks: 'ca.frameworks' };
 const STEP_NAMES = ['القراءة', 'الهيكلة', 'تصنيف بلوم', 'مطابقة المعايير', 'الاكتمال والإحصاء'];
 
 const $ = id => document.getElementById(id);
@@ -1166,6 +1332,8 @@ const store = {
 
 let settings = store.read(STORAGE_KEYS.settings, { orgName: '', logoDataUrl: '' });
 let userStandards = store.read(STORAGE_KEYS.standards, []);
+let userFrameworks = store.read(STORAGE_KEYS.frameworks, []);
+if (!settings.activeTaxonomy) settings.activeTaxonomy = 'revised';
 
 // ---------- التبويبات ----------
 (function initTabs() {
@@ -1261,17 +1429,27 @@ async function runAnalysis(file) {
 
 // ---------- التقرير (القسم 8) ----------
 const confTag = c => `<span class="tag tag-${c}">${{ high: 'عالية', medium: 'متوسطة', low: 'منخفضة' }[c] || c}</span>`;
+// مستويات بلوم بترتيب العرض حسب التصنيف الفعّال: المعرّف هو معرّف المعدَّل (إبداع 6 ≡ التركيب)
+function activeLevelDisplay() {
+  if (settings.activeTaxonomy === 'original') {
+    const o = RULES.frameworks.find(f => f.id === 'bloom-original').levels;
+    return [1, 2, 3, 4].map(i => ({ id: i, name: o[i - 1].name })).concat([{ id: 6, name: o[4].name }, { id: 5, name: o[5].name }]);
+  }
+  return RULES.bloomLevels.map(l => ({ id: l.id, name: l.name }));
+}
+const displayLevel = b => b.domain === 'cognitive' ? ((activeLevelDisplay().find(x => x.id === b.levelId) || {}).name || b.level) : b.level;
 const levelTag = (name, id) => `<span class="tag tag-bloom-${id || 0}">${escapeHtml(name)}</span>`;
+const domainTag = d => d ? `<span class="tag">${DOMAIN_NAMES[d]}</span>` : '—';
 const yesNo = v => v ? '<span class="yes">موجود</span>' : '<span class="no">غير موجود</span>';
 
 function bloomChartSvg(counts) {
-  const levels = RULES.bloomLevels;
+  const levels = activeLevelDisplay().map(d => ({ ...d, key: RULES.bloomLevels[d.id - 1].name }));
   const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
   const W = 720, H = 260, padL = 40, padB = 50, padT = 20, gap = 18;
   const barW = (W - padL - gap * levels.length) / levels.length;
-  const max = Math.max(1, ...levels.map(l => counts[l.name] || 0));
+  const max = Math.max(1, ...levels.map(l => counts[l.key] || 0));
   const bars = levels.map((l, i) => {
-    const v = counts[l.name] || 0, h = (v / max) * (H - padB - padT);
+    const v = counts[l.key] || 0, h = (v / max) * (H - padB - padT);
     const x = padL + i * (barW + gap), y = H - padB - h;
     return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="4" style="fill:var(--bloom-${l.id})"><title>${escapeHtml(l.name)}: ${v}</title></rect>
       <text x="${x + barW / 2}" y="${y - 6}" text-anchor="middle">${v} (${Math.round((v / total) * 100)}%)</text>
@@ -1286,13 +1464,17 @@ function bloomChartSvg(counts) {
 function renderReportHtml(analysis, doc, settings) {
   const st = analysis.stats;
   const lessonTitle = ref => { const u = analysis.structure.units[ref.unit]; const l = u && u.lessons[ref.lesson]; return l ? `${u.title} / ${l.title}` : ''; };
-  const objectivesRows = analysis.bloom.map(b => `<tr><td>${escapeHtml(b.objectiveRef.text)}</td><td>${escapeHtml(b.verb || '—')}</td><td>${levelTag(b.level, b.levelId)}</td><td>${confTag(b.confidence)}</td></tr>`).join('');
+  const objectivesRows = analysis.bloom.map(b => `<tr><td>${escapeHtml(b.objectiveRef.text)}</td><td>${escapeHtml(b.verb || '—')}</td><td>${domainTag(b.domain)}</td><td>${levelTag(displayLevel(b), b.domain === 'cognitive' ? b.levelId : 0)}</td><td>${confTag(b.confidence)}</td></tr>`).join('');
   const completenessRows = analysis.completeness.map(c => `<tr><td>${escapeHtml(c.lessonRef.unitTitle)}</td><td>${escapeHtml(c.lessonRef.title)}</td><td>${yesNo(c.hasObjectives)}</td><td>${yesNo(c.hasActivities)}</td><td>${yesNo(c.hasAssessment)}</td><td>${yesNo(c.hasReferences)}</td></tr>`).join('');
   const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}${m.source === 'framework' && OMAN_FRAMEWORK_IS_PLACEHOLDER && !/القرن 21/.test(m.standardLabel) ? ' <span class="tag tag-low">بند مؤقت</span>' : ''}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
   const warningsHtml = analysis.warnings.length
     ? `<ul>${analysis.warnings.map(w => `<li><code>${escapeHtml(w.code)}</code> — ${escapeHtml(w.message)}</li>`).join('')}</ul>`
     : '<p>لا تحذيرات.</p>';
-  const distRows = Object.entries(st.bloomDistribution).map(([k, v]) => `<tr><td>${escapeHtml(k)}</td><td>${st.bloomCounts[k] || 0}</td><td>${v}%</td></tr>`).join('');
+  const nameOf = k => { const d = activeLevelDisplay().find(x => RULES.bloomLevels[x.id - 1].name === k); return d ? d.name : k; };
+  const distRows = Object.entries(st.bloomDistribution).map(([k, v]) => `<tr><td>${escapeHtml(nameOf(k))}</td><td>${st.bloomCounts[k] || 0}</td><td>${v}%</td></tr>`).join('');
+  const dc = st.domainCounts || {};
+  const domainRows = ['cognitive', 'affective', 'psychomotor'].map(d => `<tr><td>${DOMAIN_NAMES[d]}</td><td>${dc[d] || 0}</td></tr>`).join('') + `<tr><td>غير محدد</td><td>${dc.none || 0}</td></tr>`;
+  const taxonomyNote = settings.activeTaxonomy === 'original' ? 'تصنيف بلوم الأصلي (1956): التركيب ثم التقويم' : 'تصنيف بلوم المعدَّل (2001): تقويم ثم إبداع';
 
   return `
   <div class="report-header">
@@ -1313,8 +1495,9 @@ function renderReportHtml(analysis, doc, settings) {
   </section>
 
   <section class="report-section"><h2>توزيع بلوم</h2>
+    <p class="placeholder">${taxonomyNote}</p>
     ${bloomChartSvg(st.bloomCounts)}
-    <div class="table-wrap"><table><thead><tr><th>الهدف</th><th>الفعل</th><th>المستوى</th><th>الثقة</th></tr></thead><tbody>${objectivesRows || '<tr><td colspan="4">لم تُكتشف أهداف.</td></tr>'}</tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>الهدف</th><th>الفعل</th><th>المجال</th><th>المستوى</th><th>الثقة</th></tr></thead><tbody>${objectivesRows || '<tr><td colspan="5">لم تُكتشف أهداف.</td></tr>'}</tbody></table></div>
   </section>
 
   <section class="report-section"><h2>مطابقة المعايير</h2>
@@ -1332,6 +1515,7 @@ function renderReportHtml(analysis, doc, settings) {
       <tr><td>الكلمات (بعد التطبيع)</td><td>${st.words}</td></tr><tr><td>الصفحات</td><td>${st.pages}</td></tr>
     </tbody></table></div>
     <div class="table-wrap"><table><thead><tr><th>مستوى بلوم</th><th>العدد</th><th>النسبة</th></tr></thead><tbody>${distRows}</tbody></table></div>
+    <div class="table-wrap"><table><thead><tr><th>مجال الهدف</th><th>العدد</th></tr></thead><tbody>${domainRows}</tbody></table></div>
   </section>
 
   <section class="report-section"><h2>التحذيرات</h2>${warningsHtml}</section>
@@ -1418,6 +1602,40 @@ function addStandards(list) {
     e.target.value = '';
   });
   renderStandards();
+})();
+
+// ---------- الأطر المرجعية (ب2) ----------
+function saveFrameworks() { store.write(STORAGE_KEYS.frameworks, userFrameworks); }
+function renderFrameworksList() {
+  $('fw-list').innerHTML = userFrameworks.map(f => `<li data-id="${escapeHtml(f.id)}"><span><strong>${escapeHtml(f.name)}</strong> — ${escapeHtml(f.kind)} — ${escapeHtml(f.source || '')}${f.official ? '' : ' <span class="tag tag-low">مؤقت</span>'}</span><button class="btn btn-danger btn-sm" data-fw-del="${escapeHtml(f.id)}" type="button">حذف</button></li>`).join('')
+    || '<li class="placeholder">لا أطر مستوردة.</li>';
+}
+function importFrameworks(data) {
+  const list = Array.isArray(data) ? data : [data];
+  const accepted = [], rejected = [];
+  for (const f of list) {
+    const errs = validateFramework(f);
+    if (errs.length) rejected.push(`${f && f.id ? f.id : '?'}: ${errs.join('، ')}`);
+    else { userFrameworks = userFrameworks.filter(x => x.id !== f.id); userFrameworks.push(f); accepted.push(f.id); }
+  }
+  saveFrameworks(); renderFrameworksList();
+  return { accepted, rejected };
+}
+(function initFrameworks() {
+  $('taxonomy-select').value = settings.activeTaxonomy;
+  $('taxonomy-select').addEventListener('change', e => { settings.activeTaxonomy = e.target.value; saveSettings(); });
+  $('fw-import').addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const r = importFrameworks(JSON.parse(await f.text()));
+      if (r.accepted.length) showAlert('OK', `استُوردت الأطر: ${r.accepted.join('، ')}`, 'success');
+      if (r.rejected.length) showAlert('IMPORT_ERROR', 'رُفضت: ' + r.rejected.join(' | '), 'danger');
+    } catch (err) { showAlert('IMPORT_ERROR', 'تعذر قراءة الملف: ' + err.message, 'danger'); }
+    e.target.value = '';
+  });
+  $('btn-fw-export').addEventListener('click', () => downloadBlob(`${dateStamp()}-frameworks.json`, JSON.stringify(getFrameworks(userFrameworks), null, 2), 'application/json'));
+  $('fw-list').addEventListener('click', e => { const id = e.target.dataset.fwDel; if (!id) return; userFrameworks = userFrameworks.filter(x => x.id !== id); saveFrameworks(); renderFrameworksList(); });
+  renderFrameworksList();
 })();
 
 // ---------- الجهة والشعار ----------
@@ -1609,6 +1827,14 @@ const DEV_TESTS = [
       assert(d.meta.warnings.some(w => w.code === 'PDF_TEXT_REBUILT'), 'تحذير PDF_TEXT_REBUILT');
       assert(d.pages[0].text.startsWith('الوحدة الأولى: النباتات'), 'السطر الأول سليم: ' + d.pages[0].text.slice(0, 30));
       const a = await analyzeDocument(d, []); assert(a.stats.objectives === 2, 'هدفان'); } },
+  // المرحلة الثانية: الأطر والمجالات
+  { name: 'الأطر: كل إطار مدمج يجتاز التحقق من النموذج', fn: () => { for (const f of FRAMEWORKS) { const e = validateFramework(f); assert(e.length === 0, f.id + ': ' + e.join('، ')); } assert(FRAMEWORKS.length >= 6, 'ستة أطر على الأقل'); } },
+  { name: 'الأطر: استيراد إطار مستخدم يستبدل المدمج بالمعرّف نفسه', fn: () => { const fw = getFrameworks([{ id: 'affective', name: 'بديل', kind: 'taxonomy', source: 'اختبار', official: false, levels: [{ id: 1, name: 'x', verbs: [] }] }]); const a = fw.find(f => f.id === 'affective'); assert(a.name === 'بديل' && a.user === true, 'الاستبدال'); assert(fw.length === FRAMEWORKS.length, 'العدد ثابت'); assert(validateFramework({ id: 'bad' }).length >= 3, 'الرفض'); } },
+  { name: 'المجالات: هدف وجداني يُصنَّف وجدانيًا', fn: () => { const r = classifyBloom(mkStruct(['أن يلتزم المتدرب بقواعد السلامة دون تذكير.']))[0]; assert(r.domain === 'affective' && r.level === 'التقييم', JSON.stringify([r.domain, r.level])); } },
+  { name: 'المجالات: هدف نفس‑حركي يُصنَّف نفس‑حركيًا', fn: () => { const r = classifyBloom(mkStruct(['أن يحاكي المتدرب خطوات تفكيك القطعة.']))[0]; assert(r.domain === 'psychomotor' && r.level === 'الاستجابة الموجهة', JSON.stringify([r.domain, r.level])); } },
+  { name: 'المجالات: الفعل المعرفي يسبق الوجداني (يقترح → إبداع)', fn: () => { const r = classifyBloom(mkStruct(['أن يقترح الطالب حلولًا.']))[0]; assert(r.domain === 'cognitive' && r.level === 'إبداع', JSON.stringify([r.domain, r.level])); } },
+  { name: 'المجالات: فعل غير قابل للقياس يبقى غير محدد (يحب)', fn: () => { const r = classifyBloom(mkStruct(['أن يحب المتدرب الأكاديمية.']))[0]; assert(r.domain === null && r.level === 'غير محدد', 'غير محدد'); } },
+  { name: 'التصنيف الفعّال: الأصلي يعرض التركيب قبل التقويم', fn: () => { const keep = settings.activeTaxonomy; settings.activeTaxonomy = 'original'; const d = activeLevelDisplay(); settings.activeTaxonomy = keep; assert(d[4].id === 6 && d[4].name === 'التركيب' && d[5].id === 5 && d[5].name === 'التقويم', JSON.stringify(d)); } },
   // العينة كاملة
   { name: 'العينة: 2 وحدة، 4 دروس، 20 هدفًا، درس بلا تقويم', fn: async () => { const a = await analyzeDocument(await readTxt('s.txt', SAMPLE_CURRICULUM), []); assert(a.stats.units === 2 && a.stats.lessons === 4 && a.stats.objectives === 20, 'الأعداد'); assert(a.completeness.filter(c => !c.hasAssessment).length === 1, 'درس واحد بلا تقويم'); assert(Object.values(a.stats.bloomCounts).filter(v => v > 0).length >= 6, 'المستويات الستة ممثلة'); } },
 ];
