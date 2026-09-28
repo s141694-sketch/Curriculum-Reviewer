@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Curriculum } from "@/types/curriculum";
 import { deleteCurriculum, listCurricula } from "@/lib/storage";
+import { CompassNeedle, Diamond } from "@/components/HarakLogo";
 
 export default function HomePage() {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
@@ -21,50 +22,87 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Curriculum Reviewer</h1>
-          <p className="text-sm text-neutral-500">
-            AI-assisted curriculum design and review.
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-6 py-12">
+      <section className="flex flex-col items-center gap-10 md:flex-row md:justify-between">
+        <div className="flex max-w-xl flex-col gap-5">
+          <span className="text-sm font-semibold text-gold-ink">أكاديمية السلطان قابوس البحرية</span>
+          <h1 className="font-display text-4xl leading-[1.35] font-bold text-navy md:text-5xl">
+            صمّم منهجك الدراسي
+            <br />
+            بخطوات واضحة
+          </h1>
+          <p className="text-lg leading-8 text-muted">
+            صِف المادة والمستوى وأهداف التعلّم والمدة، ويقترح حراك مخططاً منظّماً للوحدات والأهداف
+            والموضوعات، يمكنك تعديله مباشرة.
           </p>
-        </div>
-        <Link
-          href="/curriculum/new"
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-        >
-          New curriculum
-        </Link>
-      </header>
-
-      {curricula.length === 0 ? (
-        <p className="rounded-md border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-500 dark:border-neutral-700">
-          No curricula yet. Create one to get started.
-        </p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {curricula.map((curriculum) => (
-            <li
-              key={curriculum.id}
-              className="flex items-center justify-between rounded-md border border-neutral-200 p-4 dark:border-neutral-800"
+          <div className="mt-2 flex flex-wrap gap-3">
+            <Link
+              href="/curriculum/new"
+              className="rounded-xl bg-maroon px-6 py-3.5 font-semibold text-white hover:bg-maroon-soft"
             >
-              <Link href={`/curriculum/${curriculum.id}`} className="flex-1">
-                <p className="font-medium">{curriculum.subject}</p>
-                <p className="text-sm text-neutral-500">
-                  {curriculum.level} &middot; {curriculum.durationWeeks} weeks &middot;{" "}
-                  {curriculum.modules.length} modules
-                </p>
-              </Link>
-              <button
-                onClick={() => handleDelete(curriculum.id)}
-                className="text-sm text-neutral-400 hover:text-red-500"
+              ابدأ منهجاً جديداً
+            </Link>
+          </div>
+        </div>
+        <CompassHero />
+      </section>
+
+      <section className="flex flex-col gap-5">
+        <div className="flex items-center gap-3">
+          <Diamond className="text-gold" />
+          <h2 className="font-display text-2xl font-bold text-navy">مناهجي المحفوظة</h2>
+          <span className="h-px flex-1 bg-line" aria-hidden="true" />
+        </div>
+
+        {curricula.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-gold bg-white p-10 text-center text-muted">
+            لا توجد مناهج بعد. أنشئ منهجاً جديداً لتبدأ.
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {curricula.map((curriculum) => (
+              <li
+                key={curriculum.id}
+                className="relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-white p-5"
               >
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+                <span className="absolute inset-x-0 top-0 h-1 bg-gold" aria-hidden="true" />
+                <Link href={`/curriculum/${curriculum.id}`} className="flex flex-1 flex-col gap-1.5">
+                  <span className="font-display text-xl font-bold text-navy">{curriculum.subject}</span>
+                  <span className="text-sm text-muted">
+                    {curriculum.level} · {curriculum.durationWeeks} أسبوعاً
+                  </span>
+                  <span className="mt-2 text-sm font-medium text-gold-ink">
+                    {curriculum.modules.length} وحدات
+                  </span>
+                </Link>
+                <button
+                  onClick={() => handleDelete(curriculum.id)}
+                  className="self-end rounded-lg px-2 py-1 text-sm text-maroon-soft hover:bg-sand"
+                >
+                  حذف
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </main>
+  );
+}
+
+function CompassHero() {
+  return (
+    <div className="relative hidden size-80 shrink-0 place-items-center md:grid lg:size-96" aria-hidden="true">
+      <svg viewBox="-230 -230 460 460" className="absolute inset-0 size-full">
+        <circle r="222" fill="#FFFFFF" stroke="#E3D9C4" strokeWidth="2" />
+        <circle r="196" fill="none" stroke="#1B1F4B" strokeOpacity="0.15" strokeDasharray="2 9" />
+        <circle r="150" fill="none" stroke="#D4AD6A" strokeWidth="2" />
+        <line x1="0" y1="-222" x2="0" y2="-200" stroke="#1B1F4B" strokeWidth="3" />
+        <line x1="0" y1="200" x2="0" y2="222" stroke="#1B1F4B" strokeWidth="3" />
+        <line x1="-222" y1="0" x2="-200" y2="0" stroke="#1B1F4B" strokeWidth="3" />
+        <line x1="200" y1="0" x2="222" y2="0" stroke="#1B1F4B" strokeWidth="3" />
+      </svg>
+      <CompassNeedle height={260} className="relative" />
+    </div>
   );
 }
