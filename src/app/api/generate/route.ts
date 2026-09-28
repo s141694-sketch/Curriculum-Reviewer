@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
+import { describeClaudeError, getClaudeClient } from "@/lib/server/llm";
 import type { CurriculumBrief, Module } from "@/types/curriculum";
 
 const SYSTEM_PROMPT = `You are a curriculum design assistant. Given a subject, level, goals, and duration, produce a structured course outline.
@@ -21,7 +21,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function parseModules(raw: string): Array<Omit<Module, "id">> {
-  const parsed: unknown = JSON.parse(raw);
+  // Tolerate a model that wraps the JSON in markdown fences.
+  const parsed: unknown = JSON.parse(raw.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, ""));
   if (!isRecord(parsed) || !Array.isArray(parsed.modules)) {
     throw new Error("Malformed response: expected an object with a modules array");
   }
@@ -49,12 +50,15 @@ function parseModules(raw: string): Array<Omit<Module, "id">> {
   });
 }
 
+// Generation can take a while on large outlines.
+export const maxDuration = 120;
+
 export async function POST(request: NextRequest) {
   let brief: CurriculumBrief;
   try {
     brief = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
   if (!brief.subject || !brief.level || !brief.durationWeeks) {
@@ -65,9 +69,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const anthropic = getAnthropicClient();
-    const message = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
+    const { client, model } = await getClaudeClient();
+    const message = await client.messages.create({
+      model: model("claude-sonnet-5"),
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
       messages: [
@@ -86,7 +90,10 @@ export async function POST(request: NextRequest) {
     const modules = parseModules(textBlock.text);
     return NextResponse.json({ modules });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message =
+      error instanceof SyntaxError
+        ? "The model returned an outline that could not be read. Please try again."
+        : describeClaudeError("Curriculum generator", error).message;
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

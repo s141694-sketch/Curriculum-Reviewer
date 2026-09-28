@@ -72,7 +72,7 @@ export default function NewCurriculumPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-6 py-16">
+    <main dir="ltr" className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-6 px-6 py-16">
       <h1 className="text-2xl font-semibold">New curriculum</h1>
       <form onSubmit={handleGenerate} className="flex flex-col gap-4">
         <label className="flex flex-col gap-1 text-sm">

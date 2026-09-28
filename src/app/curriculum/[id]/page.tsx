@@ -93,9 +93,9 @@ export default function CurriculumEditorPage() {
 
   if (curriculum === null) {
     return (
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+      <main dir="ltr" className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
         <p className="text-neutral-500">Curriculum not found.</p>
-        <Link href="/" className="text-sm underline">
+        <Link href="/curriculum" className="text-sm underline">
           Back to curricula
         </Link>
       </main>
@@ -103,9 +103,9 @@ export default function CurriculumEditorPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-16">
+    <main dir="ltr" className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-16">
       <div>
-        <Link href="/" className="text-sm text-neutral-500 hover:underline">
+        <Link href="/curriculum" className="text-sm text-neutral-500 hover:underline">
           &larr; Back
         </Link>
       </div>
