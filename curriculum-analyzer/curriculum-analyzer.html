@@ -292,12 +292,103 @@ len1=val.length;len1>k;k++)item=val[k],childNode={},childNode[key]=item,lastChil
      تُملأ في م5.
      ============================================================ -->
 <script>
+// ---------- م5: بيانات القواعد ----------
+// كل ما يلي قابل للتعديل من هذا المكان وحده. الأفعال بصيغة الغائب (يـ) بلا تشكيل؛
+// صيغة (تـ) تُوحَّد إليها وقت المطابقة. الفعل المذكور في أكثر من مستوى يأخذ الأدنى بثقة medium.
+
+const BLOOM_LEVELS = [
+  { id: 1, name: 'تذكر', verbs: [
+    'يذكر','يعدد','يسمي','يحدد','يعرف','يتعرف','يسرد','يكرر','يستظهر','يحفظ','يسترجع','يستدعي',
+    'يرتب','يطابق','يختار','يصف','يقرأ','يسجل','يدون','يشير','يعين','يتذكر','ينسخ','يكتب','يجد',
+    'يستخرج','يضع','يملأ','يحصي','يعلم','يسترد','يعدد','يحدد'
+  ]},
+  { id: 2, name: 'فهم', verbs: [
+    'يشرح','يوضح','يفسر','يلخص','يستنتج','يترجم','يعبر','يعيد','يميز','يبين','يناقش','يعطي','يمثل',
+    'يصنف','يقارن','يتنبأ','يتوقع','يعمم','يستخلص','يستدل','يفهم','يعلل','يحول','يوجز','يقدر','يعرض',
+    'يستوعب','يدرك','يبسط','يستشهد','يقدم','يصوغ','يترجم','يستنتج'
+  ]},
+  { id: 3, name: 'تطبيق', verbs: [
+    'يطبق','يستخدم','يحسب','يرسم','ينفذ','يحل','يوظف','يجري','يمارس','يجرب','يعد','يكمل','يعدل',
+    'يقيس','يبني','يظهر','يستعمل','ينتج','يشغل','يتبع','يخطط','يعالج','يكتشف','يتوصل','يستثمر',
+    'يجهز','يعبئ','يجدول','يحضر','يرتب','يستخرج','يختار'
+  ]},
+  { id: 4, name: 'تحليل', verbs: [
+    'يحلل','يقارن','يميز','يصنف','يفرق','يفحص','يستنتج','يربط','يفكك','يجزئ','يستقصي','يختبر',
+    'يبحث','يستكشف','يدقق','يستنبط','ينظم','يوازن','يكشف','يفرز','يعزو','يشخص','يتتبع','يقسم',
+    'يحدد','يوازي','يستقرئ','يستدل','يستخرج','يرتب'
+  ]},
+  { id: 5, name: 'تقويم', verbs: [
+    'يقيم','يقوم','يحكم','ينقد','ينتقد','يبرر','يدافع','يفاضل','يختار','يقدر','يبرهن','يوصي','يرجح',
+    'يجادل','يقرر','يتحقق','يراجع','يقنع','يحاجج','يثمن','يفند','يبدي','يصدر','يزن','يعلق',
+    'يحاكم','يقارن','يصوب','يتبنى','ينتقي'
+  ]},
+  { id: 6, name: 'إبداع', verbs: [
+    'يصمم','يبتكر','يقترح','ينشئ','يبدع','يؤلف','يبني','يخترع','يطور','يركب','يولد','يعدل','يخطط',
+    'ينتج','يبتدع','يصيغ','يعيد','يبرمج','يكون','يجمع','يدمج','يفترض','يتخيل','ينظم','يؤسس',
+    'يستحدث','يشيد','يحور','يستنبط','يقيم'
+  ]}
+];
+
+// بنود الإطار العام العماني — placeholder: صياغة عامة مؤقتة إلى أن تُراجع البنود الرسمية
+const OMAN_FRAMEWORK = [
+  { id: 'K1', category: 'معارف', text: 'اكتساب المفاهيم والحقائق والمبادئ الأساسية في المادة الدراسية' },
+  { id: 'K2', category: 'معارف', text: 'فهم العلاقات بين المفاهيم وربطها بالحياة اليومية والبيئة العمانية' },
+  { id: 'K3', category: 'معارف', text: 'معرفة المصطلحات العلمية والرموز والوحدات المستخدمة في المادة' },
+  { id: 'S1', category: 'مهارات', text: 'مهارات التفكير العليا من تحليل وتقويم وإبداع في مواقف تعليمية' },
+  { id: 'S2', category: 'مهارات', text: 'مهارات البحث والاستقصاء وجمع المعلومات وتنظيمها وعرضها' },
+  { id: 'S3', category: 'مهارات', text: 'المهارات العملية والتجريبية واستخدام الأدوات والأجهزة بأمان' },
+  { id: 'S4', category: 'مهارات', text: 'مهارات القراءة والكتابة والتعبير الشفهي والكتابي بلغة سليمة' },
+  { id: 'V1', category: 'قيم', text: 'الاعتزاز بالهوية العمانية والانتماء للوطن واحترام تراثه وثقافته' },
+  { id: 'V2', category: 'قيم', text: 'المحافظة على البيئة والموارد الطبيعية وترشيد استهلاكها' },
+  { id: 'V3', category: 'قيم', text: 'القيم الإسلامية والأخلاقية من صدق وأمانة واحترام وتعاون ومسؤولية' },
+  { id: 'V4', category: 'قيم', text: 'تقدير العلم والعلماء والاتجاه الإيجابي نحو التعلم مدى الحياة' }
+];
+
+// مهارات القرن 21 السبع المذكورة في الوثيقة
+const SKILLS_21 = [
+  { id: 'C1', category: 'مهارات القرن 21', text: 'العمل الجماعي والتعاون مع الزملاء في مجموعات لإنجاز مهمة مشتركة' },
+  { id: 'C2', category: 'مهارات القرن 21', text: 'التقييم الذاتي وتقييم عمل الآخرين وفق معايير محددة وإصدار الأحكام' },
+  { id: 'C3', category: 'مهارات القرن 21', text: 'حل المشكلات بتحديد المشكلة واقتراح الحلول واختيار الأنسب منها' },
+  { id: 'C4', category: 'مهارات القرن 21', text: 'الإبداع وإنتاج أفكار أصيلة وتصميم أعمال جديدة' },
+  { id: 'C5', category: 'مهارات القرن 21', text: 'الابتكار وتطوير حلول ومنتجات مبتكرة لمواقف واقعية' },
+  { id: 'C6', category: 'مهارات القرن 21', text: 'التواصل الشفهي والعرض والمناقشة والتعبير عن الأفكار بوضوح' },
+  { id: 'C7', category: 'مهارات القرن 21', text: 'تكنولوجيا المعلومات والاتصالات واستخدام الحاسوب والإنترنت والتطبيقات الرقمية' }
+];
+
+// كلمات التوقف العربية (تُحذف قبل حساب التشابه)، مكتوبة بعد التطبيع (بلا ال، ة→ه، ى→ي)
+const STOP_WORDS = [
+  'من','في','علي','الي','عن','ان','انه','انها','او','و','ثم','حتي','اذا','اذ','لكن','بل','لا','لم',
+  'لن','ما','ماذا','لماذا','كيف','متي','اين','هل','هذا','هذه','ذلك','تلك','هؤلاء','اولئك','التي',
+  'الذي','الذين','اللاتي','اللواتي','هو','هي','هم','هن','انا','نحن','انت','انتم','كان','كانت',
+  'يكون','تكون','ليس','ليست','قد','لقد','كل','بعض','غير','بين','عند','عندما','بعد','قبل','خلال',
+  'حول','مع','لدي','له','لها','لهم','به','بها','بهم','فيه','فيها','منه','منها','علي','عليه','عليها',
+  'اي','ايضا','جدا','فقط','مثل','نحو','ضمن','طالب','متعلم','تلميذ','دارس','طلاب','متعلمون','ذات','ذو'
+];
+
+// أنماط الهيكلة: كلها في مصفوفة واحدة. type: unit | lesson | objectives | activities | assessments | references
+// heading: يطابق سطر العنوان الذي يفتح القسم. item: يطابق سطرًا مفردًا يُصنَّف مباشرة ولو خارج قسمه.
+const STRUCTURE_PATTERNS = [
+  { type: 'unit',        heading: /^(?:الوحدة|وحدة)\s*(?:رقم\s*)?[\d٠-٩]*\s*[:\-–—]?\s*\S/ },
+  { type: 'lesson',      heading: /^(?:الدرس|درس)\s*(?:رقم\s*)?[\d٠-٩]*\s*[:\-–—]?\s*\S/ },
+  { type: 'lesson',      heading: /^[\d٠-٩]{1,2}\s*[\.\-–)]\s*\S/, numbered: true },
+  { type: 'objectives',  heading: /^(?:الأهداف|الاهداف|أهداف التعلم|اهداف التعلم|نواتج التعلم|أهداف الدرس|اهداف الدرس|الأهداف السلوكية|نتاجات التعلم)\s*:?\s*$/ },
+  { type: 'activities',  heading: /^(?:الأنشطة|الانشطة|أنشطة|انشطة|التطبيقات|نشاط|تطبيق)\s*:?\s*$/,
+                         item:    /^(?:نشاط|تطبيق)(?![ء-ي])/ },
+  { type: 'assessments', heading: /^(?:التقويم|تقويم|التقييم|أسئلة|اسئلة|الأسئلة|الاسئلة|اختبار|الاختبار)\s*:?\s*$/,
+                         item:    /^(?:التقويم|تقويم|أسئلة|اسئلة|اختبار)(?![ء-ي])/ },
+  { type: 'references',  heading: /^(?:المراجع|مراجع|مصادر|المصادر|مصادر التعلم)\s*:?\s*$/ }
+];
+
+// سطر هدف: يبدأ بـ"أن" أو بفعل مضارع (يـ/تـ + ثلاثة أحرف على الأقل)
+const OBJECTIVE_LINE = /^(?:أن|ان)\s+\S|^[يت][ء-ي]{2,}(?![ء-ي])/;
+
 const RULES = {
-  bloomVerbs: {},          // م5
-  omanFramework: [],       // م5
-  skills21: [],            // م5
-  stopWords: [],           // م5
-  structurePatterns: []    // م5
+  bloomLevels: BLOOM_LEVELS,
+  omanFramework: OMAN_FRAMEWORK,
+  skills21: SKILLS_21,
+  stopWords: STOP_WORDS,
+  structurePatterns: STRUCTURE_PATTERNS,
+  objectiveLine: OBJECTIVE_LINE
 };
 </script>
 
@@ -439,10 +530,252 @@ async function readDocument(file) {
   };
 }
 
-// م6: structure(doc) → Structure
-// م7: classifyBloom(structure) → bloom[]
-// م8: matchStandards(structure, userStandards) → standards[]
-// م9: summarize(structure, bloom) → { completeness, stats }
+// ---------- أدوات تطبيع عربية مشتركة ----------
+const TASHKEEL = /[ؐ-ًؚ-ٰٟۖ-ۭـ]/g;   // التشكيل والتطويل
+
+function stripTashkeel(s) { return s.replace(TASHKEEL, ''); }
+function unifyHamza(s)   { return s.replace(/[أإآ]/g, 'ا'); }
+
+// تطبيع كامل للمطابقة اللفظية (6.4): همزات، تاء مربوطة، ألف مقصورة، تشكيل، "ال"، علامات الترقيم
+function normalizeArabic(text) {
+  return unifyHamza(stripTashkeel(text || ''))
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[^ء-ي٠-٩0-9\s]/g, ' ')
+    .split(/\s+/)
+    .map(w => w.replace(/^(?:و|ف|ب|ك|ل)?ال/, ''))
+    .filter(Boolean)
+    .join(' ');
+}
+
+// مجموعة كلمات مطبّعة بلا كلمات توقف ولا كلمات أقصر من حرفين
+function tokenSet(text) {
+  const stop = new Set(RULES.stopWords);
+  return new Set(normalizeArabic(text).split(' ').filter(w => w.length >= 2 && !stop.has(w)));
+}
+
+function jaccard(a, b) {
+  if (!a.size || !b.size) return 0;
+  let inter = 0;
+  for (const w of a) if (b.has(w)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+function countWords(text) {
+  return normalizeArabic(text).split(' ').filter(Boolean).length;
+}
+
+// ---------- م6: المهيكِل (6.2) ----------
+// structure(doc) → Structure { units:[{title,pageStart,lessons:[...]}], orphanText, warnings[] }
+
+function matchPattern(line, type, kind = 'heading') {
+  for (const p of RULES.structurePatterns) {
+    if (p.type !== type || !p[kind]) continue;
+    if (p[kind].test(line)) return p;
+  }
+  return null;
+}
+
+function newLesson(title, page, implicit = false) {
+  return { title, page, implicit, objectives: [], activities: [], assessments: [], references: [] };
+}
+
+function structure(doc) {
+  const warnings = [];
+  const units = [];
+  const orphan = [];
+  let unit = null, lesson = null, section = null;
+
+  const lines = [];
+  for (const p of doc.pages) for (const raw of p.text.split('\n')) {
+    const line = raw.trim();
+    if (line) lines.push({ line, page: p.index });
+  }
+
+  const openUnit = (title, page) => { unit = { title, pageStart: page, lessons: [] }; units.push(unit); lesson = null; section = null; };
+  const openLesson = (title, page, implicit) => { lesson = newLesson(title, page, implicit); unit.lessons.push(lesson); section = null; };
+  const ensureLesson = page => { if (!lesson) openLesson(unit.title, page, true); };
+
+  for (const { line, page } of lines) {
+    if (matchPattern(line, 'unit')) { openUnit(line.replace(/\s*:\s*$/, ''), page); continue; }
+    if (!unit) { orphan.push(line); continue; }
+
+    const lessonPat = matchPattern(line, 'lesson');
+    // العنوان المرقّم يُعدّ درسًا فقط خارج الأقسام وإن كان قصيرًا
+    if (lessonPat && (!lessonPat.numbered || (section === null && line.length < 80))) {
+      openLesson(line.replace(/\s*:\s*$/, ''), page, false); continue;
+    }
+
+    let opened = false;
+    for (const type of ['objectives', 'activities', 'assessments', 'references']) {
+      if (matchPattern(line, type)) { ensureLesson(page); section = type; opened = true; break; }
+    }
+    if (opened) continue;
+
+    ensureLesson(page);
+    // سطر يُصنَّف مباشرة بنمط العنصر (نشاط/تقويم) ولو خارج قسمه
+    const itemType = ['activities', 'assessments'].find(t => matchPattern(line, t, 'item'));
+    if (itemType) { lesson[itemType].push({ text: line, page }); section = itemType; continue; }
+
+    if (section === 'objectives') {
+      if (RULES.objectiveLine.test(line)) lesson.objectives.push({ text: line, page });
+      else section = null;   // انتهت قائمة الأهداف عند أول سطر لا يشبه هدفًا
+    } else if (section) {
+      lesson[section].push({ text: line, page });
+    } else {
+      orphan.push(line);
+    }
+  }
+
+  if (!units.length) {
+    warnings.push({ code: 'NO_UNITS_DETECTED', message: 'لم تُكتشف وحدات؛ عومل الملف كله كوحدة واحدة بعنوان "المستند".' });
+    const all = { title: 'المستند', pageStart: 0, lessons: [newLesson('المستند', 0, true)] };
+    const l = all.lessons[0];
+    let sec = null;
+    for (const { line, page } of lines) {
+      const type = ['objectives', 'activities', 'assessments', 'references'].find(t => matchPattern(line, t));
+      if (type) { sec = type; continue; }
+      const itemType = ['activities', 'assessments'].find(t => matchPattern(line, t, 'item'));
+      if (itemType) { l[itemType].push({ text: line, page }); sec = itemType; continue; }
+      if (sec === 'objectives' && !RULES.objectiveLine.test(line)) sec = null;
+      if (sec) l[sec].push({ text: line, page });
+      else if (RULES.objectiveLine.test(line) && /^(?:أن|ان)\s/.test(line)) l.objectives.push({ text: line, page });
+    }
+    return { units: [all], orphanText: '', warnings };
+  }
+
+  return { units, orphanText: orphan.join('\n'), warnings };
+}
+
+// ---------- م7: مصنّف بلوم (6.3) ----------
+// classifyBloom(structure) → [{ objectiveRef:{unit,lesson,index,text}, verb, level, levelId, confidence }]
+
+const PRONOUN_SUFFIXES = ['كما','كم','كن','هما','هم','هن','ها','نا','ني','ه','ك'];
+const VERB_SUFFIXES = ['ون','ين','ان','وا','ا','ي','ن'];
+
+// فهرس الأفعال: فعل مطبّع → قائمة معرّفات المستويات (مرتبة تصاعديًا)
+const BLOOM_INDEX = (() => {
+  const idx = new Map();
+  for (const lvl of RULES.bloomLevels) for (const v of lvl.verbs) {
+    const key = unifyHamza(stripTashkeel(v));
+    const arr = idx.get(key) || [];
+    if (!arr.includes(lvl.id)) arr.push(lvl.id);
+    idx.set(key, arr.sort((a, b) => a - b));
+  }
+  return idx;
+})();
+
+function stripSuffixes(word, suffixes) {
+  for (const s of suffixes) if (word.length > s.length + 2 && word.endsWith(s)) return word.slice(0, -s.length);
+  return word;
+}
+
+// استخراج الفعل: أول كلمة بعد "أن"، وإلا أول كلمة تبدأ بـ يـ/تـ
+function extractVerb(text) {
+  const words = stripTashkeel(text).replace(/[^ء-ي\s]/g, ' ').split(/\s+/).filter(Boolean);
+  for (let i = 0; i < words.length; i++) {
+    if (/^(?:أن|ان)$/.test(words[i]) && words[i + 1]) return words[i + 1];
+  }
+  return words.find(w => /^[يت][ء-ي]{2,}$/.test(w)) || '';
+}
+
+function lookupVerb(word) {
+  const w = unifyHamza(word).replace(/^ت/, 'ي');
+  const direct = BLOOM_INDEX.get(w) || (word.startsWith('ت') ? BLOOM_INDEX.get(unifyHamza(word)) : null);
+  if (direct) return { levels: direct, exact: true };
+  let stem = stripSuffixes(w, PRONOUN_SUFFIXES);
+  stem = stripSuffixes(stem, VERB_SUFFIXES);
+  const loose = BLOOM_INDEX.get(stem) || BLOOM_INDEX.get(stem.replace(/^ت/, 'ي'));
+  if (loose) return { levels: loose, exact: false };
+  return null;
+}
+
+function levelName(id) { const l = RULES.bloomLevels.find(x => x.id === id); return l ? l.name : 'غير محدد'; }
+
+function classifyBloom(struct) {
+  const out = [];
+  struct.units.forEach((u, ui) => u.lessons.forEach((l, li) => l.objectives.forEach((o, oi) => {
+    const verb = extractVerb(o.text);
+    const hit = verb ? lookupVerb(verb) : null;
+    let levelId = 0, confidence = 'low';
+    if (hit) {
+      levelId = hit.levels[0];
+      confidence = hit.exact && hit.levels.length === 1 ? 'high' : 'medium';
+    }
+    out.push({ objectiveRef: { unit: ui, lesson: li, index: oi, text: o.text }, verb, level: levelName(levelId), levelId, confidence });
+  })));
+  return out;
+}
+
+// ---------- م8: مطابق المعايير (6.4) ----------
+// matchStandards(structure, userStandards) → [{ objectiveRef, standardId, standardText, source, score, confidence }]
+
+const MATCH_THRESHOLDS = { high: 0.5, medium: 0.3, low: 0.15 };
+
+function scoreConfidence(score) {
+  if (score > MATCH_THRESHOLDS.high) return 'high';
+  if (score >= MATCH_THRESHOLDS.medium) return 'medium';
+  if (score >= MATCH_THRESHOLDS.low) return 'low';
+  return null;
+}
+
+function matchStandards(struct, userStandards = []) {
+  const pool = [
+    ...RULES.omanFramework.map(s => ({ id: s.id, text: s.text, label: s.category, source: 'framework' })),
+    ...RULES.skills21.map(s => ({ id: s.id, text: s.text, label: s.category, source: 'framework' })),
+    ...userStandards.map(s => ({ id: s.id || s.code, text: [s.code, s.text].filter(Boolean).join(' '), label: s.domain || 'معيار المادة', source: 'user' }))
+  ].map(s => ({ ...s, tokens: tokenSet(s.text) }));
+
+  const out = [];
+  struct.units.forEach((u, ui) => u.lessons.forEach((l, li) => l.objectives.forEach((o, oi) => {
+    const tokens = tokenSet(o.text);
+    for (const s of pool) {
+      const score = jaccard(tokens, s.tokens);
+      const confidence = scoreConfidence(score);
+      if (!confidence) continue;
+      out.push({ objectiveRef: { unit: ui, lesson: li, index: oi, text: o.text },
+        standardId: s.id, standardText: s.text, standardLabel: s.label, source: s.source,
+        score: Math.round(score * 100) / 100, confidence });
+    }
+  })));
+  return out.sort((a, b) => b.score - a.score);
+}
+
+// ---------- م9: الاكتمال والإحصاء (6.5) ----------
+// summarize(structure, bloom, doc) → { completeness:[...], stats:{...} }
+
+function summarize(struct, bloom, doc) {
+  const completeness = [];
+  let lessons = 0, objectives = 0;
+  struct.units.forEach((u, ui) => u.lessons.forEach((l, li) => {
+    lessons++; objectives += l.objectives.length;
+    completeness.push({ lessonRef: { unit: ui, lesson: li, unitTitle: u.title, title: l.title },
+      hasObjectives: l.objectives.length > 0, hasActivities: l.activities.length > 0,
+      hasAssessment: l.assessments.length > 0, hasReferences: l.references.length > 0 });
+  }));
+
+  const dist = {};
+  for (const lvl of RULES.bloomLevels) dist[lvl.name] = 0;
+  dist['غير محدد'] = 0;
+  for (const b of bloom) dist[b.level] = (dist[b.level] || 0) + 1;
+  const total = bloom.length || 1;
+  const bloomDistribution = {};
+  for (const k of Object.keys(dist)) bloomDistribution[k] = Math.round((dist[k] / total) * 1000) / 10;
+
+  const words = doc ? doc.pages.reduce((n, p) => n + countWords(p.text), 0) : 0;
+  return { completeness, stats: { units: struct.units.length, lessons, objectives, words, pages: doc ? doc.meta.pageCount : 0, bloomDistribution, bloomCounts: dist } };
+}
+
+// ---------- خط الأنابيب الكامل ----------
+// analyzeDocument(doc, userStandards, onStep) → Analysis (القسم 5.3)
+async function analyzeDocument(doc, userStandards = [], onStep = () => {}) {
+  onStep(2); const struct = structure(doc);
+  onStep(3); const bloom = classifyBloom(struct);
+  onStep(4); const standards = matchStandards(struct, userStandards);
+  onStep(5); const { completeness, stats } = summarize(struct, bloom, doc);
+  return { bloom, standards, completeness, stats, structure: struct,
+    warnings: [...doc.meta.warnings, ...struct.warnings], generatedAt: new Date().toISOString() };
+}
 </script>
 
 <!-- ============================================================
