@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
+import { chat, extractJson } from "@/lib/ai";
 import type { CurriculumBrief, Module } from "@/types/curriculum";
 
-const SYSTEM_PROMPT = `You are a curriculum design assistant. Given a subject, level, goals, and duration, produce a structured course outline.
+const SYSTEM_PROMPT = `You are a curriculum design assistant for Harak, a tool used by Sultan Qaboos Naval Academy. Given a subject, level, goals, and duration, produce a structured course outline.
+
+Write ALL text values (module titles, objectives, topic titles, topic descriptions) in Modern Standard Arabic (العربية الفصحى), even if the brief is written in English. Keep JSON keys exactly as given, in English. Write learning objectives as behavioural objectives beginning with a measurable present-tense verb (e.g. "يحدد الطالب…", "يشرح الطالب…").
+
 Respond with ONLY valid JSON matching this TypeScript type, no prose, no markdown fences:
 
 {
@@ -65,25 +68,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const anthropic = getAnthropicClient();
-    const message = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `Subject: ${brief.subject}\nLevel: ${brief.level}\nGoals: ${brief.goals || "General mastery of the subject"}\nDuration: ${brief.durationWeeks} weeks`,
-        },
-      ],
-    });
+    const text = await chat(
+      SYSTEM_PROMPT,
+      `المادة: ${brief.subject}\nالمستوى: ${brief.level}\nأهداف التعلّم: ${brief.goals || "إتقان عام للمادة"}\nالمدة: ${brief.durationWeeks} أسبوعًا\n\nاكتب المخطط كاملًا بالعربية.`,
+    );
 
-    const textBlock = message.content.find((block) => block.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      return NextResponse.json({ error: "No text response from model" }, { status: 502 });
-    }
-
-    const modules = parseModules(textBlock.text);
+    const modules = parseModules(extractJson(text));
     return NextResponse.json({ modules });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

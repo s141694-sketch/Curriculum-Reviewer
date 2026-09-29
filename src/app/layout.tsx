@@ -1,20 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { El_Messiri, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Wallpaper } from "@/components/Wallpaper";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const messiri = El_Messiri({
+  variable: "--font-messiri",
+  subsets: ["arabic", "latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const plexArabic = IBM_Plex_Sans_Arabic({
+  variable: "--font-plex-arabic",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Curriculum Reviewer",
-  description: "AI-assisted curriculum design and review",
+  title: "حراك",
+  description: "حراك — بوصلة المنهج الدراسي. أكاديمية السلطان قابوس البحرية.",
 };
 
 export default function RootLayout({
@@ -24,10 +29,15 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="ar"
+      dir="rtl"
+      className={`${messiri.variable} ${plexArabic.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="isolate flex min-h-full flex-col font-sans text-ink">
+        <Wallpaper />
+        <SiteHeader />
+        {children}
+      </body>
     </html>
   );
 }

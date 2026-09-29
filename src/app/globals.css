@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
+/*
+ * Harak visual identity ("Compass" concept).
+ * North = maroon (primary action), south = navy (text, chrome),
+ * hub = gold (dividers, ornaments; never text on light backgrounds).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --harak-navy: #1b1f4b;
+  --harak-navy-deep: #12153a;
+  --harak-navy-soft: #2e3470;
+  --harak-maroon: #7e1416;
+  --harak-maroon-soft: #a0282c;
+  --harak-gold: #d4ad6a;
+  --harak-gold-soft: #e8cf9a;
+  --harak-gold-ink: #7a5b22;
+  --harak-ivory: #fbf8f1;
+  --harak-sand: #f4efe4;
+  --harak-line: #e3d9c4;
+  --harak-ink: #14162e;
+  --harak-muted: #4a4c63;
+  --harak-success: #1e7a4c;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-navy: var(--harak-navy);
+  --color-navy-deep: var(--harak-navy-deep);
+  --color-navy-soft: var(--harak-navy-soft);
+  --color-maroon: var(--harak-maroon);
+  --color-maroon-soft: var(--harak-maroon-soft);
+  --color-gold: var(--harak-gold);
+  --color-gold-soft: var(--harak-gold-soft);
+  --color-gold-ink: var(--harak-gold-ink);
+  --color-ivory: var(--harak-ivory);
+  --color-sand: var(--harak-sand);
+  --color-line: var(--harak-line);
+  --color-ink: var(--harak-ink);
+  --color-muted: var(--harak-muted);
+  --color-success: var(--harak-success);
+  --font-sans: var(--font-plex-arabic), system-ui, sans-serif;
+  --font-display: var(--font-messiri), var(--font-plex-arabic), serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* ivory ground with a faint chart-grid of sand dots */
+  background-color: var(--harak-ivory);
+  background-image: radial-gradient(var(--harak-line) 1px, transparent 1.2px);
+  background-size: 28px 28px;
+  color: var(--harak-ink);
+}
+
+/* Slow turn of the wallpaper compass roses. */
+@keyframes harak-rose {
+  to { transform: rotate(360deg); }
+}
+.harak-rose { animation: harak-rose 240s linear infinite; transform-origin: 50% 50%; }
+.harak-rose-reverse { animation: harak-rose 320s linear infinite reverse; transform-origin: 50% 50%; }
+
+/* The wordmark's needle swings when its link or card is hovered. */
+.harak-needle { transform-origin: 50% 50%; }
+.group:hover .harak-needle,
+a:hover > .harak-wordmark .harak-needle {
+  animation: harak-seek 1.2s cubic-bezier(0.45, 0.05, 0.3, 1) 1;
+}
+
+/* Lift-on-hover for cards, and a gentle press for buttons. */
+.harak-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.harak-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--harak-gold);
+  box-shadow: 0 12px 28px rgba(27, 31, 75, 0.1);
+}
+.harak-press { transition: background-color 0.15s ease, transform 0.15s ease; }
+.harak-press:active { transform: scale(0.98); }
+
+/* Nav links: maroon underline that draws in from the right (RTL). */
+.harak-nav {
+  position: relative;
+  padding-bottom: 4px;
+  transition: color 0.15s ease;
+}
+.harak-nav::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: var(--harak-maroon);
+  transition: width 0.25s ease;
+}
+.harak-nav:hover::after,
+.harak-nav[aria-current="page"]::after { width: 100%; }
+
+/* Route line between modules: dashes drift like a plotted course. */
+@keyframes harak-course {
+  to { background-position: 0 -16px; }
+}
+.harak-course {
+  background-image: linear-gradient(to bottom, var(--harak-gold) 50%, transparent 50%);
+  background-size: 2px 16px;
+  animation: harak-course 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .harak-rose, .harak-rose-reverse, .harak-course,
+  .group:hover .harak-needle, a:hover > .harak-wordmark .harak-needle {
+    animation: none;
+  }
+  .harak-card:hover { transform: none; }
+}
+
+:focus-visible {
+  outline: 3px solid var(--harak-gold-soft);
+  outline-offset: 2px;
+}
+
+/* Brand text field: ivory fill, sand border, navy focus ring. */
+.harak-field {
+  border: 1px solid var(--harak-line);
+  border-radius: 12px;
+  background: var(--harak-ivory);
+  padding: 0.7rem 0.9rem;
+  color: var(--harak-ink);
+}
+
+.harak-field:focus {
+  border-color: var(--harak-navy);
+  background: #ffffff;
+  outline: 3px solid var(--harak-gold-soft);
+  outline-offset: 1px;
+}
+
+@keyframes harak-seek {
+  0% { transform: rotate(-55deg); }
+  30% { transform: rotate(30deg); }
+  52% { transform: rotate(-14deg); }
+  70% { transform: rotate(6deg); }
+  84%, 100% { transform: rotate(0deg); }
+}
+
+.harak-seek {
+  animation: harak-seek 1.6s cubic-bezier(0.45, 0.05, 0.3, 1) infinite;
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .harak-seek {
+    animation: none;
+  }
 }
