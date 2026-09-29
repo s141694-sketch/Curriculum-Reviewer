@@ -240,6 +240,14 @@ const AI = {
 
   async complete(messages, onStatus) { let out = ''; for await (const d of this.stream(messages, onStatus)) out += d; return out; },
 
+  // قائمة النماذج المنزّلة في Ollama (/api/tags)
+  async listModels() {
+    const res = await fetch(`${this.baseUrl()}/api/tags`).catch(() => { throw new Error('تعذّر الوصول إلى Ollama. شغّله بـ OLLAMA_ORIGINS="*" ollama serve'); });
+    if (!res.ok) throw new Error(`Ollama ردّ بخطأ ${res.status}`);
+    const data = await res.json();
+    return (data.models || []).map(m => m.name);
+  },
+
   async test() {
     if (this.settings.engine === 'webllm') {
       if (!navigator.gpu) throw new Error('هذا المتصفح لا يدعم WebGPU؛ استخدم Chrome أو Edge حديثًا، أو اختر Ollama.');
@@ -325,6 +333,16 @@ function renderChat() {
   $('btn-ai-test').addEventListener('click', async () => {
     status('جارٍ الاختبار…');
     try { status(await AI.test(), 'ok'); } catch (e) { status(e.message || String(e), 'err'); }
+  });
+  $('btn-ai-models').addEventListener('click', async () => {
+    status('جارٍ قراءة قائمة النماذج…');
+    try {
+      const names = await AI.listModels();
+      $('ai-models').innerHTML = names.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+      $('ai-models-hint').textContent = names.length ? 'المتاحة: ' + names.join('، ') : 'لا نماذج منزّلة بعد: ollama pull qwen2.5:7b';
+      if (names.length && !names.includes(S.model)) { S.model = names.find(n => /qwen|gemma|llama/i.test(n)) || names[0]; AI.save(); $('ai-model').value = S.model; }
+      status(`وُجد ${names.length} نموذجًا. النموذج المختار: ${AI.model()}`, 'ok');
+    } catch (e) { status(e.message || String(e), 'err'); }
   });
   $('btn-ai-clear').addEventListener('click', () => { chat = []; store.write(HARAK_KEYS.chat, chat); renderChat(); });
   document.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => send(b.dataset.quick)));

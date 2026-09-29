@@ -790,9 +790,9 @@ pre.json { direction: ltr; text-align: left; background: var(--color-primary); c
               <option value="webllm">داخل المتصفح (WebLLM، تجريبي)</option>
             </select></div>
           <div class="field" data-engine="ollama openai"><label for="ai-url">عنوان الخادم</label><input type="text" id="ai-url" dir="ltr" placeholder="http://localhost:11434"></div>
-          <div class="field" data-engine="ollama openai webllm"><label for="ai-model">النموذج</label><input type="text" id="ai-model" dir="ltr" placeholder="qwen2.5:7b"></div>
+          <div class="field" data-engine="ollama openai webllm"><label for="ai-model">النموذج</label><input type="text" id="ai-model" dir="ltr" placeholder="qwen2.5:7b" list="ai-models"><datalist id="ai-models"></datalist><small class="muted" id="ai-models-hint"></small></div>
           <div class="field" data-engine="openai"><label for="ai-key">مفتاح API (إن لزم)</label><input type="password" id="ai-key" dir="ltr" autocomplete="off"></div>
-          <div class="actions" style="margin:var(--space-unit) 0"><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-test">اختبار الاتصال</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-clear">مسح المحادثة</button></div>
+          <div class="actions" style="margin:var(--space-unit) 0"><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-test">اختبار الاتصال</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-models" data-engine="ollama">النماذج المتاحة</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-clear">مسح المحادثة</button></div>
           <div class="engine-status" id="ai-status">لم يُختبر الاتصال بعد.</div>
           <p class="muted" style="font-size:0.8rem;line-height:1.7;margin:var(--space-unit) 0 0">Ollama: ثبّته من ollama.com ثم <code dir="ltr">ollama pull qwen2.5:7b</code>. إن رفض المتصفح الاتصال شغّله بـ <code dir="ltr">OLLAMA_ORIGINS="*" ollama serve</code>.</p>
         </div>
@@ -2743,6 +2743,14 @@ const AI = {
 
   async complete(messages, onStatus) { let out = ''; for await (const d of this.stream(messages, onStatus)) out += d; return out; },
 
+  // قائمة النماذج المنزّلة في Ollama (/api/tags)
+  async listModels() {
+    const res = await fetch(`${this.baseUrl()}/api/tags`).catch(() => { throw new Error('تعذّر الوصول إلى Ollama. شغّله بـ OLLAMA_ORIGINS="*" ollama serve'); });
+    if (!res.ok) throw new Error(`Ollama ردّ بخطأ ${res.status}`);
+    const data = await res.json();
+    return (data.models || []).map(m => m.name);
+  },
+
   async test() {
     if (this.settings.engine === 'webllm') {
       if (!navigator.gpu) throw new Error('هذا المتصفح لا يدعم WebGPU؛ استخدم Chrome أو Edge حديثًا، أو اختر Ollama.');
@@ -2828,6 +2836,16 @@ function renderChat() {
   $('btn-ai-test').addEventListener('click', async () => {
     status('جارٍ الاختبار…');
     try { status(await AI.test(), 'ok'); } catch (e) { status(e.message || String(e), 'err'); }
+  });
+  $('btn-ai-models').addEventListener('click', async () => {
+    status('جارٍ قراءة قائمة النماذج…');
+    try {
+      const names = await AI.listModels();
+      $('ai-models').innerHTML = names.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+      $('ai-models-hint').textContent = names.length ? 'المتاحة: ' + names.join('، ') : 'لا نماذج منزّلة بعد: ollama pull qwen2.5:7b';
+      if (names.length && !names.includes(S.model)) { S.model = names.find(n => /qwen|gemma|llama/i.test(n)) || names[0]; AI.save(); $('ai-model').value = S.model; }
+      status(`وُجد ${names.length} نموذجًا. النموذج المختار: ${AI.model()}`, 'ok');
+    } catch (e) { status(e.message || String(e), 'err'); }
   });
   $('btn-ai-clear').addEventListener('click', () => { chat = []; store.write(HARAK_KEYS.chat, chat); renderChat(); });
   document.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => send(b.dataset.quick)));
