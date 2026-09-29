@@ -20,8 +20,8 @@ function applyRole() {
   document.querySelectorAll('[data-admin-only]').forEach(el => { el.hidden = role !== 'admin'; });
   $('app-user').hidden = !session;
   if (session) {
-    $('app-user-name').textContent = session.name || ROLE_LABELS[session.role];
-    $('app-user-role').textContent = session.name ? ROLE_LABELS[session.role] : '';
+    $('app-user-name').textContent = session.name;
+    $('app-user-role').textContent = ROLE_LABELS[session.role];
     $('admin-role-chip').textContent = ROLE_LABELS[session.role];
     $('admin-title').textContent = session.role === 'admin' ? 'لوحة التحكم بالنظام' : 'لوحة المراجعة';
   }
@@ -33,9 +33,12 @@ function applyRole() {
   const cards = Array.from(document.querySelectorAll('.role-card'));
   let picked = 'designer';
   cards.forEach(c => c.addEventListener('click', () => { picked = c.dataset.role; cards.forEach(x => x.setAttribute('aria-pressed', String(x === c))); }));
+  $('landing-name').addEventListener('input', e => e.target.setCustomValidity(''));
   $('landing-form').addEventListener('submit', e => {
     e.preventDefault();
-    const name = $('landing-name').value.trim().slice(0, 60);
+    const nameInput = $('landing-name');
+    const name = nameInput.value.trim().slice(0, 60);
+    if (name.length < 2) { nameInput.setCustomValidity('اكتب اسمك (حرفان على الأقل) للدخول.'); nameInput.reportValidity(); return; }
     session = { name, role: picked, at: new Date().toISOString() };
     sessionStorage.setItem(HARAK_KEYS.session, JSON.stringify(session));
     const logins = store.read(HARAK_KEYS.logins, []);

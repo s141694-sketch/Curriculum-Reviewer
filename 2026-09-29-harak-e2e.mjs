@@ -1,4 +1,3 @@
-// اختبار شامل لملف harak.html: يحتاج playwright وخادمًا وهميًا على 11434 (انظر harak-app/README.md)
 import { chromium } from 'playwright';
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
 const ctx = await b.newContext({ viewport:{width:1366,height:900} });
@@ -28,9 +27,9 @@ await p.click('#tab-admin'); await p.waitForTimeout(300); await p.screenshot({pa
 console.log('users rows:', await p.$$eval('#users-table tbody tr', r=>r.map(x=>x.textContent)));
 await p.click('#btn-admin-tests'); await p.waitForSelector('#admin-test-results strong'); console.log('tests:', await p.textContent('#admin-test-results strong'));
 // reviewer sees admin tab but no admin-only; designer doesn't see admin tab
-await p.click('#btn-switch-role'); await p.click('.role-card[data-role=reviewer]'); await p.click('#landing-enter'); await p.waitForTimeout(200);
+await p.click('#btn-switch-role'); await p.click('.role-card[data-role=reviewer]'); await p.fill('#landing-name','سعيد'); await p.click('#landing-enter'); await p.waitForTimeout(200);
 console.log('reviewer admin tab visible:', !(await p.$eval('#tab-admin', t=>t.hidden)), 'admin-only hidden:', await p.$eval('[data-admin-only]', t=>t.hidden));
-await p.click('#btn-switch-role'); await p.click('.role-card[data-role=designer]'); await p.click('#landing-enter'); await p.waitForTimeout(200);
+await p.click('#btn-switch-role'); await p.click('.role-card[data-role=designer]'); await p.fill('#landing-name','سعيد'); await p.click('#landing-enter'); await p.waitForTimeout(200);
 console.log('designer admin tab hidden:', await p.$eval('#tab-admin', t=>t.hidden));
 await p.reload(); await p.waitForTimeout(500); console.log('after reload landing hidden (session kept):', await p.isHidden('#landing'));
 console.log('errors:', errs);
