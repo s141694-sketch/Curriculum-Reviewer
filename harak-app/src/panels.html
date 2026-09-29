@@ -66,9 +66,9 @@
               <option value="webllm">داخل المتصفح (WebLLM، تجريبي)</option>
             </select></div>
           <div class="field" data-engine="ollama openai"><label for="ai-url">عنوان الخادم</label><input type="text" id="ai-url" dir="ltr" placeholder="http://localhost:11434"></div>
-          <div class="field" data-engine="ollama openai webllm"><label for="ai-model">النموذج</label><input type="text" id="ai-model" dir="ltr" placeholder="qwen2.5:7b"></div>
+          <div class="field" data-engine="ollama openai webllm"><label for="ai-model">النموذج</label><input type="text" id="ai-model" dir="ltr" placeholder="qwen2.5:7b" list="ai-models"><datalist id="ai-models"></datalist><small class="muted" id="ai-models-hint"></small></div>
           <div class="field" data-engine="openai"><label for="ai-key">مفتاح API (إن لزم)</label><input type="password" id="ai-key" dir="ltr" autocomplete="off"></div>
-          <div class="actions" style="margin:var(--space-unit) 0"><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-test">اختبار الاتصال</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-clear">مسح المحادثة</button></div>
+          <div class="actions" style="margin:var(--space-unit) 0"><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-test">اختبار الاتصال</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-models" data-engine="ollama">النماذج المتاحة</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-clear">مسح المحادثة</button></div>
           <div class="engine-status" id="ai-status">لم يُختبر الاتصال بعد.</div>
           <p class="muted" style="font-size:0.8rem;line-height:1.7;margin:var(--space-unit) 0 0">Ollama: ثبّته من ollama.com ثم <code dir="ltr">ollama pull qwen2.5:7b</code>. إن رفض المتصفح الاتصال شغّله بـ <code dir="ltr">OLLAMA_ORIGINS="*" ollama serve</code>.</p>
         </div>
