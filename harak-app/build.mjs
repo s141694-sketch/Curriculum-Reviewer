@@ -35,6 +35,11 @@ once(
   "admin tab",
 );
 once(`  <section class="tab-panel is-active" role="tabpanel" id="panel-upload"`, `  <section class="tab-panel" role="tabpanel" id="panel-upload"`, "upload panel");
+once(
+  `    <div id="report" class="report">\n      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "رفع" أو جرّب العينة.</p>\n    </div>`,
+  `    <div id="report" class="report">\n      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "تحليل منهج" أو جرّب العينة.</p>\n    </div>\n` + read("src/ai-review.html"),
+  "ai review card",
+);
 once("</main>", read("src/panels.html") + "</main>", "panels");
 once("</body>\n</html>", `<script>\n${read("src/shell.js")}\n</script>\n\n</body>\n</html>`, "script");
 
