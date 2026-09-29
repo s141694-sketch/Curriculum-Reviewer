@@ -30,9 +30,6 @@ export async function POST(request: NextRequest) {
   if (!role || !ROLES.includes(role)) return NextResponse.json({ error: "اختر دورًا" }, { status: 400 });
 
   const expected = passcodeFor(role);
-  if (expected === null) {
-    return NextResponse.json({ error: "لم يُضبط رمز الدخول لهذا الدور على الخادم" }, { status: 503 });
-  }
   if (expected && body.passcode !== expected) {
     return NextResponse.json({ error: "رمز الدخول غير صحيح" }, { status: 401 });
   }
