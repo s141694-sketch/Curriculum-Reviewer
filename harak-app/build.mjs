@@ -40,6 +40,10 @@ once(
   `    <div id="report" class="report">\n      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "تحليل منهج" أو جرّب العينة.</p>\n    </div>\n` + read("src/ai-review.html"),
   "ai review card",
 );
+once(`<button class="btn btn-secondary" id="btn-sample" type="button">جرّب على عينة</button>`, `<button class="btn btn-secondary" id="btn-sample" type="button" hidden>جرّب على عينة</button>`, "sample button");
+once(`    <div class="card">\n      <h2>الجهة والشعار</h2>`, `    <div class="card" hidden>\n      <h2>الجهة والشعار</h2>`, "org card");
+once(`<li>أضف معايير مادتك واسم الجهة والشعار من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>`, `<li>أضف معايير مادتك من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>`, "settings hint");
+once(`ارفع منهجًا من تبويب "تحليل منهج" أو جرّب العينة.`, `ارفع منهجًا من تبويب "تحليل منهج" أو حلّل منهجًا من "المناهج".`, "results placeholder");
 once("</main>", read("src/panels.html") + "</main>", "panels");
 once("</body>\n</html>", `<script>\n${read("src/shell.js")}\n</script>\n\n</body>\n</html>`, "script");
 

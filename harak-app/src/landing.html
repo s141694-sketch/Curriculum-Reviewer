@@ -2,13 +2,16 @@
 <div id="landing" role="dialog" aria-modal="true" aria-labelledby="landing-title">
   <div class="landing-inner">
     <div class="landing-brand">
-      <span class="harak-wordmark" role="img" aria-label="حراك"><span aria-hidden="true">حر</span><svg viewBox="0 0 48 176" aria-hidden="true"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg><span aria-hidden="true">ك</span></span>
-      <span class="tagline">بوصلة المنهج الدراسي</span>
-      <div class="landing-compass" aria-hidden="true">
-        <svg viewBox="-110 -110 220 220" width="160" height="160"><circle r="104" fill="#FFFFFF" stroke="#E3D9C4" stroke-width="2"/><circle r="90" fill="none" stroke="#D4AD6A" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="2 7"/><circle r="66" fill="none" stroke="#D4AD6A" stroke-width="1.5"/><line x1="0" y1="-104" x2="0" y2="-92" stroke="#1B1F4B" stroke-width="3"/><line x1="0" y1="92" x2="0" y2="104" stroke="#1B1F4B" stroke-width="3"/><line x1="-104" y1="0" x2="-92" y2="0" stroke="#1B1F4B" stroke-width="3"/><line x1="92" y1="0" x2="104" y2="0" stroke="#1B1F4B" stroke-width="3"/></svg>
-        <div class="needle"><svg width="34" height="124" viewBox="0 0 48 176"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/><circle cx="24" cy="88" r="3" fill="#FBF8F1"/></svg></div>
-      </div>
       <img class="emblem" id="landing-emblem" alt="شعار أكاديمية السلطان قابوس البحرية">
+      <span class="academy">أكاديمية السلطان قابوس البحرية</span>
+      <div class="landing-lockup">
+        <span class="harak-wordmark" role="img" aria-label="حراك"><span aria-hidden="true">حر</span><svg viewBox="0 0 48 176" aria-hidden="true"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg><span aria-hidden="true">ك</span></span>
+        <div class="landing-compass" aria-hidden="true">
+          <svg viewBox="-110 -110 220 220"><circle r="104" fill="#FFFFFF" stroke="#E3D9C4" stroke-width="2"/><circle r="90" fill="none" stroke="#D4AD6A" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="2 7"/><circle r="66" fill="none" stroke="#D4AD6A" stroke-width="1.5"/><line x1="0" y1="-104" x2="0" y2="-92" stroke="#1B1F4B" stroke-width="3"/><line x1="0" y1="92" x2="0" y2="104" stroke="#1B1F4B" stroke-width="3"/><line x1="-104" y1="0" x2="-92" y2="0" stroke="#1B1F4B" stroke-width="3"/><line x1="92" y1="0" x2="104" y2="0" stroke="#1B1F4B" stroke-width="3"/></svg>
+          <div class="needle"><svg viewBox="0 0 48 176"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/><circle cx="24" cy="88" r="3" fill="#FBF8F1"/></svg></div>
+        </div>
+      </div>
+      <span class="tagline">بوصلة المنهج الدراسي</span>
     </div>
 
     <form class="landing-card" id="landing-form">
@@ -31,12 +34,11 @@
         </button>
       </div>
       <div class="field">
-        <label for="landing-name">الاسم (اختياري)</label>
-        <input type="text" id="landing-name" placeholder="اسمك كما يظهر في السجل" autocomplete="name">
+        <label for="landing-name">الاسم</label>
+        <input type="text" id="landing-name" placeholder="اكتب اسمك الكامل" autocomplete="name" required minlength="2">
       </div>
       <div class="landing-actions">
         <button type="submit" class="btn btn-primary" id="landing-enter">دخول</button>
-        <span class="landing-foot">لا كلمات مرور: اختر دورك وادخل. يُحفظ اسمك ودورك في هذا المتصفح فقط.</span>
       </div>
     </form>
   </div>

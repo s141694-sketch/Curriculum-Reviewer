@@ -415,24 +415,29 @@ th { color: var(--color-primary); font-family: var(--font-body); font-weight: 60
 #landing { position: fixed; inset: 0; z-index: 50; overflow: auto; background: var(--color-ivory); background-image: var(--wallpaper); background-size: var(--wallpaper-size); }
 #landing[hidden] { display: none; }
 .landing-inner { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--space-unit) * 4); padding: calc(var(--space-unit) * 6) calc(var(--space-unit) * 3); box-sizing: border-box; }
-.landing-brand { display: flex; flex-direction: column; align-items: center; gap: var(--space-unit); color: var(--color-primary); }
-.landing-brand .harak-wordmark { font-size: 4.5rem; }
+.landing-brand { display: flex; flex-direction: column; align-items: center; gap: calc(var(--space-unit) * 1.5); color: var(--color-primary); }
+.landing-brand .emblem { height: 170px; width: auto; }
+.landing-brand .academy { font-family: var(--font-heading); font-weight: 700; font-size: 1.35rem; color: var(--color-primary); }
+.landing-lockup { display: flex; align-items: center; gap: calc(var(--space-unit) * 3); margin-top: var(--space-unit); }
+.landing-lockup .harak-wordmark { font-size: 4.5rem; }
 .landing-brand .tagline { color: var(--color-gold-ink); font-weight: 600; }
-.landing-brand .emblem { height: 96px; margin-top: var(--space-unit); }
-.landing-compass { width: 160px; height: 160px; position: relative; }
+.landing-compass { width: 112px; height: 112px; position: relative; flex-shrink: 0; }
+.landing-compass > svg { width: 100%; height: 100%; }
 .landing-compass .needle { position: absolute; inset: 0; display: grid; place-items: center; animation: harak-seek 2.2s cubic-bezier(.45,.05,.3,1) 1; transform-origin: 50% 50%; }
-.landing-card { width: min(720px, 100%); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 24px; padding: calc(var(--space-unit) * 4); box-sizing: border-box; display: flex; flex-direction: column; gap: calc(var(--space-unit) * 2.5); }
+.landing-compass .needle svg { width: 24px; height: 88px; }
+@media (prefers-reduced-motion: reduce) { .landing-compass .needle { animation: none; } }
+@media (max-width: 600px) { .landing-brand .emblem { height: 120px; } .landing-lockup { gap: calc(var(--space-unit) * 2); } .landing-lockup .harak-wordmark { font-size: 3.2rem; } .landing-compass { width: 84px; height: 84px; } .landing-compass .needle svg { width: 18px; height: 66px; } }
+.landing-card { width: min(720px, 100%); background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 16px; padding: calc(var(--space-unit) * 4); box-sizing: border-box; display: flex; flex-direction: column; gap: calc(var(--space-unit) * 2.5); }
 .landing-card h2 { font-size: 1.6rem; color: var(--color-primary); }
 .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: calc(var(--space-unit) * 2); }
-.role-card { text-align: right; cursor: pointer; border: 1.5px solid var(--color-line); border-radius: 16px; background: var(--color-ivory); padding: calc(var(--space-unit) * 2); font-family: var(--font-body); display: flex; flex-direction: column; gap: calc(var(--space-unit) / 2); transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
-.role-card:hover { transform: translateY(-3px); border-color: var(--color-accent); box-shadow: 0 12px 28px rgba(27, 31, 75, 0.1); }
+.role-card { text-align: right; cursor: pointer; border: 1.5px solid var(--color-line); border-radius: 12px; background: var(--color-ivory); padding: calc(var(--space-unit) * 2); font-family: var(--font-body); display: flex; flex-direction: column; gap: calc(var(--space-unit) / 2); transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+.role-card:hover { transform: translateY(-2px); border-color: var(--color-accent); }
 .role-card[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-surface); box-shadow: 0 0 0 3px var(--color-gold-soft); }
 .role-card .role-icon { width: 40px; height: 40px; color: var(--color-action); }
 .role-card strong { font-family: var(--font-heading); font-size: 1.15rem; color: var(--color-primary); }
 .role-card small { color: var(--color-muted); line-height: 1.6; }
 .landing-actions { display: flex; flex-wrap: wrap; gap: var(--space-unit); align-items: center; }
 .landing-actions .btn { padding: calc(var(--space-unit) * 1.5) calc(var(--space-unit) * 3.5); font-size: 1.05rem; }
-.landing-foot { color: var(--color-muted); font-size: 0.85rem; }
 
 /* عام */
 .panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-unit); margin-bottom: calc(var(--space-unit) * 2); }
@@ -530,13 +535,16 @@ pre.json { direction: ltr; text-align: left; background: var(--color-primary); c
 <div id="landing" role="dialog" aria-modal="true" aria-labelledby="landing-title">
   <div class="landing-inner">
     <div class="landing-brand">
-      <span class="harak-wordmark" role="img" aria-label="حراك"><span aria-hidden="true">حر</span><svg viewBox="0 0 48 176" aria-hidden="true"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg><span aria-hidden="true">ك</span></span>
-      <span class="tagline">بوصلة المنهج الدراسي</span>
-      <div class="landing-compass" aria-hidden="true">
-        <svg viewBox="-110 -110 220 220" width="160" height="160"><circle r="104" fill="#FFFFFF" stroke="#E3D9C4" stroke-width="2"/><circle r="90" fill="none" stroke="#D4AD6A" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="2 7"/><circle r="66" fill="none" stroke="#D4AD6A" stroke-width="1.5"/><line x1="0" y1="-104" x2="0" y2="-92" stroke="#1B1F4B" stroke-width="3"/><line x1="0" y1="92" x2="0" y2="104" stroke="#1B1F4B" stroke-width="3"/><line x1="-104" y1="0" x2="-92" y2="0" stroke="#1B1F4B" stroke-width="3"/><line x1="92" y1="0" x2="104" y2="0" stroke="#1B1F4B" stroke-width="3"/></svg>
-        <div class="needle"><svg width="34" height="124" viewBox="0 0 48 176"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/><circle cx="24" cy="88" r="3" fill="#FBF8F1"/></svg></div>
-      </div>
       <img class="emblem" id="landing-emblem" alt="شعار أكاديمية السلطان قابوس البحرية">
+      <span class="academy">أكاديمية السلطان قابوس البحرية</span>
+      <div class="landing-lockup">
+        <span class="harak-wordmark" role="img" aria-label="حراك"><span aria-hidden="true">حر</span><svg viewBox="0 0 48 176" aria-hidden="true"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg><span aria-hidden="true">ك</span></span>
+        <div class="landing-compass" aria-hidden="true">
+          <svg viewBox="-110 -110 220 220"><circle r="104" fill="#FFFFFF" stroke="#E3D9C4" stroke-width="2"/><circle r="90" fill="none" stroke="#D4AD6A" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="2 7"/><circle r="66" fill="none" stroke="#D4AD6A" stroke-width="1.5"/><line x1="0" y1="-104" x2="0" y2="-92" stroke="#1B1F4B" stroke-width="3"/><line x1="0" y1="92" x2="0" y2="104" stroke="#1B1F4B" stroke-width="3"/><line x1="-104" y1="0" x2="-92" y2="0" stroke="#1B1F4B" stroke-width="3"/><line x1="92" y1="0" x2="104" y2="0" stroke="#1B1F4B" stroke-width="3"/></svg>
+          <div class="needle"><svg viewBox="0 0 48 176"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/><circle cx="24" cy="88" r="3" fill="#FBF8F1"/></svg></div>
+        </div>
+      </div>
+      <span class="tagline">بوصلة المنهج الدراسي</span>
     </div>
 
     <form class="landing-card" id="landing-form">
@@ -559,12 +567,11 @@ pre.json { direction: ltr; text-align: left; background: var(--color-primary); c
         </button>
       </div>
       <div class="field">
-        <label for="landing-name">الاسم (اختياري)</label>
-        <input type="text" id="landing-name" placeholder="اسمك كما يظهر في السجل" autocomplete="name">
+        <label for="landing-name">الاسم</label>
+        <input type="text" id="landing-name" placeholder="اكتب اسمك الكامل" autocomplete="name" required minlength="2">
       </div>
       <div class="landing-actions">
         <button type="submit" class="btn btn-primary" id="landing-enter">دخول</button>
-        <span class="landing-foot">لا كلمات مرور: اختر دورك وادخل. يُحفظ اسمك ودورك في هذا المتصفح فقط.</span>
       </div>
     </form>
   </div>
@@ -613,7 +620,7 @@ pre.json { direction: ltr; text-align: left; background: var(--color-primary); c
       <p class="file-name" id="file-name">لم يُختر ملف بعد.</p>
       <div class="actions">
         <button class="btn btn-primary" id="btn-analyze" type="button" disabled>حلّل</button>
-        <button class="btn btn-secondary" id="btn-sample" type="button">جرّب على عينة</button>
+        <button class="btn btn-secondary" id="btn-sample" type="button" hidden>جرّب على عينة</button>
         <button class="btn btn-secondary" id="btn-dev-tests" type="button" hidden>تشغيل الاختبارات</button>
       </div>
       <ol class="steps" id="steps" aria-label="خطوات التحليل">
@@ -632,7 +639,7 @@ pre.json { direction: ltr; text-align: left; background: var(--color-primary); c
         <li>تعمل بالكامل داخل المتصفح بلا إنترنت ولا خادم؛ لا يغادر ملفك جهازك.</li>
         <li>الصيغ المقبولة: PDF نصي (لا ممسوح)، DOCX، TXT. الأضمن للعربية: DOCX.</li>
         <li>التحليل بقواعد لفظية: تصنيف أفعال الأهداف على مستويات بلوم، مطابقة لفظية مع المعايير، واكتمال عناصر كل درس. النتائج تحتاج مراجعة بشرية.</li>
-        <li>أضف معايير مادتك واسم الجهة والشعار من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>
+        <li>أضف معايير مادتك من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>
       </ul>
     </div>
   </section>
@@ -645,7 +652,7 @@ pre.json { direction: ltr; text-align: left; background: var(--color-primary); c
       <button class="btn btn-secondary" id="btn-save" type="button" disabled>حفظ التقرير في المتصفح</button>
     </div>
     <div id="report" class="report">
-      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "تحليل منهج" أو جرّب العينة.</p>
+      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "تحليل منهج" أو حلّل منهجًا من "المناهج".</p>
     </div>
     <div class="card" id="ai-review-card" style="margin-top:calc(var(--space-unit)*2)">
       <div class="panel-head no-print" style="margin-bottom:var(--space-unit)">
@@ -708,7 +715,7 @@ pre.json { direction: ltr; text-align: left; background: var(--color-primary); c
       <ul class="reports-list" id="fw-list"></ul>
     </div>
 
-    <div class="card">
+    <div class="card" hidden>
       <h2>الجهة والشعار</h2>
       <div class="field">
         <label for="org-name">اسم الجهة</label>
@@ -2532,8 +2539,8 @@ function applyRole() {
   document.querySelectorAll('[data-admin-only]').forEach(el => { el.hidden = role !== 'admin'; });
   $('app-user').hidden = !session;
   if (session) {
-    $('app-user-name').textContent = session.name || ROLE_LABELS[session.role];
-    $('app-user-role').textContent = session.name ? ROLE_LABELS[session.role] : '';
+    $('app-user-name').textContent = session.name;
+    $('app-user-role').textContent = ROLE_LABELS[session.role];
     $('admin-role-chip').textContent = ROLE_LABELS[session.role];
     $('admin-title').textContent = session.role === 'admin' ? 'لوحة التحكم بالنظام' : 'لوحة المراجعة';
   }
@@ -2545,9 +2552,12 @@ function applyRole() {
   const cards = Array.from(document.querySelectorAll('.role-card'));
   let picked = 'designer';
   cards.forEach(c => c.addEventListener('click', () => { picked = c.dataset.role; cards.forEach(x => x.setAttribute('aria-pressed', String(x === c))); }));
+  $('landing-name').addEventListener('input', e => e.target.setCustomValidity(''));
   $('landing-form').addEventListener('submit', e => {
     e.preventDefault();
-    const name = $('landing-name').value.trim().slice(0, 60);
+    const nameInput = $('landing-name');
+    const name = nameInput.value.trim().slice(0, 60);
+    if (name.length < 2) { nameInput.setCustomValidity('اكتب اسمك (حرفان على الأقل) للدخول.'); nameInput.reportValidity(); return; }
     session = { name, role: picked, at: new Date().toISOString() };
     sessionStorage.setItem(HARAK_KEYS.session, JSON.stringify(session));
     const logins = store.read(HARAK_KEYS.logins, []);
