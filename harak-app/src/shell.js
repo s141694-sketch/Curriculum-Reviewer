@@ -238,6 +238,18 @@ const AI = {
     }
   },
 
+  // هل يبقى كل شيء على هذا الجهاز؟
+  locality() {
+    const S = this.settings;
+    if (S.engine === 'webllm') return { local: false, text: 'داخل المتصفح: يُحمَّل النموذج من الإنترنت مرة واحدة ثم يعمل محليًا.' };
+    let host = '';
+    try { host = new URL(this.baseUrl()).hostname; } catch { return { local: false, text: 'عنوان الخادم غير صالح.' }; }
+    const localHost = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(host);
+    if (!localHost) return { local: false, text: `خادم خارجي (${host}): نص المنهج يغادر جهازك.` };
+    if (/-cloud$/i.test(this.model())) return { local: false, text: 'نموذج سحابي (-cloud): Ollama يمرّر النص إلى خوادمه عبر الإنترنت.' };
+    return { local: true, text: '✔ يعمل محليًا بالكامل: الملف والنموذج على هذا الجهاز، لا يغادر النص المتصفح وlocalhost.' };
+  },
+
   async complete(messages, onStatus) { let out = ''; for await (const d of this.stream(messages, onStatus)) out += d; return out; },
 
   // قائمة النماذج المنزّلة في Ollama (/api/tags)
@@ -330,6 +342,14 @@ function renderChat() {
   syncFields();
 
   const status = (text, cls = '') => { const el = $('ai-status'); el.textContent = text; el.className = 'engine-status ' + cls; };
+  window.aiStatus = status;
+  const locality = () => {
+    const el = $('ai-locality'); const l = AI.locality();
+    el.textContent = l.text; el.className = 'engine-status ' + (l.local ? 'ok' : 'err');
+  };
+  ['ai-engine', 'ai-url', 'ai-model'].forEach(id => $(id).addEventListener('input', locality));
+  $('ai-engine').addEventListener('change', locality);
+  locality();
   $('btn-ai-test').addEventListener('click', async () => {
     status('جارٍ الاختبار…');
     try { status(await AI.test(), 'ok'); } catch (e) { status(e.message || String(e), 'err'); }
@@ -424,5 +444,58 @@ function renderChat() {
     [...Object.values(HARAK_KEYS), ...Object.values(STORAGE_KEYS)].forEach(k => localStorage.removeItem(k));
     sessionStorage.removeItem(HARAK_KEYS.session);
     location.reload();
+  });
+})();
+
+// ---------- التقييم بالذكاء الاصطناعي في تبويب النتائج ----------
+(function initAiReview() {
+  const box = $('ai-review'), btn = $('btn-ai-review');
+  const list = (arr, cls = '') => (arr && arr.length) ? `<ul class="${cls}">${arr.map(x => `<li>${escapeHtml(typeof x === 'string' ? x : JSON.stringify(x))}</li>`).join('')}</ul>` : '<p class="muted">—</p>';
+  const section = (title, body) => `<div class="report-section"><h2>${title}</h2>${body}</div>`;
+
+  function render() {
+    const r = state.analysis && state.analysis.aiReview;
+    btn.disabled = !state.analysis;
+    if (!r) { box.innerHTML = `<p class="placeholder">${state.analysis ? 'اضغط «قيّم بالذكاء الاصطناعي» لتقييم يشرح النتائج ويقترح صياغات بديلة.' : 'حلّل منهجًا أولًا.'}</p>`; return; }
+    if (r.raw) { box.innerHTML = `<div class="report-section"><h2>تقييم النموذج</h2><div class="msg assistant" style="max-width:100%">${escapeHtml(r.raw)}</div></div>`; return; }
+    const score = Number(r.score);
+    box.innerHTML = `
+      <div class="summary-cards" style="margin-bottom:calc(var(--space-unit)*2)">
+        <div class="summary-card"><div class="num">${Number.isFinite(score) ? score : '—'}</div><div class="lbl">الدرجة الكلية من 100</div></div>
+        <div class="summary-card"><div class="num">${(r.strengths || []).length}</div><div class="lbl">نقاط قوة</div></div>
+        <div class="summary-card"><div class="num">${(r.weaknesses || []).length}</div><div class="lbl">نقاط ضعف</div></div>
+        <div class="summary-card"><div class="num">${(r.objectives || []).length}</div><div class="lbl">أهداف مقترح تحسينها</div></div>
+      </div>
+      ${section('الحكم العام', `<p>${escapeHtml(r.overall || '')}</p>`)}
+      ${section('نقاط القوة', list(r.strengths))}
+      ${section('نقاط الضعف', list(r.weaknesses))}
+      ${(r.objectives || []).length ? section('الأهداف المقترح تحسينها', `<div class="table-wrap"><table><thead><tr><th>الهدف الحالي</th><th>المستوى المقدّر</th><th>الملاحظة</th><th>الصياغة المقترحة</th></tr></thead><tbody>${r.objectives.map(o => `<tr><td>${escapeHtml(o.text || '')}</td><td>${escapeHtml(o.level || '')}</td><td>${escapeHtml(o.issue || '')}</td><td><strong>${escapeHtml(o.rewrite || '')}</strong></td></tr>`).join('')}</tbody></table></div>`) : ''}
+      ${section('عناصر ناقصة', list(r.missing))}
+      ${section('التوصيات', list(r.recommendations))}
+      <p class="muted" style="font-size:0.85rem">تقييم آلي من النموذج «${escapeHtml(r.model || '')}» في ${fmtDate(r.at)}؛ يحتاج مراجعة بشرية.</p>`;
+  }
+
+  // يُستدعى المحلّل renderResults عند كل تحليل جديد؛ نلحق به عرض التقييم الذكي
+  const original = renderResults;
+  renderResults = function () { original(); render(); };
+  render();
+
+  btn.addEventListener('click', async () => {
+    const a = state.analysis; if (!a) return;
+    btn.classList.add('is-busy'); btn.innerHTML = NEEDLE_SVG + 'جارٍ التقييم…';
+    box.innerHTML = '<p class="placeholder">النموذج يقرأ المنهج والنتائج الآلية…</p>';
+    const text = state.doc.pages.map(p => p.text).join('\n').slice(0, 7000);
+    const objectives = a.bloom.slice(0, 40).map(b => `- ${b.text} (المستوى المكتشف: ${b.level || 'غير محدد'})`).join('\n');
+    const sys = 'أنت مراجع مناهج خبير في أكاديمية السلطان قابوس البحرية. قيّم المنهج المرفق بموضوعية وفق تصنيف بلوم المعدَّل وأركان الهدف السلوكي واكتمال عناصر الدرس (أهداف، أنشطة، تقويم، مراجع) وملاءمة المحتوى للمستوى. أجب بالعربية الفصحى وبـJSON صالح فقط، بلا شرح ولا علامات ```، بهذا الشكل: {"score": 0-100, "overall": "فقرة", "strengths": ["..."], "weaknesses": ["..."], "objectives": [{"text": "الهدف كما ورد", "level": "مستوى بلوم", "issue": "المشكلة", "rewrite": "صياغة سلوكية أفضل تبدأ بـ أن"}], "missing": ["..."], "recommendations": ["..."]}. اختر للأهداف أضعف 3 إلى 8 أهداف فقط.';
+    const user = `ملخص التحليل الآلي: ${analysisSummary()}\n\nالأهداف المكتشفة:\n${objectives}\n\nنص المنهج:\n${text}`;
+    try {
+      const out = await AI.complete([{ role: 'system', content: sys }, { role: 'user', content: user }], s => window.aiStatus && window.aiStatus(s));
+      let review;
+      try { review = JSON.parse(extractJson(out)); } catch { review = { raw: out }; }
+      a.aiReview = { ...review, model: AI.model(), at: new Date().toISOString() };
+      render();
+    } catch (e) {
+      box.innerHTML = `<div class="alert alert-danger">${escapeHtml(e.message || String(e))}<br><small>تحقق من إعدادات المحرّك في تبويب «المساعد».</small></div>`;
+    } finally { btn.classList.remove('is-busy'); btn.textContent = 'قيّم بالذكاء الاصطناعي'; }
   });
 })();

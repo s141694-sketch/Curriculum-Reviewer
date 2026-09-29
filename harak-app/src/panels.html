@@ -70,6 +70,7 @@
           <div class="field" data-engine="openai"><label for="ai-key">مفتاح API (إن لزم)</label><input type="password" id="ai-key" dir="ltr" autocomplete="off"></div>
           <div class="actions" style="margin:var(--space-unit) 0"><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-test">اختبار الاتصال</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-models" data-engine="ollama">النماذج المتاحة</button><button class="btn btn-secondary btn-sm" type="button" id="btn-ai-clear">مسح المحادثة</button></div>
           <div class="engine-status" id="ai-status">لم يُختبر الاتصال بعد.</div>
+          <div class="engine-status" id="ai-locality"></div>
           <p class="muted" style="font-size:0.8rem;line-height:1.7;margin:var(--space-unit) 0 0">Ollama: ثبّته من ollama.com ثم <code dir="ltr">ollama pull qwen2.5:7b</code>. إن رفض المتصفح الاتصال شغّله بـ <code dir="ltr">OLLAMA_ORIGINS="*" ollama serve</code>.</p>
         </div>
       </aside>

@@ -1,0 +1,17 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
+const p = await b.newPage({viewport:{width:1366,height:900}}); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{ if(m.type()==='error') errs.push(m.text().slice(0,200)); });
+await p.goto('file:///home/user/Curriculum-Reviewer/harak-app/harak.html'); await p.click('.role-card[data-role=reviewer]'); await p.click('#landing-enter');
+await p.click('#tab-assistant'); console.log('locality:', await p.textContent('#ai-locality'));
+await p.fill('#ai-model','gemma4:31b-cloud'); await p.waitForTimeout(100); console.log('locality cloud:', await p.textContent('#ai-locality'));
+await p.fill('#ai-model','qwen2.5:7b');
+await p.click('#tab-upload'); console.log('review btn disabled before:', await p.$eval('#btn-ai-review', b=>b.disabled));
+await p.click('#btn-sample'); await p.waitForSelector('#panel-results.is-active',{timeout:15000}); await p.waitForTimeout(400);
+console.log('review btn disabled after:', await p.$eval('#btn-ai-review', b=>b.disabled));
+await p.click('#btn-ai-review'); await p.waitForSelector('#ai-review .summary-card',{timeout:15000}); await p.waitForTimeout(300);
+console.log('score:', await p.$eval('#ai-review .summary-card .num', n=>n.textContent), '| sections:', await p.$$eval('#ai-review .report-section h2', hs=>hs.map(h=>h.textContent)));
+await p.$eval('#ai-review-card', el=>el.scrollIntoView()); await p.screenshot({path:'h-review.png'});
+const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#btn-json')]); const path = await dl.path(); const fs = await import('node:fs'); console.log('json has aiReview:', fs.readFileSync(path,'utf8').includes('"aiReview"'));
+await p.click('#tab-upload'); await p.click('#btn-sample'); await p.waitForSelector('#panel-results.is-active'); await p.waitForTimeout(400);
+console.log('review cleared on new analysis:', (await p.textContent('#ai-review')).includes('اضغط'));
+console.log('errors:', errs); await b.close();
