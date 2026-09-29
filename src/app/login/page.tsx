@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { CompassMark, HarakWordmark } from "@/components/HarakLogo";
-import { isElevated, ROLE_LABELS, ROLES, type Role } from "@/lib/session";
+import { ROLE_LABELS, ROLES, type Role } from "@/lib/session";
 
 const roleHints: Record<Role, string> = {
   member: "إنشاء المناهج وتعديلها.",
@@ -24,7 +24,6 @@ function LoginForm() {
   const params = useSearchParams();
   const [name, setName] = useState("");
   const [role, setRole] = useState<Role>("member");
-  const [passcode, setPasscode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +35,7 @@ function LoginForm() {
       const response = await fetch("/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, role, passcode }),
+        body: JSON.stringify({ name, role }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "تعذّر تسجيل الدخول");
@@ -61,7 +60,7 @@ function LoginForm() {
         onSubmit={handleSubmit}
         className="flex flex-col gap-5 rounded-3xl border border-line bg-white p-8"
       >
-        <h1 className="font-display text-2xl font-bold text-navy">سجّل اسمك للدخول</h1>
+        <h1 className="font-display text-2xl font-bold text-navy">اختر دورك للدخول</h1>
 
         <label className="flex flex-col gap-1.5 text-sm font-semibold">
           الاسم
@@ -99,20 +98,6 @@ function LoginForm() {
             </label>
           ))}
         </fieldset>
-
-        {isElevated(role) && (
-          <label className="flex flex-col gap-1.5 text-sm font-semibold">
-            رمز الدخول
-            <input
-              type="password"
-              required
-              value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
-              placeholder="يزوّدك به مسؤول النظام"
-              className="harak-field text-base font-normal"
-            />
-          </label>
-        )}
 
         {error && (
           <p role="alert" className="rounded-xl bg-[#F7E9E9] px-4 py-3 text-sm text-maroon">

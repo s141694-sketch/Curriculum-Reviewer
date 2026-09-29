@@ -1,0 +1,37 @@
+// اختبار شامل لملف harak.html: يحتاج playwright وخادمًا وهميًا على 11434 (انظر harak-app/README.md)
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
+const ctx = await b.newContext({ viewport:{width:1366,height:900} });
+const p = await ctx.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{ if(m.type()==='error') errs.push(m.text().slice(0,200)); });
+await p.goto('file:///home/user/Curriculum-Reviewer/harak-app/harak.html'); await p.waitForTimeout(800);
+console.log('landing visible:', await p.isVisible('#landing'));
+await p.screenshot({path:'h-landing.png'});
+await p.click('.role-card[data-role=admin]'); await p.fill('#landing-name','مريم البلوشية'); await p.click('#landing-enter'); await p.waitForTimeout(300);
+console.log('landing hidden:', await p.isHidden('#landing'), '| tabs:', await p.$$eval('.tab-btn', ts=>ts.filter(t=>!t.hidden).map(t=>t.textContent)));
+await p.click('#btn-cur-new'); await p.fill('#cur-subject','الملاحة البحرية'); await p.fill('#cur-goals','أن يحدد الطالب المواقع.');
+await p.click('#btn-cur-ai'); await p.waitForSelector('#cur-editor-view:not([hidden])', {timeout:15000}); await p.waitForTimeout(300);
+console.log('modules in editor:', await p.$$eval('.module-card', m=>m.length));
+await p.screenshot({path:'h-editor.png', fullPage:true});
+await p.click('#btn-cur-analyze'); await p.waitForSelector('#panel-results.is-active',{timeout:15000}); await p.waitForTimeout(500);
+console.log('analysis stats:', await p.$$eval('.summary-card .num', ns=>ns.map(n=>n.textContent)));
+await p.click('#tab-curricula'); await p.click('#btn-cur-ask'); await p.waitForTimeout(200);
+console.log('context selected:', await p.$eval('#ai-context', s=>s.selectedOptions[0].textContent));
+await p.click('#btn-ai-test'); await p.waitForTimeout(800); console.log('status:', await p.textContent('#ai-status'));
+await p.fill('#chat-text','هل الأهداف جيدة؟'); await p.click('#chat-send'); await p.waitForTimeout(1500);
+console.log('chat last:', (await p.$$eval('.msg', ms=>ms.map(m=>m.textContent))).at(-1).slice(0,60));
+await p.click('[data-quick*="JSON"]'); await p.waitForTimeout(2500);
+console.log('apply btn:', await p.isVisible('[data-apply]'));
+p.once('dialog', d=>d.accept()); await p.click('[data-apply]'); await p.waitForTimeout(400);
+console.log('after apply, modules:', await p.$$eval('.module-card', m=>m.length), 'tab:', await p.$eval('.tab-btn[aria-selected=true]', t=>t.textContent));
+await p.click('#tab-assistant'); await p.waitForTimeout(300); await p.screenshot({path:'h-assistant.png'});
+await p.click('#tab-admin'); await p.waitForTimeout(300); await p.screenshot({path:'h-admin.png', fullPage:true});
+console.log('users rows:', await p.$$eval('#users-table tbody tr', r=>r.map(x=>x.textContent)));
+await p.click('#btn-admin-tests'); await p.waitForSelector('#admin-test-results strong'); console.log('tests:', await p.textContent('#admin-test-results strong'));
+// reviewer sees admin tab but no admin-only; designer doesn't see admin tab
+await p.click('#btn-switch-role'); await p.click('.role-card[data-role=reviewer]'); await p.click('#landing-enter'); await p.waitForTimeout(200);
+console.log('reviewer admin tab visible:', !(await p.$eval('#tab-admin', t=>t.hidden)), 'admin-only hidden:', await p.$eval('[data-admin-only]', t=>t.hidden));
+await p.click('#btn-switch-role'); await p.click('.role-card[data-role=designer]'); await p.click('#landing-enter'); await p.waitForTimeout(200);
+console.log('designer admin tab hidden:', await p.$eval('#tab-admin', t=>t.hidden));
+await p.reload(); await p.waitForTimeout(500); console.log('after reload landing hidden (session kept):', await p.isHidden('#landing'));
+console.log('errors:', errs);
+await b.close();

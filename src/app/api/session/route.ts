@@ -29,8 +29,7 @@ export async function POST(request: NextRequest) {
   if (name.length < 2) return NextResponse.json({ error: "اكتب اسمك (حرفان على الأقل)" }, { status: 400 });
   if (!role || !ROLES.includes(role)) return NextResponse.json({ error: "اختر دورًا" }, { status: 400 });
 
-  const expected = passcodeFor(role);
-  if (expected && body.passcode !== expected) {
+  if (passcodeFor() && body.passcode !== passcodeFor()) {
     return NextResponse.json({ error: "رمز الدخول غير صحيح" }, { status: 401 });
   }
 

@@ -35,12 +35,15 @@ Any hosted OpenAI-compatible endpoint works too: set `AI_BASE_URL`, `AI_MODEL` a
 
 Every page asks for a name and a role first (`/login`). Members design curricula;
 reviewers and admins also get `/admin`: the list of everyone who signed in, JSON
-export/import of curricula, and (admins) the AI configuration. Elevated roles need a
-passcode. The built-in ones live in `src/lib/session.ts` (`DEFAULT_PASSCODES`) and
-work immediately; `REVIEWER_PASSCODE` / `ADMIN_PASSCODE` in the environment override
-them. Set `SESSION_SECRET` in production.
+export/import of curricula, and (admins) the AI configuration. There are no passcodes:
+the role is picked freely on the login screen. Set `SESSION_SECRET` in production.
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## Single-file edition
+
+`harak-app/harak.html` is the whole system in one file (role sign-in, curriculum design,
+the open-source AI assistant, the offline analyzer, admin panel) — see `harak-app/README.md`.
 
 ## How it works
 

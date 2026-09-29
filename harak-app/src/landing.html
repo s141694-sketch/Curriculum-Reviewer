@@ -1,0 +1,43 @@
+<!-- شاشة الدخول: يختار المستخدم دوره ثم يظهر النظام -->
+<div id="landing" role="dialog" aria-modal="true" aria-labelledby="landing-title">
+  <div class="landing-inner">
+    <div class="landing-brand">
+      <span class="harak-wordmark" role="img" aria-label="حراك"><span aria-hidden="true">حر</span><svg viewBox="0 0 48 176" aria-hidden="true"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg><span aria-hidden="true">ك</span></span>
+      <span class="tagline">بوصلة المنهج الدراسي</span>
+      <div class="landing-compass" aria-hidden="true">
+        <svg viewBox="-110 -110 220 220" width="160" height="160"><circle r="104" fill="#FFFFFF" stroke="#E3D9C4" stroke-width="2"/><circle r="90" fill="none" stroke="#D4AD6A" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="2 7"/><circle r="66" fill="none" stroke="#D4AD6A" stroke-width="1.5"/><line x1="0" y1="-104" x2="0" y2="-92" stroke="#1B1F4B" stroke-width="3"/><line x1="0" y1="92" x2="0" y2="104" stroke="#1B1F4B" stroke-width="3"/><line x1="-104" y1="0" x2="-92" y2="0" stroke="#1B1F4B" stroke-width="3"/><line x1="92" y1="0" x2="104" y2="0" stroke="#1B1F4B" stroke-width="3"/></svg>
+        <div class="needle"><svg width="34" height="124" viewBox="0 0 48 176"><polygon points="24,0 24,88 8,88" fill="#7E1416"/><polygon points="24,0 40,88 24,88" fill="#A0282C"/><polygon points="8,88 24,88 24,176" fill="#1B1F4B"/><polygon points="24,88 40,88 24,176" fill="#2E3470"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/><circle cx="24" cy="88" r="3" fill="#FBF8F1"/></svg></div>
+      </div>
+      <img class="emblem" id="landing-emblem" alt="شعار أكاديمية السلطان قابوس البحرية">
+    </div>
+
+    <form class="landing-card" id="landing-form">
+      <h2 id="landing-title">كيف تريد الدخول إلى حراك؟</h2>
+      <div class="role-grid" role="group" aria-label="الدور">
+        <button type="button" class="role-card" data-role="designer" aria-pressed="true">
+          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>
+          <strong>مصمم منهج</strong>
+          <small>إنشاء المناهج وتعديلها، وطلب مسودة من المساعد الذكي.</small>
+        </button>
+        <button type="button" class="role-card" data-role="reviewer" aria-pressed="false">
+          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 5l2 7h-4z" fill="currentColor"/><path d="M10 12h4l-2 7z"/></svg>
+          <strong>مراجع مناهج</strong>
+          <small>كل ما سبق، مع تحليل المناهج ضد بلوم والمعايير، ولوحة الإدارة والبيانات.</small>
+        </button>
+        <button type="button" class="role-card" data-role="admin" aria-pressed="false">
+          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+          <strong>مدير النظام</strong>
+          <small>كل ما سبق، مع التحكم الكامل: المستخدمون، الإعدادات، الاختبارات.</small>
+        </button>
+      </div>
+      <div class="field">
+        <label for="landing-name">الاسم (اختياري)</label>
+        <input type="text" id="landing-name" placeholder="اسمك كما يظهر في السجل" autocomplete="name">
+      </div>
+      <div class="landing-actions">
+        <button type="submit" class="btn btn-primary" id="landing-enter">دخول</button>
+        <span class="landing-foot">لا كلمات مرور: اختر دورك وادخل. يُحفظ اسمك ودورك في هذا المتصفح فقط.</span>
+      </div>
+    </form>
+  </div>
+</div>

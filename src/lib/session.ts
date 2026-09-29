@@ -69,18 +69,7 @@ export async function decodeSession(token: string | undefined): Promise<Session 
   }
 }
 
-/**
- * Built-in passcodes, kept in the repository by the project owner's decision.
- * An environment variable of the same role overrides each one.
- */
-export const DEFAULT_PASSCODES = {
-  reviewer: "Harak-Rev!2026#Sqna",
-  admin: "Harak-Adm!2026#Sqna",
-} as const;
-
-/** Passcode required for an elevated role ("" = none). */
-export function passcodeFor(role: Role): string {
-  if (role === "admin") return process.env.ADMIN_PASSCODE || DEFAULT_PASSCODES.admin;
-  if (role === "reviewer") return process.env.REVIEWER_PASSCODE || DEFAULT_PASSCODES.reviewer;
+/** No passcodes: the role is chosen freely on the login screen. */
+export function passcodeFor(): string {
   return "";
 }
