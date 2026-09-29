@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
+import { chat, extractJson } from "@/lib/ai";
 import type { CurriculumBrief, Module } from "@/types/curriculum";
 
 const SYSTEM_PROMPT = `You are a curriculum design assistant for Harak, a tool used by Sultan Qaboos Naval Academy. Given a subject, level, goals, and duration, produce a structured course outline.
@@ -68,25 +68,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const anthropic = getAnthropicClient();
-    const message = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
-      max_tokens: 4096,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `المادة: ${brief.subject}\nالمستوى: ${brief.level}\nأهداف التعلّم: ${brief.goals || "إتقان عام للمادة"}\nالمدة: ${brief.durationWeeks} أسبوعًا\n\nاكتب المخطط كاملًا بالعربية.`,
-        },
-      ],
-    });
+    const text = await chat(
+      SYSTEM_PROMPT,
+      `المادة: ${brief.subject}\nالمستوى: ${brief.level}\nأهداف التعلّم: ${brief.goals || "إتقان عام للمادة"}\nالمدة: ${brief.durationWeeks} أسبوعًا\n\nاكتب المخطط كاملًا بالعربية.`,
+    );
 
-    const textBlock = message.content.find((block) => block.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      return NextResponse.json({ error: "No text response from model" }, { status: 502 });
-    }
-
-    const modules = parseModules(textBlock.text);
+    const modules = parseModules(extractJson(text));
     return NextResponse.json({ modules });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
