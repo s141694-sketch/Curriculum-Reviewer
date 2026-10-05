@@ -28,7 +28,7 @@
 
     <div id="cur-editor-view" hidden>
       <div class="panel-head">
-        <button class="btn btn-secondary" type="button" data-cur-back>→ مناهجي</button>
+        <div class="actions" style="margin:0; align-items:center"><button class="btn btn-secondary" type="button" data-cur-back>→ مناهجي</button><span class="saved" id="cur-saved" aria-live="polite"></span></div>
         <div class="actions" style="margin:0">
           <button class="btn" type="button" id="btn-cur-analyze">تحليل هذا المنهج</button>
           <button class="btn btn-secondary" type="button" id="btn-cur-ask">ناقشه مع المساعد</button>
@@ -47,7 +47,8 @@
         <div class="card">
           <h2 style="font-size:1.1rem">السياق</h2>
           <div class="field"><label for="ai-context">المنهج الذي نتحدث عنه</label><select id="ai-context"><option value="">بلا منهج محدد</option></select></div>
-          <label style="display:flex;gap:6px;align-items:center;font-weight:400;font-size:0.9rem"><input type="checkbox" id="ai-include-analysis" checked> إرفاق نتائج آخر تحليل إن وُجدت</label>
+          <div class="field"><label for="ai-lang">لغة الردود</label><select id="ai-lang"><option value="ar">العربية (الافتراضية)</option><option value="en">English</option></select></div>
+          <label class="check"><input type="checkbox" id="ai-include-analysis" checked> إرفاق نتائج آخر تحليل إن وُجدت</label>
           <div class="section-title"><svg class="diamond" viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,0 14,7 7,14 0,7" fill="currentColor"/></svg><h3>أسئلة جاهزة</h3></div>
           <div class="quick">
             <button class="btn btn-secondary" type="button" data-quick="قيّم جودة أهداف هذا المنهج وفق تصنيف بلوم، واقترح إعادة صياغة الأهداف الضعيفة كأهداف سلوكية قابلة للقياس.">تقويم الأهداف</button>
@@ -112,10 +113,5 @@
         <button class="btn btn-secondary" type="button" id="btn-admin-settings">المعايير والإعدادات</button>
       </div>
       <div id="admin-test-results" class="dev-results"></div>
-      <div class="danger-zone" style="margin-top:calc(var(--space-unit)*2)">
-        <strong style="color:var(--color-danger)">منطقة الحذف</strong>
-        <p class="muted" style="margin:var(--space-unit) 0">يحذف كل ما في هذا المتصفح: المناهج، التقارير، المعايير، الأطر المستوردة، سجل الدخول، وإعدادات المساعد.</p>
-        <button class="btn btn-danger btn-sm" type="button" id="btn-admin-wipe">حذف كل البيانات</button>
-      </div>
     </div>
   </section>

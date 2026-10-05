@@ -37,9 +37,11 @@ once(
 once(`  <section class="tab-panel is-active" role="tabpanel" id="panel-upload"`, `  <section class="tab-panel" role="tabpanel" id="panel-upload"`, "upload panel");
 once(
   `    <div id="report" class="report">\n      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "رفع" أو جرّب العينة.</p>\n    </div>`,
-  `    <div id="report" class="report">\n      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "تحليل منهج" أو جرّب العينة.</p>\n    </div>\n` + read("src/ai-review.html"),
+  read("src/ai-review.html").split("\n")[0] + `\n    <div id="report" class="report">\n      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "تحليل منهج" أو جرّب العينة.</p>\n    </div>\n` + read("src/ai-review.html").split("\n").slice(1).join("\n"),
   "ai review card",
 );
+once(`      <p class="file-name" id="file-name">لم يُختر ملف بعد.</p>`, `      <p class="file-name" id="file-name">لم يُختر ملف بعد.</p>\n` + read("src/analyze-brief.html"), "brief");
+once(`$('btn-analyze').addEventListener('click', () => state.file && runAnalysis(state.file));`, `$('btn-analyze').addEventListener('click', () => state.file && (window.harakAnalyze ? window.harakAnalyze(state.file) : runAnalysis(state.file)));`, "analyze hook");
 once(`<button class="btn btn-secondary" id="btn-sample" type="button">جرّب على عينة</button>`, `<button class="btn btn-secondary" id="btn-sample" type="button" hidden>جرّب على عينة</button>`, "sample button");
 once(`    <div class="card">\n      <h2>الجهة والشعار</h2>`, `    <div class="card" hidden>\n      <h2>الجهة والشعار</h2>`, "org card");
 once(`<li>أضف معايير مادتك واسم الجهة والشعار من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>`, `<li>أضف معايير مادتك من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>`, "settings hint");

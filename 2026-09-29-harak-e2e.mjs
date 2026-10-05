@@ -11,7 +11,7 @@ await p.click('#btn-cur-new'); await p.fill('#cur-subject','الملاحة ال�
 await p.click('#btn-cur-ai'); await p.waitForSelector('#cur-editor-view:not([hidden])', {timeout:15000}); await p.waitForTimeout(300);
 console.log('modules in editor:', await p.$$eval('.module-card', m=>m.length));
 await p.screenshot({path:'h-editor.png', fullPage:true});
-await p.click('#btn-cur-analyze'); await p.waitForSelector('#panel-results.is-active',{timeout:15000}); await p.waitForTimeout(500);
+await p.click('#btn-cur-analyze'); await p.fill('#brief-text',''); await p.click('#btn-analyze'); await p.waitForSelector('#panel-results.is-active',{timeout:15000}); await p.waitForTimeout(500);
 console.log('analysis stats:', await p.$$eval('.summary-card .num', ns=>ns.map(n=>n.textContent)));
 await p.click('#tab-curricula'); await p.click('#btn-cur-ask'); await p.waitForTimeout(200);
 console.log('context selected:', await p.$eval('#ai-context', s=>s.selectedOptions[0].textContent));

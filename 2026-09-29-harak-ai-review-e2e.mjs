@@ -13,5 +13,5 @@ console.log('score:', await p.$eval('#ai-review .summary-card .num', n=>n.textCo
 await p.$eval('#ai-review-card', el=>el.scrollIntoView()); await p.screenshot({path:'h-review.png'});
 const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#btn-json')]); const path = await dl.path(); const fs = await import('node:fs'); console.log('json has aiReview:', fs.readFileSync(path,'utf8').includes('"aiReview"'));
 await p.click('#tab-upload'); await p.evaluate(()=>document.getElementById('btn-sample').click()); await p.waitForSelector('#panel-results.is-active'); await p.waitForTimeout(400);
-console.log('review cleared on new analysis:', (await p.textContent('#ai-review')).includes('اضغط'));
+console.log('review cleared on new analysis:', (await p.$$('#ai-review .summary-card')).length === 0);
 console.log('errors:', errs); await b.close();
