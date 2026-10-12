@@ -53,6 +53,23 @@ Open [http://localhost:3000](http://localhost:3000).
   module/topic outline (in Arabic) as JSON
 - `GET/POST/DELETE /api/session` — session cookie; `GET/DELETE /api/admin/users` — login log
 
+## Task tracking (beads)
+
+Development work is tracked with [beads](https://github.com/gastownhall/beads) (`bd`),
+a dependency-aware issue tracker for coding agents. Issues are prefixed `cr-`.
+
+```bash
+npm install -g @beads/bd   # once per machine
+bd bootstrap               # fresh clone: rebuilds the database from .beads/issues.jsonl
+bd ready                   # work with no open blockers
+bd show cr-q7m.1           # details
+bd update <id> --claim     # take it; bd close <id> when done
+```
+
+The Dolt database under `.beads/` is not committed; `.beads/issues.jsonl` is (auto-export
+is on). Claude Code sessions run `.claude/hooks/beads-session-start.sh`, which installs
+`bd` if missing, bootstraps the database, and loads the workflow context.
+
 ## Notes / next steps
 
 - Persistence is client-side (`localStorage`) for now. Swap `src/lib/storage.ts` for a
