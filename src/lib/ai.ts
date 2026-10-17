@@ -33,7 +33,11 @@ export function aiConfig(): AIConfig {
   };
 }
 
-export async function chat(system: string, user: string): Promise<string> {
+export async function chat(
+  system: string,
+  user: string,
+  opts: { json?: boolean } = {},
+): Promise<string> {
   const config = aiConfig();
 
   if (config.provider === "anthropic") {
@@ -58,6 +62,8 @@ export async function chat(system: string, user: string): Promise<string> {
       model: config.model,
       temperature: 0.4,
       max_tokens: 4096,
+      // JSON mode: Groq (all models) and Ollama then return syntactically valid JSON.
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -67,6 +73,9 @@ export async function chat(system: string, user: string): Promise<string> {
     throw new Error(`تعذّر الوصول إلى خادم النموذج (${config.baseUrl}): ${e.message}`);
   });
 
+  if (response.status === 429) {
+    throw new Error("مزوّد النموذج مشغول الآن (تجاوزنا حدّ الطلبات). حاول بعد دقيقة.");
+  }
   if (!response.ok) {
     throw new Error(`خادم النموذج ردّ بخطأ ${response.status}: ${(await response.text()).slice(0, 300)}`);
   }
