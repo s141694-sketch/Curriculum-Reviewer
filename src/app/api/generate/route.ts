@@ -68,12 +68,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const text = await chat(
-      SYSTEM_PROMPT,
-      `المادة: ${brief.subject}\nالمستوى: ${brief.level}\nأهداف التعلّم: ${brief.goals || "إتقان عام للمادة"}\nالمدة: ${brief.durationWeeks} أسبوعًا\n\nاكتب المخطط كاملًا بالعربية.`,
-    );
+    const prompt = `المادة: ${brief.subject}\nالمستوى: ${brief.level}\nأهداف التعلّم: ${brief.goals || "إتقان عام للمادة"}\nالمدة: ${brief.durationWeeks} أسبوعًا\n\nاكتب المخطط كاملًا بالعربية.`;
 
-    const modules = parseModules(extractJson(text));
+    // Open models occasionally emit malformed JSON on long outlines: ask for
+    // JSON mode and retry once before giving up.
+    let modules: Array<Omit<Module, "id">> | undefined;
+    for (let attempt = 1; !modules; attempt++) {
+      const text = await chat(SYSTEM_PROMPT, prompt, { json: true });
+      try {
+        modules = parseModules(extractJson(text));
+      } catch (error) {
+        if (attempt >= 2) throw error;
+      }
+    }
     return NextResponse.json({ modules });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
