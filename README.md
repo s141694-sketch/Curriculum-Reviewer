@@ -52,6 +52,12 @@ Open [http://localhost:3000](http://localhost:3000).
 - `POST /api/generate` — server route that asks the configured model for a structured
   module/topic outline (in Arabic) as JSON
 - `GET/POST/DELETE /api/session` — session cookie; `GET/DELETE /api/admin/users` — login log
+- `GET /api/enrich/{wikipedia|books|research}?q=` — server-side lookups in Arabic Wikipedia,
+  Open Library and OpenAlex, shown in the editor as "مرجع من ويكيبيديا" per topic and
+  "كتب مقترحة" / "أبحاث داعمة" per module (signed-in users only; cached for a day).
+  Optional `OPENALEX_API_KEY` / `OPENALEX_MAILTO` are passed to OpenAlex when set.
+- `GET /api/enrich/health` — live check of every candidate API; results are recorded in
+  `docs/external-apis.md`
 
 ## Task tracking (beads)
 
@@ -76,6 +82,7 @@ is on). Claude Code sessions run `.claude/hooks/beads-session-start.sh`, which i
   real database (e.g. Postgres via Prisma, or Supabase) once you need multi-device or
   multi-user access.
 - Sign-in is name + role with a passcode for elevated roles, not full user accounts.
-  The login log is a JSON file, so it needs a persistent disk (not serverless).
+  The login log is a JSON file, so it needs a persistent disk (not serverless). On Vercel
+  it is written to `/tmp` (temporary, per instance), and a failed write never blocks sign-in.
 - `src/app/api/generate/route.ts` holds the system prompt; `src/lib/ai.ts` holds the
   provider switch.
