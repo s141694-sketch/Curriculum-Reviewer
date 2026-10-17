@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { Curriculum, Module, Topic } from "@/types/curriculum";
 import { getCurriculum, saveCurriculum } from "@/lib/storage";
 import { Diamond } from "@/components/HarakLogo";
+import { ReferencesPanel } from "@/components/ReferencesPanel";
 
 function emptyModule(): Module {
   return {
@@ -234,6 +235,11 @@ export default function CurriculumEditorPage() {
                         placeholder="وصف مختصر للموضوع"
                         className="harak-field py-1.5 text-sm text-muted"
                       />
+                      <ReferencesPanel
+                        compact
+                        source="wikipedia"
+                        initialQuery={topic.title || module.title || curriculum.subject}
+                      />
                     </div>
                     <button
                       onClick={() => removeTopic(module.id, topic.id)}
@@ -249,6 +255,11 @@ export default function CurriculumEditorPage() {
                 >
                   + إضافة موضوع
                 </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <ReferencesPanel source="books" initialQuery={module.title || curriculum.subject} />
+                <ReferencesPanel source="research" initialQuery={module.title || curriculum.subject} />
               </div>
             </div>
           ))}
