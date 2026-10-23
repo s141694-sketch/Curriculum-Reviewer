@@ -695,8 +695,8 @@ const BLOOM_LEVELS = [
   ]}
 ];
 
-// بنود الإطار العام العماني — placeholder: صياغة عامة مؤقتة إلى أن تُراجع البنود الرسمية
-const OMAN_FRAMEWORK_IS_PLACEHOLDER = true;   // اجعله false بعد إدخال البنود الرسمية
+// بنود الإطار العام العماني: مرجع داخلي بصياغة عامة، لا يمثل نصًا رسميًا. اجعل القيمة false عند إدخال البنود الرسمية.
+const OMAN_FRAMEWORK_IS_PLACEHOLDER = true;
 const OMAN_FRAMEWORK = [
   { id: 'K1', category: 'معارف', text: 'اكتساب المفاهيم والحقائق والمبادئ الأساسية في المادة الدراسية' },
   { id: 'K2', category: 'معارف', text: 'فهم العلاقات بين المفاهيم وربطها بالحياة اليومية والبيئة العمانية' },
@@ -755,7 +755,7 @@ const OBJECTIVE_LINE = /^(?:[\d٠-٩]{1,2}\s*[\.\-–)][\s.\-–)]*)?(?:(?:أن|
 const OBJECTIVE_LINE_LOOSE = /^[\d٠-٩]{1,2}(?:\s|[\.\-–)]).*(?:^|\s)(?:أن|ان)\s+[يت][ء-ي]{2,}/;
 
 // ---------- ب2/ب3: الأطر المرجعية (النموذج الموحّد، القسم 3 من مواصفات المرحلة الثانية) ----------
-// official: true فقط لنص من مرجع منشور معروف أو وثيقة قدّمها المالك. الترجمات العربية للمصطلحات الأجنبية غير رسمية.
+// official: true فقط لنص من مرجع منشور معروف أو وثيقة قدّمها المالك. ترجمة المصطلحات الأجنبية اجتهادية.
 const LOCAL_SOURCE = 'دورة المهارات التدريبية، مدرسة تدريب الدراسات التأسيسية والإنماء المهني (2024) — الدرس الثامن: صياغة الأهداف السلوكية';
 
 const FRAMEWORKS = [
@@ -846,7 +846,7 @@ const FRAMEWORKS = [
       { id: 'unmeasurable', text: 'عدم إمكانية قياس وتقويم الهدف السلوكي وملاحظته في البيئة الصفية.', example: 'أنْ يحب المتدرب الأكاديمية.' }
     ]
   },
-  // ---------- ب4: أطر عالمية إضافية (ترجمة المصطلحات غير رسمية؛ المصطلح الإنجليزي بجانبها) ----------
+  // ---------- ب4: أطر عالمية إضافية (ترجمة المصطلحات اجتهادية؛ المصطلح الإنجليزي بجانبها) ----------
   {
     id: 'dok', kind: 'taxonomy',
     name: 'عمق المعرفة (ويب)', nameEn: "Webb's Depth of Knowledge (DOK)",
@@ -885,14 +885,14 @@ const FRAMEWORKS = [
       { id: 'timebound', code: 'T', text: 'محدد زمنيًا (Time-bound): إطار زمني للأداء أو للتحقق.', hint: 'خلال، في نهاية الدرس، في خمس دقائق.' }
     ]
   },
-  // ---------- ب7: معايير الاعتماد الأكاديمي العمانية — هيكل مؤقت ----------
-  // official: false عمدًا. البنود أدناه عناوين عامة لتجربة الآلية فقط، وليست نص الهيئة.
+  // ---------- ب7: قائمة تحقق عامة لمبادئ الاعتماد الأكاديمي ----------
+  // official: false عمدًا. البنود أدناه مرجع داخلي مبني على مبادئ الاعتماد العامة، وليست نص الهيئة.
   // يُستبدل بالنص الرسمي باستيراد ملف JSON يحمل id: 'oman-accreditation' (من تبويب الإعدادات) أو بتعديل هذه المصفوفة.
   {
     id: 'oman-accreditation', kind: 'standards',
-    name: 'معايير الاعتماد الأكاديمي العمانية (هيكل مؤقت)', nameEn: 'Oman academic accreditation standards (placeholder structure)',
-    source: 'لم يُستورد نص رسمي بعد. المرجع المنتظر: وثائق الهيئة العُمانية للاعتماد الأكاديمي وضمان جودة التعليم (معايير الاعتماد المؤسسي والبرامجي) والإطار الوطني للمؤهلات.', official: false,
-    notes: 'كل بند هنا مؤقت ويُعرض بوسم "مؤقت". قائمة التحقق في التقرير تبحث عن دليل لفظي في المنهج لكل بند، وتبقى المطابقة النهائية حكمًا بشريًا.',
+    name: 'قائمة تحقق عامة لمبادئ الاعتماد الأكاديمي', nameEn: 'General academic accreditation principles checklist',
+    source: 'مرجع داخلي مبني على مبادئ الاعتماد العامة، ولا يمثل النص الرسمي للهيئة العُمانية للاعتماد الأكاديمي وضمان جودة التعليم.', official: false,
+    notes: 'قائمة التحقق في التقرير تبحث عن دليل لفظي في المنهج لكل بند، والحكم النهائي بشري.',
     items: [
       { id: 'P1', code: 'برامجي‑1', category: 'الاعتماد البرامجي', text: 'أهداف البرنامج ومخرجات التعلم محددة وقابلة للقياس ومتسقة مع رسالة المؤسسة', official: false },
       { id: 'P2', code: 'برامجي‑2', category: 'الاعتماد البرامجي', text: 'المنهج الدراسي متسق مع مخرجات التعلم من حيث المحتوى والتسلسل والعمق', official: false },
@@ -1554,7 +1554,7 @@ const STEP_NAMES = ['القراءة', 'الهيكلة', 'تصنيف بلوم', '
 
 const $ = id => document.getElementById(id);
 const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const fmtDate = iso => new Date(iso).toLocaleString('ar-OM', { dateStyle: 'medium', timeStyle: 'short' });
+const fmtDate = iso => new Date(iso).toLocaleString('ar-OM-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' });
 
 const state = { file: null, doc: null, analysis: null };
 
@@ -1713,7 +1713,7 @@ function renderReportHtml(analysis, doc, settings) {
   const lessonTitle = ref => { const u = analysis.structure.units[ref.unit]; const l = u && u.lessons[ref.lesson]; return l ? `${u.title} / ${l.title}` : ''; };
   const objectivesRows = analysis.bloom.map(b => `<tr><td>${escapeHtml(b.objectiveRef.text)}</td><td>${escapeHtml(b.verb || '—')}</td><td>${domainTag(b.domain)}</td><td>${levelTag(displayLevel(b), b.domain === 'cognitive' ? b.levelId : 0)}</td><td>${confTag(b.confidence)}</td></tr>`).join('');
   const completenessRows = analysis.completeness.map(c => `<tr><td>${escapeHtml(c.lessonRef.unitTitle)}</td><td>${escapeHtml(c.lessonRef.title)}</td><td>${yesNo(c.hasObjectives)}</td><td>${yesNo(c.hasActivities)}</td><td>${yesNo(c.hasAssessment)}</td><td>${yesNo(c.hasReferences)}</td></tr>`).join('');
-  const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : m.source === 'accreditation' ? 'معايير الاعتماد' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}${(m.source === 'framework' && OMAN_FRAMEWORK_IS_PLACEHOLDER && !/القرن 21/.test(m.standardLabel)) || m.placeholder ? ' <span class="tag tag-low">بند مؤقت</span>' : ''}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
+  const matchRows = analysis.standards.map(m => `<tr><td>${escapeHtml(m.objectiveRef.text)}</td><td><strong>${escapeHtml(m.standardId)}</strong> ${escapeHtml(m.standardText)}</td><td>${escapeHtml(m.source === 'user' ? 'معايير المادة' : m.source === 'accreditation' ? 'معايير الاعتماد' : 'الإطار العام')} — ${escapeHtml(m.standardLabel)}${(m.source === 'framework' && OMAN_FRAMEWORK_IS_PLACEHOLDER && !/القرن 21/.test(m.standardLabel)) || m.placeholder ? ' <span class="tag tag-low">مرجع داخلي</span>' : ''}</td><td>تطابق محتمل ${Math.round(m.score * 100)}%</td><td>${confTag(m.confidence)}</td></tr>`).join('');
   // ب6: جودة الصياغة والمصفوفة
   const compNames = { an: 'أنْ', verb: 'فعل سلوكي', learner: 'المتعلم', content: 'المحتوى', condition: 'شرط الأداء', criterion: 'معيار الأداء' };
   const errorNames = Object.fromEntries(((RULES.frameworks.find(f => f.id === 'objective-errors') || { items: [] }).items).map(it => [it.id, it.text]));
@@ -1779,8 +1779,8 @@ function renderReportHtml(analysis, doc, settings) {
   </section>
 
   <section class="report-section"><h2>قائمة تحقق المنهج ضد معايير الاعتماد</h2>
-    <p class="placeholder">لكل بند: عدد أسطر المنهج التي تشبهه لفظيًا (≥ 15%) وأقربها. "دليل لفظي" لا يعني استيفاء البند؛ الحكم بشري. البنود الموسومة "مؤقت" ليست نصًا رسميًا.</p>
-    ${(analysis.checklist || []).length ? `<div class="table-wrap"><table><thead><tr><th>الإطار / الفئة</th><th>الرمز</th><th>البند</th><th>دليل لفظي</th><th>أقرب سطر (الصفحة)</th></tr></thead><tbody>${analysis.checklist.map(c => `<tr><td>${escapeHtml(c.frameworkName)}${c.item.category ? ' / ' + escapeHtml(c.item.category) : ''}${c.official ? '' : ' <span class="tag tag-low">مؤقت</span>'}</td><td>${escapeHtml(c.item.code || c.item.id)}</td><td>${escapeHtml(c.item.text)}</td><td>${c.evidence ? `<span class="yes">${c.evidence} سطر</span>` : '<span class="no">لا دليل</span>'}</td><td>${c.best ? `${escapeHtml(c.best.text.slice(0, 90))}${c.best.text.length > 90 ? '…' : ''} <span class="placeholder">(ص ${c.best.page + 1}، ${Math.round(c.best.score * 100)}%)</span>` : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p>لا أطر معايير مفعّلة.</p>'}
+    <p class="placeholder">لكل بند: عدد أسطر المنهج التي تشبهه لفظيًا (≥ 15%) وأقربها. "دليل لفظي" لا يعني استيفاء البند؛ الحكم بشري. البنود الموسومة "مرجع داخلي" لا تمثل نصًا رسميًا.</p>
+    ${(analysis.checklist || []).length ? `<div class="table-wrap"><table><thead><tr><th>الإطار / الفئة</th><th>الرمز</th><th>البند</th><th>دليل لفظي</th><th>أقرب سطر (الصفحة)</th></tr></thead><tbody>${analysis.checklist.map(c => `<tr><td>${escapeHtml(c.frameworkName)}${c.item.category ? ' / ' + escapeHtml(c.item.category) : ''}${c.official ? '' : ' <span class="tag tag-low">مرجع داخلي</span>'}</td><td>${escapeHtml(c.item.code || c.item.id)}</td><td>${escapeHtml(c.item.text)}</td><td>${c.evidence ? `<span class="yes">${c.evidence} سطر</span>` : '<span class="no">لا دليل</span>'}</td><td>${c.best ? `${escapeHtml(c.best.text.slice(0, 90))}${c.best.text.length > 90 ? '…' : ''} <span class="placeholder">(ص ${c.best.page + 1}، ${Math.round(c.best.score * 100)}%)</span>` : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p>لا أطر معايير مفعّلة.</p>'}
   </section>
 
   <section class="report-section"><h2>الاكتمال</h2>
@@ -1887,15 +1887,15 @@ const badge = (text, cls = '') => `<span class="tag ${cls}">${escapeHtml(text)}<
 
 function frameworkBadges(f) {
   const out = [];
-  out.push(f.official ? badge('مصدر موثّق', 'tag-high') : badge('مؤقت — غير رسمي', 'tag-low'));
-  if (f.translation === 'unofficial') out.push(badge('ترجمة غير رسمية للمصطلحات', 'tag-medium'));
+  out.push(f.official ? badge('مصدر موثّق', 'tag-high') : badge('مرجع داخلي', 'tag-low'));
+  if (f.translation === 'unofficial') out.push(badge('ترجمة المصطلحات اجتهادية، والمصطلح الإنجليزي مرفق', 'tag-medium'));
   if (f.user) out.push(badge('مستورد'));
   if (f.domain) out.push(badge('المجال: ' + (DOMAIN_NAMES[f.domain] || f.domain)));
   return out.join(' ');
 }
 
 function copyText(text, btn) {
-  const done = () => { const t = btn.textContent; btn.textContent = 'نُسخ ✔'; setTimeout(() => btn.textContent = t, 1500); };
+  const done = () => { const t = btn.textContent; btn.textContent = 'نُسخ'; setTimeout(() => btn.textContent = t, 1500); };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => fallback());
   else fallback();
   function fallback() { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch {} ta.remove(); }
@@ -1917,7 +1917,7 @@ function renderLevel(f, l) {
 function renderFrameworkCard(f) {
   let body = '';
   if (f.kind === 'taxonomy') body = f.levels.map(l => renderLevel(f, l)).join('');
-  else body = `<ol>${f.items.map(it => `<li><strong>${it.code ? escapeHtml(it.code) + ' — ' : ''}</strong>${escapeHtml(it.text)}${it.hint ? ` <span class="placeholder">(${escapeHtml(it.hint)})</span>` : ''}${it.example ? `<br><span class="ref-example">مثال خاطئ: ${escapeHtml(it.example)}</span>` : ''}${it.official === false ? ' ' + badge('مؤقت', 'tag-low') : ''}</li>`).join('')}</ol>`;
+  else body = `<ol>${f.items.map(it => `<li><strong>${it.code ? escapeHtml(it.code) + ' — ' : ''}</strong>${escapeHtml(it.text)}${it.hint ? ` <span class="placeholder">(${escapeHtml(it.hint)})</span>` : ''}${it.example ? `<br><span class="ref-example">مثال خاطئ: ${escapeHtml(it.example)}</span>` : ''}${it.official === false ? ' ' + badge('مرجع داخلي', 'tag-low') : ''}</li>`).join('')}</ol>`;
   if (f.dimensions) body += `<h3>أبعاد المعرفة</h3>` + f.dimensions.map(d => `<div class="ref-level"><h3>${escapeHtml(d.name)} <span class="en">${escapeHtml(d.nameEn || '')}</span></h3><p>${escapeHtml(d.definition)}</p></div>`).join('');
   return `<details class="card ref-card" id="ref-${escapeHtml(f.id)}">
     <summary>${escapeHtml(f.name)} ${f.nameEn ? `<span class="en">${escapeHtml(f.nameEn)}</span>` : ''}</summary>
@@ -1960,7 +1960,7 @@ function searchVerb(query) {
 // ---------- الأطر المرجعية (ب2) ----------
 function saveFrameworks() { store.write(STORAGE_KEYS.frameworks, userFrameworks); }
 function renderFrameworksList() {
-  $('fw-list').innerHTML = userFrameworks.map(f => `<li data-id="${escapeHtml(f.id)}"><span><strong>${escapeHtml(f.name)}</strong> — ${escapeHtml(f.kind)} — ${escapeHtml(f.source || '')}${f.official ? '' : ' <span class="tag tag-low">مؤقت</span>'}</span><button class="btn btn-danger btn-sm" data-fw-del="${escapeHtml(f.id)}" type="button">حذف</button></li>`).join('')
+  $('fw-list').innerHTML = userFrameworks.map(f => `<li data-id="${escapeHtml(f.id)}"><span><strong>${escapeHtml(f.name)}</strong> — ${escapeHtml(f.kind)} — ${escapeHtml(f.source || '')}${f.official ? '' : ' <span class="tag tag-low">مرجع داخلي</span>'}</span><button class="btn btn-danger btn-sm" data-fw-del="${escapeHtml(f.id)}" type="button">حذف</button></li>`).join('')
     || '<li class="placeholder">لا أطر مستوردة.</li>';
 }
 function importFrameworks(data) {
@@ -2199,12 +2199,12 @@ const DEV_TESTS = [
       ex.forEach((e, i) => assert(q[i].errors.includes(e[1]), e[1] + ' ← ' + JSON.stringify(q[i].errors))); } },
   { name: 'الجودة: بُعد المعرفة يُخمَّن بثقة منخفضة', fn: () => { const st = mkStruct(['أن يشرح الطالب مفهوم التمثيل الضوئي.', 'أن يعدد الطالب أجزاء النبات.']); const q = checkObjectives(st, classifyBloom(st)); assert(q[0].dimension && q[0].dimension.id === 'conceptual' && q[0].dimension.confidence === 'low', JSON.stringify(q[0].dimension)); assert(q[1].dimension && q[1].dimension.id === 'factual', JSON.stringify(q[1].dimension)); } },
   // ب7: معايير الاعتماد
-  { name: 'الاعتماد: الإطار المؤقت موسوم غير رسمي وبنوده تدخل المطابقة وقائمة التحقق', fn: async () => {
+  { name: 'الاعتماد: المرجع الداخلي موسوم وبنوده تدخل المطابقة وقائمة التحقق', fn: async () => {
       const acc = FRAMEWORKS.find(f => f.id === 'oman-accreditation'); assert(acc && acc.official === false && acc.items.every(i => i.official === false), 'الوسم');
       const d = await readTxt('s.txt', SAMPLE_CURRICULUM); const a = await analyzeDocument(d, [], () => {}, getFrameworks([]));
-      assert(a.checklist.length === acc.items.length, 'قائمة التحقق ' + a.checklist.length); assert(a.checklist.every(c => c.official === false), 'كل البنود مؤقتة');
+      assert(a.checklist.length === acc.items.length, 'قائمة التحقق ' + a.checklist.length); assert(a.checklist.every(c => c.official === false), 'كل البنود مرجع داخلي');
       const st = mkStruct(['أهداف البرنامج ومخرجات التعلم محددة وقابلة للقياس.']); const m = matchStandards(st, [], getFrameworks([])).filter(x => x.source === 'accreditation'); assert(m.length >= 1 && m[0].placeholder === true, 'مطابقة اعتماد ' + JSON.stringify(m[0])); } },
-  { name: 'الاعتماد: استيراد نص رسمي بالمعرّف نفسه يزيل وسم "مؤقت"', fn: async () => {
+  { name: 'الاعتماد: استيراد نص رسمي بالمعرّف نفسه يزيل وسم "مرجع داخلي"', fn: async () => {
       const official = { id: 'oman-accreditation', kind: 'standards', name: 'اختبار رسمي', source: 'اختبار', official: true, items: [{ id: 'X1', code: 'X1', text: 'أهداف البرنامج ومخرجات التعلم محددة وقابلة للقياس' }] };
       const fws = getFrameworks([official]); const d = await readTxt('s.txt', SAMPLE_CURRICULUM); const a = await analyzeDocument(d, [], () => {}, fws);
       assert(a.checklist.length === 1 && a.checklist[0].official === true, JSON.stringify(a.checklist)); } },

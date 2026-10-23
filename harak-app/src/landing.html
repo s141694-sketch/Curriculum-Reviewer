@@ -1,5 +1,5 @@
-<!-- شاشة الدخول: يختار المستخدم دوره ثم يظهر النظام -->
-<div id="landing" role="dialog" aria-modal="true" aria-labelledby="landing-title">
+<!-- شاشة الدخول: إعداد حساب المدير عند أول تشغيل، ثم الدخول باسم المستخدم وكلمة المرور -->
+<div id="landing" role="dialog" aria-modal="true" aria-labelledby="login-title">
   <div class="landing-inner">
     <div class="landing-brand">
       <img class="emblem" id="landing-emblem" alt="شعار أكاديمية السلطان قابوس البحرية">
@@ -14,32 +14,35 @@
       <span class="tagline">بوصلة المنهج الدراسي</span>
     </div>
 
-    <form class="landing-card" id="landing-form">
-      <h2 id="landing-title">كيف تريد الدخول إلى حراك؟</h2>
-      <div class="role-grid" role="group" aria-label="الدور">
-        <button type="button" class="role-card" data-role="designer" aria-pressed="true">
-          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>
-          <strong>مصمم منهج</strong>
-          <small>إنشاء المناهج وتعديلها، وطلب مسودة من المساعد الذكي.</small>
-        </button>
-        <button type="button" class="role-card" data-role="reviewer" aria-pressed="false">
-          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 5l2 7h-4z" fill="currentColor"/><path d="M10 12h4l-2 7z"/></svg>
-          <strong>مراجع مناهج</strong>
-          <small>كل ما سبق، مع تحليل المناهج ضد بلوم والمعايير، ولوحة الإدارة والبيانات.</small>
-        </button>
-        <button type="button" class="role-card" data-role="admin" aria-pressed="false">
-          <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
-          <strong>مدير النظام</strong>
-          <small>كل ما سبق، مع التحكم الكامل: المستخدمون، الإعدادات، اختبارات النظام.</small>
-        </button>
-      </div>
-      <div class="field">
-        <label for="landing-name">الاسم</label>
-        <input type="text" id="landing-name" placeholder="اكتب اسمك الكامل" autocomplete="name" required minlength="2">
-      </div>
-      <div class="landing-actions">
-        <button type="submit" class="btn btn-primary" id="landing-enter">دخول</button>
-      </div>
-    </form>
+    <div class="landing-card">
+      <!-- أول تشغيل: إنشاء حساب مدير النظام -->
+      <form class="auth-form" id="setup-form" novalidate hidden>
+        <h2 id="setup-title">إعداد حساب مدير النظام</h2>
+        <p class="muted">هذا أول تشغيل للنظام على هذا الجهاز. أنشئ حساب مدير النظام لتتمكن بعده من إضافة بقية المستخدمين.</p>
+        <div class="field"><label for="setup-fullname">الاسم الكامل</label><input type="text" id="setup-fullname" autocomplete="name" required><span class="field-error" id="setup-fullname-error" role="alert"></span></div>
+        <div class="field"><label for="setup-username">اسم المستخدم</label><input type="text" id="setup-username" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" required><small class="hint">من 3 إلى 32 حرفًا لاتينيًا أو رقمًا، ويُسمح بالنقطة والشرطة.</small><span class="field-error" id="setup-username-error" role="alert"></span></div>
+        <div class="field"><label for="setup-password">كلمة المرور</label><div class="pw-wrap"><input type="password" id="setup-password" dir="ltr" autocomplete="new-password" required><button type="button" class="pw-toggle" data-pw-toggle="setup-password" aria-label="إظهار كلمة المرور" aria-pressed="false"></button></div><small class="hint">10 أحرف على الأقل، وتتضمن حرفًا ورقمًا.</small><span class="field-error" id="setup-password-error" role="alert"></span></div>
+        <div class="field"><label for="setup-password2">تأكيد كلمة المرور</label><div class="pw-wrap"><input type="password" id="setup-password2" dir="ltr" autocomplete="new-password" required><button type="button" class="pw-toggle" data-pw-toggle="setup-password2" aria-label="إظهار كلمة المرور" aria-pressed="false"></button></div><span class="field-error" id="setup-password2-error" role="alert"></span></div>
+        <div class="landing-actions"><button type="submit" class="btn btn-primary" id="setup-submit">إنشاء الحساب والدخول</button></div>
+      </form>
+
+      <!-- الدخول -->
+      <form class="auth-form" id="login-form" novalidate hidden>
+        <h2 id="login-title">تسجيل الدخول</h2>
+        <div class="field"><label for="login-username">اسم المستخدم</label><input type="text" id="login-username" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" required></div>
+        <div class="field"><label for="login-password">كلمة المرور</label><div class="pw-wrap"><input type="password" id="login-password" dir="ltr" autocomplete="current-password" required><button type="button" class="pw-toggle" data-pw-toggle="login-password" aria-label="إظهار كلمة المرور" aria-pressed="false"></button></div><span class="caps-warn" id="login-caps" hidden>مفتاح الأحرف الكبيرة (Caps Lock) مفعّل.</span></div>
+        <div class="form-error" id="login-error" role="alert" hidden></div>
+        <div class="landing-actions"><button type="submit" class="btn btn-primary" id="login-submit">دخول</button></div>
+      </form>
+
+      <!-- تغيير كلمة المرور الإلزامي عند أول دخول بكلمة مرور مؤقتة -->
+      <form class="auth-form" id="change-form" novalidate hidden>
+        <h2 id="change-title">تعيين كلمة مرور جديدة</h2>
+        <p class="muted" id="change-intro">كلمة المرور الحالية مؤقتة. عيّن كلمة مرور خاصة بك للمتابعة.</p>
+        <div class="field"><label for="change-password">كلمة المرور الجديدة</label><div class="pw-wrap"><input type="password" id="change-password" dir="ltr" autocomplete="new-password" required><button type="button" class="pw-toggle" data-pw-toggle="change-password" aria-label="إظهار كلمة المرور" aria-pressed="false"></button></div><small class="hint">10 أحرف على الأقل، وتتضمن حرفًا ورقمًا.</small><span class="field-error" id="change-password-error" role="alert"></span></div>
+        <div class="field"><label for="change-password2">تأكيد كلمة المرور</label><div class="pw-wrap"><input type="password" id="change-password2" dir="ltr" autocomplete="new-password" required><button type="button" class="pw-toggle" data-pw-toggle="change-password2" aria-label="إظهار كلمة المرور" aria-pressed="false"></button></div><span class="field-error" id="change-password2-error" role="alert"></span></div>
+        <div class="landing-actions"><button type="submit" class="btn btn-primary" id="change-submit">حفظ والمتابعة</button><button type="button" class="btn btn-secondary" id="change-cancel">خروج</button></div>
+      </form>
+    </div>
   </div>
 </div>

@@ -7,7 +7,7 @@ import { ROLE_LABELS, ROLES, type Role } from "@/lib/session";
 
 const roleHints: Record<Role, string> = {
   member: "إنشاء المناهج وتعديلها.",
-  reviewer: "كل ما سبق، مع لوحة المراجعة: المستخدمون وبيانات JSON.",
+  reviewer: "كل ما سبق، مع لوحة الإدارة: المستخدمون وبيانات JSON.",
   admin: "كل ما سبق، مع التحكم الكامل بالنظام.",
 };
 

@@ -12,7 +12,7 @@
       <div class="panel-head"><div><span class="chip">منهج جديد</span><h2>حدّد وجهة المنهج</h2></div><button class="btn btn-secondary" type="button" data-cur-back>رجوع</button></div>
       <form class="card" id="cur-new-form">
         <div class="form-grid">
-          <div class="field"><label for="cur-subject">المادة</label><input type="text" id="cur-subject" required placeholder="مثال: الملاحة البحرية"></div>
+          <div class="field"><label for="cur-subject">المادة</label><input type="text" id="cur-subject" required placeholder="الملاحة البحرية"></div>
           <div class="field"><label for="cur-level">المستوى</label>
             <select id="cur-level"><option>السنة الأولى</option><option>السنة الثانية</option><option>السنة الثالثة</option><option>دورة تأسيسية</option><option>دورة تخصصية</option><option>تدريب مهني</option></select></div>
         </div>
@@ -64,7 +64,7 @@
             <select id="ai-engine">
               <option value="ollama">Ollama على هذا الجهاز (نموذج مفتوح المصدر)</option>
               <option value="openai">خادم متوافق مع OpenAI (محلي أو مستضاف)</option>
-              <option value="webllm">داخل المتصفح (WebLLM، تجريبي)</option>
+              <option value="webllm">داخل المتصفح (WebLLM)</option>
             </select></div>
           <div class="field" data-engine="ollama openai"><label for="ai-url">عنوان الخادم</label><input type="text" id="ai-url" dir="ltr" placeholder="http://localhost:11434"></div>
           <div class="field" data-engine="ollama openai webllm"><label for="ai-model">النموذج</label><input type="text" id="ai-model" dir="ltr" placeholder="qwen2.5:7b" list="ai-models"><datalist id="ai-models"></datalist><small class="muted" id="ai-models-hint"></small></div>
@@ -85,19 +85,47 @@
     </div>
   </section>
 
-  <!-- حراك: تبويب الإدارة (المراجع والمدير) -->
+  <!-- حراك: تبويب الإدارة (مصمم المنهج ومدير النظام) -->
   <section class="tab-panel" role="tabpanel" id="panel-admin" aria-labelledby="tab-admin">
     <div class="panel-head"><div><span class="chip" id="admin-role-chip"></span><h2 id="admin-title">لوحة الإدارة</h2></div></div>
     <div class="stat-grid" id="admin-stats"></div>
+
+    <div class="card" data-admin-only id="accounts-card">
+      <div class="section-title"><svg class="diamond" viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,0 14,7 7,14 0,7" fill="currentColor"/></svg><h3>المستخدمون والصلاحيات</h3></div>
+      <div class="notice" id="accounts-backup" hidden></div>
+      <p class="muted" id="accounts-quota"></p>
+      <div class="table-wrap"><table class="users-table" id="accounts-table"><thead><tr><th>الاسم الكامل</th><th>اسم المستخدم</th><th>الدور</th><th>الحالة</th><th>آخر دخول</th><th><span class="sr-only">إجراءات</span></th></tr></thead><tbody></tbody></table></div>
+
+      <form class="add-user" id="add-user-form" novalidate>
+        <h4>إضافة مستخدم</h4>
+        <div class="form-grid">
+          <div class="field"><label for="nu-fullname">الاسم الكامل</label><input type="text" id="nu-fullname" required><span class="field-error" id="nu-fullname-error" role="alert"></span></div>
+          <div class="field"><label for="nu-username">اسم المستخدم</label><input type="text" id="nu-username" dir="ltr" autocapitalize="off" spellcheck="false" autocomplete="off" required><span class="field-error" id="nu-username-error" role="alert"></span></div>
+          <div class="field"><label for="nu-role">الدور</label><select id="nu-role"><option value="designer">المصمم التعليمي</option><option value="reviewer">مصمم المنهج</option><option value="admin">مدير النظام</option></select></div>
+          <div class="field"><label for="nu-password">كلمة مرور مؤقتة</label><div class="pw-wrap"><input type="text" id="nu-password" dir="ltr" autocomplete="off" required><button type="button" class="pw-gen" id="nu-generate">توليد</button></div><small class="hint">يُلزم المستخدم بتغييرها عند أول دخول.</small><span class="field-error" id="nu-password-error" role="alert"></span></div>
+        </div>
+        <div class="actions"><button class="btn btn-primary" type="submit" id="nu-submit">إضافة المستخدم</button></div>
+      </form>
+
+      <div class="section-title"><svg class="diamond" viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,0 14,7 7,14 0,7" fill="currentColor"/></svg><h3>نقل الحسابات وحدودها</h3></div>
+      <p class="muted">ملف المستخدمين يحمل كلمات المرور مشفّرة فقط، ويُستخدم لنقل الحسابات إلى جهاز آخر أو حفظ نسخة احتياطية منها.</p>
+      <div class="actions">
+        <button class="btn" type="button" id="btn-accounts-export">تصدير المستخدمين</button>
+        <label class="btn btn-secondary">استيراد المستخدمين<input type="file" id="accounts-import" accept=".json" hidden></label>
+        <span class="inline-field"><label for="accounts-max">الحد الأقصى للمستخدمين</label><input type="number" id="accounts-max" min="1" max="200"><button class="btn btn-secondary btn-sm" type="button" id="btn-accounts-max">حفظ</button></span>
+      </div>
+    </div>
+
     <div class="card">
-      <div class="section-title"><svg class="diamond" viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,0 14,7 7,14 0,7" fill="currentColor"/></svg><h3>المستخدمون الذين دخلوا النظام (هذا المتصفح)</h3></div>
-      <div class="table-wrap"><table class="users-table" id="users-table"><thead><tr><th>الاسم</th><th>الدور</th><th>وقت الدخول</th></tr></thead><tbody></tbody></table></div>
+      <div class="section-title"><svg class="diamond" viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,0 14,7 7,14 0,7" fill="currentColor"/></svg><h3>سجل الدخول</h3></div>
+      <div class="table-wrap"><table class="users-table" id="users-table"><thead><tr><th>الاسم</th><th>اسم المستخدم</th><th>الدور</th><th>النتيجة</th><th>الوقت</th></tr></thead><tbody></tbody></table></div>
       <p class="placeholder" id="users-empty">لا سجلات بعد.</p>
       <div class="actions" data-admin-only><button class="btn btn-secondary btn-sm" type="button" id="btn-users-clear">مسح سجل الدخول</button></div>
     </div>
+
     <div class="card">
       <div class="section-title"><svg class="diamond" viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,0 14,7 7,14 0,7" fill="currentColor"/></svg><h3>البيانات (JSON)</h3></div>
-      <p class="muted">المناهج والتقارير المحفوظة والمعايير في هذا المتصفح. صدّرها كنسخة احتياطية أو انقلها إلى جهاز آخر.</p>
+      <p class="muted">المناهج والتقارير المحفوظة والمعايير في هذا المتصفح. صدّرها نسخةً احتياطية أو انقلها إلى جهاز آخر.</p>
       <div class="actions">
         <button class="btn" type="button" id="btn-data-export">تصدير كل البيانات</button>
         <label class="btn btn-secondary">استيراد بيانات<input type="file" id="data-import" accept=".json" hidden></label>
@@ -106,10 +134,11 @@
       <div id="data-notice" class="muted"></div>
       <pre class="json" id="data-json" hidden></pre>
     </div>
+
     <div class="card" data-admin-only>
       <div class="section-title"><svg class="diamond" viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,0 14,7 7,14 0,7" fill="currentColor"/></svg><h3>التحكم بالنظام</h3></div>
       <div class="actions">
-        <button class="btn btn-secondary" type="button" id="btn-admin-tests">تشغيل اختبارات المحلّل</button>
+        <button class="btn btn-secondary" type="button" id="btn-admin-tests">تشغيل اختبارات النظام</button>
         <button class="btn btn-secondary" type="button" id="btn-admin-settings">المعايير والإعدادات</button>
       </div>
       <div id="admin-test-results" class="dev-results"></div>

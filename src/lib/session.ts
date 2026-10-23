@@ -12,9 +12,9 @@ export interface Session {
 export const ROLES: Role[] = ["member", "reviewer", "admin"];
 
 export const ROLE_LABELS: Record<Role, string> = {
-  member: "مصمم مناهج",
-  reviewer: "مراجع مناهج",
-  admin: "مسؤول النظام",
+  member: "المصمم التعليمي",
+  reviewer: "مصمم المنهج",
+  admin: "مدير النظام",
 };
 
 export const SESSION_COOKIE = "harak_session";

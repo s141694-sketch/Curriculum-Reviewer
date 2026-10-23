@@ -18,7 +18,7 @@ once("/* ---------- 1ج. أنماط الطباعة ---------- */", read("src/she
 once("<body>\n", "<body>\n" + read("src/landing.html") + "\n", "landing");
 once(
   `    <h1 class="app-title">محلّل المناهج</h1>\n    <div class="app-org" id="app-org">اسم الجهة</div>\n  </div>\n</header>`,
-  `    <h1 class="app-title">بوصلة المنهج الدراسي</h1>\n    <div class="app-org" id="app-org">اسم الجهة</div>\n  </div>\n  <div class="app-user" id="app-user" hidden>\n    <div class="who"><strong id="app-user-name"></strong><span id="app-user-role"></span></div>\n    <button class="btn btn-secondary btn-sm" type="button" id="btn-switch-role">تبديل الدور</button>\n  </div>\n</header>`,
+  `    <h1 class="app-title">بوصلة المنهج الدراسي</h1>\n    <div class="app-org" id="app-org">اسم الجهة</div>\n  </div>\n  <div class="app-user" id="app-user" hidden>\n    <button class="user-btn" type="button" id="user-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu"><span class="avatar" id="app-user-initial" aria-hidden="true"></span><span class="who"><strong id="app-user-name"></strong><span id="app-user-role"></span></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>\n    <div class="user-menu" id="user-menu" role="menu" hidden>\n      <button type="button" role="menuitem" id="menu-change-password">تغيير كلمة المرور</button>\n      <button type="button" role="menuitem" id="menu-logout" class="danger">تسجيل الخروج</button>\n    </div>\n  </div>\n</header>`,
   "header",
 );
 once(
@@ -46,6 +46,8 @@ once(`<button class="btn btn-secondary" id="btn-sample" type="button">جرّب �
 once(`    <div class="card">\n      <h2>الجهة والشعار</h2>`, `    <div class="card" hidden>\n      <h2>الجهة والشعار</h2>`, "org card");
 once(`<li>أضف معايير مادتك واسم الجهة والشعار من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>`, `<li>أضف معايير مادتك من تبويب "المعايير والإعدادات"؛ تُحفظ في هذا المتصفح فقط.</li>`, "settings hint");
 once(`ارفع منهجًا من تبويب "تحليل منهج" أو جرّب العينة.`, `ارفع منهجًا من تبويب "تحليل منهج" أو حلّل منهجًا من "المناهج".`, "results placeholder");
+once("const update = () => { btn.hidden = location.hash !== '#dev'; };", "const update = () => { btn.hidden = true; };", "dev button");
+once(`placeholder="ع1 يذكر الطالب أجزاء النبات&#10;ع2 يشرح الطالب عملية التمثيل الضوئي"`, `placeholder="م1 يحدد الطالب موقع السفينة على الخريطة الملاحية&#10;م2 يطبّق الطالب القواعد الدولية لمنع التصادم في البحر"`, "standards placeholder");
 once("</main>", read("src/panels.html") + "</main>", "panels");
 once("</body>\n</html>", `<script>\n${read("src/shell.js")}\n</script>\n\n</body>\n</html>`, "script");
 
