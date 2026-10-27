@@ -7,6 +7,10 @@ const p = await (await b.newContext({ viewport: { width: 1366, height: 900 } }))
 await setupAdmin(p);
 check('التبويبات', await p.$$eval('.tab-btn', ts => ts.filter(t => !t.hidden).map(t => t.textContent.trim())), ['المناهج', 'المساعد', 'تحليل منهج', 'النتائج', 'المرجع', 'المعايير والإعدادات', 'الإدارة']);
 
+// BlurText (React Bits) في عنوان «مناهجي»: يكتمل ظاهرًا، والنص الكامل لقارئ الشاشة مرة واحدة
+await p.waitForFunction(() => { const s = [...document.querySelectorAll('#panel-curricula h2 [aria-hidden="true"]')]; return s.length && s.every(x => getComputedStyle(x).opacity === '1'); }, null, { timeout: 5000 });
+check('BlurText: العنوان يكتمل ظاهرًا', await p.$eval('#panel-curricula h2', h => [h.tagName, h.querySelectorAll('[aria-hidden="true"]').length, [...h.querySelectorAll('span')].filter(s => !s.closest('[aria-hidden]') && !s.querySelector('span')).map(s => s.textContent)]), ['H2', 1, ['مناهجي']]);
+
 // منهج جديد بمسودة من المساعد
 check('زر رئيسي واحد في الحالة الفارغة', await p.$eval('#btn-cur-new', x => x.hidden));
 await p.click('[data-empty-new]'); await p.fill('#cur-subject', 'الملاحة البحرية'); await p.fill('#cur-goals', 'أن يحدد الطالب المواقع.');

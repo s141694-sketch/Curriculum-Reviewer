@@ -59,6 +59,9 @@
 /* عام */
 .panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-unit); margin-bottom: calc(var(--space-unit) * 2); }
 .panel-head h2 { font-size: 1.6rem; color: var(--color-primary); }
+/* BlurText (React Bits): الشعار النصي في المنتصف، والطباعة تُظهر النص كاملًا مهما كانت مرحلة الحركة */
+.landing-brand .tagline .blur-text { justify-content: center; }
+@media print { .blur-text span { opacity: 1 !important; filter: none !important; transform: none !important; } }
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: calc(var(--space-unit) * 2); margin-bottom: calc(var(--space-unit) * 2); }
 .stat { background: var(--color-surface); border: 1px solid var(--color-line); border-top: 4px solid var(--color-accent); border-radius: var(--radius); padding: calc(var(--space-unit) * 2); text-align: center; }
 .stat .num { font-family: var(--font-heading); font-size: 2rem; font-weight: 700; color: var(--color-primary); }

@@ -2,6 +2,7 @@
 // التشغيل: node build.mjs   (من مجلد harak-app)
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { buildSync } from "esbuild";
 
 const here = new URL(".", import.meta.url).pathname;
 const read = (p) => readFileSync(resolve(here, p), "utf8");
@@ -49,7 +50,21 @@ once(`ارفع منهجًا من تبويب "تحليل منهج" أو جرّب 
 once("const update = () => { btn.hidden = location.hash !== '#dev'; };", "const update = () => { btn.hidden = true; };", "dev button");
 once(`placeholder="ع1 يذكر الطالب أجزاء النبات&#10;ع2 يشرح الطالب عملية التمثيل الضوئي"`, `placeholder="م1 يحدد الطالب موقع السفينة على الخريطة الملاحية&#10;م2 يطبّق الطالب القواعد الدولية لمنع التصادم في البحر"`, "standards placeholder");
 once("</main>", read("src/panels.html") + "</main>", "panels");
-once("</body>\n</html>", `<script>\n${read("src/shell.js")}\n</script>\n\n</body>\n</html>`, "script");
+// مكوّنات React (BlurText من React Bits) محزومة في سكربت واحد يُدمج بعد shell.js
+const islands = buildSync({
+  entryPoints: [resolve(here, "src/islands.jsx")],
+  bundle: true,
+  minify: true,
+  format: "iife",
+  jsx: "automatic",
+  target: ["es2020"],
+  define: { "process.env.NODE_ENV": '"production"' },
+  legalComments: "eof",
+  logLevel: "error",
+  write: false,
+}).outputFiles[0].text;
+if (/<\/script/i.test(islands)) throw new Error("حزمة المكوّنات تحتوي </script>");
+once("</body>\n</html>", `<script>\n${read("src/shell.js")}\n</script>\n<script>\n${islands}</script>\n\n</body>\n</html>`, "script");
 
 const out = resolve(here, "harak.html");
 writeFileSync(out, html);

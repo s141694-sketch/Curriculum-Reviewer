@@ -6,6 +6,7 @@ import type { Curriculum } from "@/types/curriculum";
 import { deleteCurriculum, listCurricula } from "@/lib/storage";
 import { Diamond } from "@/components/HarakLogo";
 import { HeroCompass } from "@/components/HeroCompass";
+import BlurText from "@/components/BlurText";
 
 export default function HomePage() {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
@@ -27,11 +28,19 @@ export default function HomePage() {
       <section className="flex flex-col items-center gap-10 md:flex-row md:justify-between">
         <div className="flex max-w-xl flex-col gap-5">
           <span className="text-sm font-semibold text-gold-ink">أكاديمية السلطان قابوس البحرية</span>
-          <h1 className="font-display text-4xl leading-[1.35] font-bold text-navy md:text-5xl">
-            صمّم منهجك الدراسي
-            <br />
-            بخطوات واضحة
-          </h1>
+          <BlurText
+            as="h1"
+            text="صمّم منهجك الدراسي بخطوات واضحة"
+            effect="blur"
+            animateBy="words"
+            direction="top"
+            trigger="load"
+            delay={120}
+            stepDuration={0.4}
+            blur={10}
+            distance={24}
+            className="font-display text-4xl leading-[1.35] font-bold text-navy md:text-5xl"
+          />
           <p className="text-lg leading-8 text-muted">
             صِف المادة والمستوى وأهداف التعلّم والمدة، ويقترح حراك مخططاً منظّماً للوحدات والأهداف
             والموضوعات، يمكنك تعديله مباشرة.

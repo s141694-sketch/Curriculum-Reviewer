@@ -106,6 +106,16 @@ cd harak-app && node build.mjs
 يأخذ `../curriculum-analyzer/curriculum-analyzer.html` ويضيف إليه `src/shell.css` و`src/landing.html`
 و`src/panels.html` و`src/shell.js`. عدّل المصادر في `src/` لا `harak.html`.
 
+### مكوّنات React داخل الملف
+يحزم `build.mjs` الملف `src/islands.jsx` بـ esbuild (React وmotion والمكوّنات) في سكربت واحد يُدمج بعد `shell.js`،
+فيبقى `harak.html` ملفًا واحدًا يعمل بلا إنترنت. يحتاج البناء `npm install` في جذر المستودع مرة واحدة.
+
+- **BlurText** من React Bits (`../src/components/BlurText.jsx`، مشترك مع موقع Next.js): كل عنصر يحمل
+  `data-blur-text` يظهر نصه كلمةً كلمة بتلاشي الضبابية. مستخدم في الشعار النصي بشاشة الدخول (يعاد عند العودة إليها)
+  وفي عنوان «مناهجي» (يعاد عند كل دخول). يُقسَّم النص العربي بالكلمات لا بالحروف كي لا تنفصل الحروف المتصلة،
+  ويحترم إعداد «تقليل الحركة»، ويقرأ قارئ الشاشة النص كاملًا مرة واحدة.
+- الحزمة تزيد حجم `harak.html` نحو 336 كيلوبايت.
+
 ## الاختبار
 تحتاج الاختبارات حزمة `playwright` ومتصفح Chromium. مسار Chromium يُحدَّد بالمتغير `CHROMIUM_PATH` عند الحاجة.
 كل اختبار يطبع ✓ أو ✗ لكل فحص، ثم «ن/م نجح»، ويخرج برمز 1 عند أي إخفاق.

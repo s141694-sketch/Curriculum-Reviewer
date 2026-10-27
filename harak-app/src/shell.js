@@ -185,8 +185,10 @@ function applyRole() {
 
 function showAuth(view) {
   const landing = $('landing');
+  const returning = landing.hidden; // العودة من داخل النظام (خروج أو انتهاء جلسة)
   landing.hidden = false;
   ['setup', 'login', 'change'].forEach(v => { $(v + '-form').hidden = v !== view; });
+  if (returning) document.dispatchEvent(new CustomEvent('harak:auth')); // يعيد حركة الشعار النصي
   landing.setAttribute('aria-labelledby', view + '-title');
   // تأخير بسيط حتى تظهر الشاشة، ولا يُنقل التركيز إن بدأ المستخدم الكتابة في حقل آخر من النموذج
   const form = $(view + '-form'), first = form.querySelector('input');
@@ -202,6 +204,7 @@ function enterApp(user, greet = true) {
   applyRole();
   activateTab('tab-curricula');
   renderCurricula();
+  document.dispatchEvent(new CustomEvent('harak:enter')); // يعيد حركة عنوان «مناهجي»
   if (greet) toast(`أهلًا ${user.fullName}. دخلت بصفة ${ROLE_LABELS[user.role]}.`, 'success');
 }
 
