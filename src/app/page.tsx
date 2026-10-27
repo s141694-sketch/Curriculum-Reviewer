@@ -7,6 +7,7 @@ import { deleteCurriculum, listCurricula } from "@/lib/storage";
 import { Diamond } from "@/components/HarakLogo";
 import { HeroCompass } from "@/components/HeroCompass";
 import BlurText from "@/components/BlurText";
+import Magnet from "@/components/Magnet";
 
 export default function HomePage() {
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
@@ -27,7 +28,7 @@ export default function HomePage() {
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-12 px-6 py-12">
       <section className="flex flex-col items-center gap-10 md:flex-row md:justify-between">
         <div className="flex max-w-xl flex-col gap-5">
-          <span className="text-sm font-semibold text-gold-ink">أكاديمية السلطان قابوس البحرية</span>
+          <span className="text-sm font-semibold text-ocean">أكاديمية السلطان قابوس البحرية</span>
           <BlurText
             as="h1"
             text="صمّم منهجك الدراسي بخطوات واضحة"
@@ -39,19 +40,21 @@ export default function HomePage() {
             stepDuration={0.4}
             blur={10}
             distance={24}
-            className="font-display text-4xl leading-[1.35] font-bold text-navy md:text-5xl"
+            className="font-display text-4xl leading-[1.35] font-bold text-deep md:text-5xl"
           />
           <p className="text-lg leading-8 text-muted">
             صِف المادة والمستوى وأهداف التعلّم والمدة، ويقترح حراك مخططاً منظّماً للوحدات والأهداف
             والموضوعات، يمكنك تعديله مباشرة.
           </p>
           <div className="mt-2 flex flex-wrap gap-3">
-            <Link
-              href="/curriculum/new"
-              className="harak-press rounded-xl bg-maroon px-6 py-3.5 font-semibold text-white hover:bg-maroon-soft"
-            >
-              ابدأ منهجاً جديداً
-            </Link>
+            <Magnet padding={60} magnetStrength={4} maxOffset={10}>
+              <Link
+                href="/curriculum/new"
+                className="harak-press inline-flex rounded-full bg-ocean px-7 py-3.5 font-semibold text-white hover:bg-deep"
+              >
+                ابدأ منهجاً جديداً
+              </Link>
+            </Magnet>
           </div>
         </div>
         <HeroCompass />
@@ -59,13 +62,13 @@ export default function HomePage() {
 
       <section className="flex flex-col gap-5">
         <div className="flex items-center gap-3">
-          <Diamond className="text-gold" />
-          <h2 className="font-display text-2xl font-bold text-navy">مناهجي المحفوظة</h2>
+          <Diamond className="text-sky" />
+          <h2 className="font-display text-2xl font-bold text-deep">مناهجي المحفوظة</h2>
           <span className="h-px flex-1 bg-line" aria-hidden="true" />
         </div>
 
         {curricula.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-gold bg-white p-10 text-center text-muted">
+          <p className="rounded-2xl border border-dashed border-sky bg-white p-10 text-center text-muted">
             لا توجد مناهج بعد. أنشئ منهجاً جديداً لتبدأ.
           </p>
         ) : (
@@ -75,19 +78,19 @@ export default function HomePage() {
                 key={curriculum.id}
                 className="harak-card relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-white p-5"
               >
-                <span className="absolute inset-x-0 top-0 h-1 bg-gold" aria-hidden="true" />
+                <span className="absolute inset-x-0 top-0 h-1 bg-sky" aria-hidden="true" />
                 <Link href={`/curriculum/${curriculum.id}`} className="flex flex-1 flex-col gap-1.5">
-                  <span className="font-display text-xl font-bold text-navy">{curriculum.subject}</span>
+                  <span className="font-display text-xl font-bold text-deep">{curriculum.subject}</span>
                   <span className="text-sm text-muted">
                     {curriculum.level} · {curriculum.durationWeeks} أسبوعاً
                   </span>
-                  <span className="mt-2 text-sm font-medium text-gold-ink">
+                  <span className="mt-2 text-sm font-medium text-ocean">
                     {curriculum.modules.length} وحدات
                   </span>
                 </Link>
                 <button
                   onClick={() => handleDelete(curriculum.id)}
-                  className="self-end rounded-lg px-2 py-1 text-sm text-maroon-soft hover:bg-sand"
+                  className="self-end rounded-lg px-2 py-1 text-sm text-deep hover:bg-tint"
                 >
                   حذف
                 </button>

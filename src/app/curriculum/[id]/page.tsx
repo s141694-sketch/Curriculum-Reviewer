@@ -96,7 +96,7 @@ export default function CurriculumEditorPage() {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
         <p className="text-muted">لم يُعثر على هذا المنهج.</p>
-        <Link href="/" className="font-semibold text-navy underline hover:text-maroon">
+        <Link href="/" className="font-semibold text-deep underline hover:text-ocean">
           العودة إلى مناهجي
         </Link>
       </main>
@@ -106,7 +106,7 @@ export default function CurriculumEditorPage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-10">
       <div>
-        <Link href="/" className="text-sm font-medium text-muted hover:text-maroon">
+        <Link href="/" className="text-sm font-medium text-muted hover:text-ocean">
           → مناهجي
         </Link>
       </div>
@@ -121,7 +121,7 @@ export default function CurriculumEditorPage() {
           aria-label="اسم المنهج"
           value={curriculum.subject}
           onChange={(e) => update({ ...curriculum, subject: e.target.value })}
-          className="rounded-lg bg-transparent font-display text-3xl leading-snug font-bold text-navy outline-none focus:bg-white md:text-4xl"
+          className="rounded-lg bg-transparent font-display text-3xl leading-snug font-bold text-deep outline-none focus:bg-white md:text-4xl"
         />
         {curriculum.goals && <p className="max-w-3xl leading-8 text-muted">{curriculum.goals}</p>}
       </header>
@@ -140,12 +140,12 @@ export default function CurriculumEditorPage() {
               <a
                 key={module.id}
                 href={`#${module.id}`}
-                className="group relative flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-sand"
+                className="group relative flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-tint"
               >
-                <span className="size-3 shrink-0 rounded-full border-2 border-navy bg-white transition-colors group-hover:bg-navy" aria-hidden="true" />
+                <span className="size-3 shrink-0 rounded-full border-2 border-deep bg-white transition-colors group-hover:bg-deep" aria-hidden="true" />
                 <span className="flex flex-col">
                   <span className="text-xs text-muted">الوحدة {index + 1}</span>
-                  <span className="text-sm font-semibold text-navy">{module.title || "وحدة بلا عنوان"}</span>
+                  <span className="text-sm font-semibold text-deep">{module.title || "وحدة بلا عنوان"}</span>
                 </span>
               </a>
             ))}
@@ -159,12 +159,12 @@ export default function CurriculumEditorPage() {
               id={module.id}
               className="harak-card relative flex scroll-mt-6 flex-col gap-4 overflow-hidden rounded-2xl border border-line bg-white p-6"
             >
-              <span className="absolute inset-x-0 top-0 h-1 bg-gold" aria-hidden="true" />
+              <span className="absolute inset-x-0 top-0 h-1 bg-sky" aria-hidden="true" />
               <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-semibold text-gold-ink">الوحدة {index + 1}</span>
+                <span className="text-sm font-semibold text-ocean">الوحدة {index + 1}</span>
                 <button
                   onClick={() => removeModule(module.id)}
-                  className="rounded-lg px-2 py-1 text-sm text-maroon-soft hover:bg-sand"
+                  className="rounded-lg px-2 py-1 text-sm text-deep hover:bg-tint"
                 >
                   حذف الوحدة
                 </button>
@@ -177,7 +177,7 @@ export default function CurriculumEditorPage() {
                     value={module.title}
                     onChange={(e) => updateModule(module.id, { title: e.target.value })}
                     placeholder="عنوان الوحدة"
-                    className="harak-field font-display text-lg font-bold text-navy"
+                    className="harak-field font-display text-lg font-bold text-deep"
                   />
                 </label>
                 <label className="flex flex-col gap-1.5 text-sm font-semibold">
@@ -203,8 +203,8 @@ export default function CurriculumEditorPage() {
               </label>
 
               <div className="flex items-center gap-3">
-                <Diamond size={10} className="text-gold" />
-                <h3 className="font-display text-lg font-bold text-navy">الموضوعات</h3>
+                <Diamond size={10} className="text-sky" />
+                <h3 className="font-display text-lg font-bold text-deep">الموضوعات</h3>
                 <span className="h-px flex-1 bg-line" aria-hidden="true" />
               </div>
 
@@ -214,7 +214,7 @@ export default function CurriculumEditorPage() {
                     key={topic.id}
                     className="flex items-start gap-3 rounded-xl border border-line p-3"
                   >
-                    <span className="mt-1.5 grid size-7 shrink-0 place-items-center rounded-lg bg-[#EDEEF6] text-sm font-semibold text-navy">
+                    <span className="mt-1.5 grid size-7 shrink-0 place-items-center rounded-lg bg-[#E3F0F8] text-sm font-semibold text-deep">
                       {topicIndex + 1}
                     </span>
                     <div className="flex flex-1 flex-col gap-1.5">
@@ -237,7 +237,7 @@ export default function CurriculumEditorPage() {
                     </div>
                     <button
                       onClick={() => removeTopic(module.id, topic.id)}
-                      className="mt-1.5 rounded-lg px-2 py-1 text-sm text-maroon-soft hover:bg-sand"
+                      className="mt-1.5 rounded-lg px-2 py-1 text-sm text-deep hover:bg-tint"
                     >
                       حذف
                     </button>
@@ -245,7 +245,7 @@ export default function CurriculumEditorPage() {
                 ))}
                 <button
                   onClick={() => addTopic(module.id)}
-                  className="rounded-xl border-[1.5px] border-dashed border-gold bg-ivory py-3 text-sm font-semibold text-gold-ink hover:bg-sand"
+                  className="rounded-xl border-[1.5px] border-dashed border-sky bg-ivory py-3 text-sm font-semibold text-ocean hover:bg-tint"
                 >
                   + إضافة موضوع
                 </button>
@@ -255,7 +255,7 @@ export default function CurriculumEditorPage() {
 
           <button
             onClick={addModule}
-            className="self-start rounded-xl bg-sand px-5 py-3 text-sm font-semibold text-navy hover:bg-line"
+            className="self-start rounded-xl bg-tint px-5 py-3 text-sm font-semibold text-deep hover:bg-line"
           >
             + إضافة وحدة
           </button>

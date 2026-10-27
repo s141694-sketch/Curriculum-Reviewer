@@ -2,8 +2,8 @@ type NeedleTone = "color" | "reverse" | "mono";
 
 const needleFills: Record<NeedleTone, [string, string, string, string]> = {
   // north-left, north-right, south-left, south-right
-  color: ["#7E1416", "#A0282C", "#1B1F4B", "#2E3470"],
-  reverse: ["#C7383C", "#E0555A", "#D4AD6A", "#E8CF9A"],
+  color: ["#74B4DA", "#9CC8E5", "#10367D", "#0B5497"],
+  reverse: ["#74B4DA", "#BFDCEE", "#FFFEF9", "#DCE8F3"],
   mono: ["currentColor", "currentColor", "currentColor", "currentColor"],
 };
 
@@ -31,7 +31,7 @@ export function CompassNeedle({
       <polygon points="8,88 24,88 24,176" fill={sl} />
       <polygon points="24,88 40,88 24,176" fill={sr} />
       {tone !== "mono" && (
-        <circle cx="24" cy="88" r="8" fill={tone === "reverse" ? "#FBF8F1" : "#D4AD6A"} />
+        <circle cx="24" cy="88" r="8" fill="#D4AD6A" />
       )}
     </svg>
   );
@@ -79,10 +79,10 @@ export function CompassMark({
     <svg width={size} height={size} viewBox="-50 -50 100 100" aria-hidden="true" className={className}>
       <circle r="44" fill="none" stroke="currentColor" strokeWidth="5" />
       <g className={spinning ? "harak-seek" : undefined}>
-        <polygon points="0,-32 0,0 -9,0" fill="#C7383C" />
-        <polygon points="0,-32 9,0 0,0" fill="#E0555A" />
-        <polygon points="-9,0 0,0 0,32" fill="#D4AD6A" />
-        <polygon points="0,0 9,0 0,32" fill="#E8CF9A" />
+        <polygon points="0,-32 0,0 -9,0" fill="#74B4DA" />
+        <polygon points="0,-32 9,0 0,0" fill="#BFDCEE" />
+        <polygon points="-9,0 0,0 0,32" fill="#FFFEF9" />
+        <polygon points="0,0 9,0 0,32" fill="#DCE8F3" />
       </g>
     </svg>
   );

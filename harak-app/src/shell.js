@@ -9,7 +9,7 @@
 const HARAK_KEYS = { session: 'harak.session', logins: 'harak.logins', curricula: 'harak.curricula', ai: 'harak.ai', chat: 'harak.chat', brief: 'harak.brief' };
 const ROLE_LABELS = { designer: 'المصمم التعليمي', reviewer: 'مصمم المنهج', admin: 'مدير النظام' };
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
-const NEEDLE_SVG = '<svg class="spin" width="14" height="14" viewBox="-50 -50 100 100" aria-hidden="true"><polygon points="0,-40 11,0 -11,0" fill="#E0555A"/><polygon points="-11,0 11,0 0,40" fill="#E8CF9A"/></svg>';
+const NEEDLE_SVG = '<svg class="spin" width="14" height="14" viewBox="-50 -50 100 100" aria-hidden="true"><polygon points="0,-40 11,0 -11,0" fill="#BFDCEE"/><polygon points="-11,0 11,0 0,40" fill="#FFFEF9"/></svg>';
 // صياغة العدد مع المعدود: 1 مفرد، 2 مثنى، 3–10 جمع، 0 و11 فأكثر مفرد منصوب
 // forms = [مفرد، مثنى، جمع، مفرد منصوب]، مثل ['وحدة واحدة', 'وحدتان', 'وحدات', 'وحدة']
 function countOf(n, [one, two, few, many]) {
@@ -379,7 +379,7 @@ function renderCurricula() {
           <span class="meta">آخر تعديل ${fmtDate(c.updatedAt)}</span>
         </div>`).join('')}</div>`
     : `<div class="empty">
-         <svg width="56" height="56" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="44" fill="none" stroke="currentColor" stroke-width="3"/><polygon points="0,-30 9,0 -9,0" fill="#7E1416"/><polygon points="-9,0 9,0 0,30" fill="#1B1F4B"/></svg>
+         <svg width="56" height="56" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="44" fill="none" stroke="currentColor" stroke-width="3"/><polygon points="0,-30 9,0 -9,0" fill="#74B4DA"/><polygon points="-9,0 9,0 0,30" fill="#10367D"/></svg>
          <p>لا توجد مناهج بعد.</p>
          <button class="btn btn-primary" type="button" data-empty-new>ابدأ منهجًا جديدًا</button>
        </div>`;
@@ -688,7 +688,7 @@ function refreshContextOptions() {
 
 function renderChat() {
   const log = $('chat-log');
-  if (!chat.length) { log.innerHTML = '<div class="chat-hello"><span class="harak-wordmark" aria-hidden="true">حر<svg viewBox="0 0 48 176" style="width:.25em;height:.93em"><polygon points="24,0 40,88 24,176 8,88" fill="#1B1F4B"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg>ك</span><br>اختر منهجًا من القائمة ثم اسأل، أو استخدم الأسئلة الجاهزة.<br>المساعد يعمل بنموذج مفتوح المصدر على جهازك.</div>'; return; }
+  if (!chat.length) { log.innerHTML = '<div class="chat-hello"><span class="harak-wordmark" aria-hidden="true">حر<svg viewBox="0 0 48 176" style="width:.25em;height:.93em"><polygon points="24,0 40,88 24,176 8,88" fill="#10367D"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg>ك</span><br>اختر منهجًا من القائمة ثم اسأل، أو استخدم الأسئلة الجاهزة.<br>المساعد يعمل بنموذج مفتوح المصدر على جهازك.</div>'; return; }
   log.innerHTML = chat.map((m, i) => {
     const applicable = m.role === 'assistant' && /"modules"\s*:/.test(m.content);
     const body = m.pending && !m.content ? '<div class="skeleton" aria-label="جارٍ إعداد الرد"><span></span><span></span><span></span></div>' : m.role === 'assistant' ? renderMarkdown(m.content) : escapeHtml(m.content);
@@ -854,7 +854,7 @@ function renderChat() {
   // حالة فارغة واضحة في «النتائج» بدل أزرار معطّلة وبطاقات بلا محتوى
   const resultsEmpty = document.createElement('div');
   resultsEmpty.className = 'empty no-print'; resultsEmpty.id = 'results-empty';
-  resultsEmpty.innerHTML = `<svg width="56" height="56" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="44" fill="none" stroke="currentColor" stroke-width="3"/><polygon points="0,-30 9,0 -9,0" fill="#7E1416"/><polygon points="-9,0 9,0 0,30" fill="#1B1F4B"/></svg>
+  resultsEmpty.innerHTML = `<svg width="56" height="56" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="44" fill="none" stroke="currentColor" stroke-width="3"/><polygon points="0,-30 9,0 -9,0" fill="#74B4DA"/><polygon points="-9,0 9,0 0,30" fill="#10367D"/></svg>
     <p>لا نتائج بعد. ارفع ملف منهج في «تحليل منهج»، أو حلّل منهجًا محفوظًا من «المناهج».</p>
     <div class="empty-actions"><button class="btn btn-primary" type="button" data-go="tab-upload">تحليل منهج</button><button class="btn btn-secondary" type="button" data-go="tab-curricula">المناهج</button></div>`;
   $('panel-results').prepend(resultsEmpty);
@@ -1153,7 +1153,12 @@ function animateSummary() {
     const a = tabs.querySelector('.tab-btn[aria-selected="true"]');
     if (!a || a.hidden || !a.offsetWidth) { ind.style.opacity = '0'; return; }
     ind.style.opacity = '1';
-    ind.style.transform = `translateX(${a.offsetLeft}px) scaleX(${a.offsetWidth / 100})`;
+    // كبسولة عاجية خلف التبويب النشط: عرض وارتفاع حقيقيان (التحجيم يشوّه الحواف المستديرة)
+    ind.style.width = a.offsetWidth + 'px';
+    ind.style.height = a.offsetHeight + 'px';
+    ind.style.transform = `translate(${a.offsetLeft}px, ${a.offsetTop}px)`;
+    // أول تموضع بلا حركة، ثم تنزلق الكبسولة بين التبويبات
+    if (!ind.classList.contains('is-ready')) requestAnimationFrame(() => ind.classList.add('is-ready'));
   };
   const base = window.activateTab;
   window.activateTab = function (id) {

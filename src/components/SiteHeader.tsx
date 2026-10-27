@@ -37,20 +37,22 @@ export function SiteHeader() {
   const nav = session && isElevated(session.role) ? [...links, { href: "/admin", label: "لوحة التحكم" }] : links;
 
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between gap-6 px-6">
-        <Link href="/" aria-label="حراك — الصفحة الرئيسية" className="group flex items-center gap-4 text-navy">
-          <HarakWordmark size={36} />
-          <span className="h-11 w-px bg-gold" aria-hidden="true" />
-          <Image
-            src={academyEmblem}
-            alt="شعار أكاديمية السلطان قابوس البحرية"
-            className="h-14 w-auto"
-            priority
-          />
+    <header className="harak-on-ocean relative top-0 z-20 bg-ocean md:sticky text-ivory shadow-[0_1px_0_rgba(10,31,68,0.18)]">
+      <div className="mx-auto flex min-h-20 w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-3">
+        <Link href="/" aria-label="حراك — الصفحة الرئيسية" className="group flex items-center gap-4 text-ivory">
+          <HarakWordmark size={36} tone="reverse" />
+          <span className="h-11 w-px bg-sky" aria-hidden="true" />
+          <span className="grid size-14 place-items-center rounded-full bg-ivory">
+            <Image
+              src={academyEmblem}
+              alt="شعار أكاديمية السلطان قابوس البحرية"
+              className="h-12 w-auto"
+              priority
+            />
+          </span>
         </Link>
         {!onLogin && (
-          <nav aria-label="التنقل الرئيسي" className="flex items-center gap-8 text-[15px] font-medium">
+          <nav aria-label="التنقل الرئيسي" className="flex flex-wrap items-center gap-2 text-[15px] font-medium">
             {nav.map((link) => {
               const active = pathname === link.href;
               return (
@@ -58,7 +60,11 @@ export function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? "page" : undefined}
-                  className={`harak-nav ${active ? "text-maroon" : "text-navy hover:text-maroon"}`}
+                  className={`rounded-full border px-4 py-2 transition-colors ${
+                    active
+                      ? "border-ivory bg-ivory font-semibold text-ocean"
+                      : "border-[#5B8FC4] text-ice hover:border-ivory hover:text-ivory"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -69,12 +75,12 @@ export function SiteHeader() {
         {session && !onLogin && (
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end leading-tight">
-              <span className="text-sm font-semibold text-navy">{session.name}</span>
-              <span className="text-xs text-gold-ink">{ROLE_LABELS[session.role]}</span>
+              <span className="text-sm font-semibold text-ivory">{session.name}</span>
+              <span className="text-xs text-ice">{ROLE_LABELS[session.role]}</span>
             </div>
             <button
               onClick={logout}
-              className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:border-maroon hover:text-maroon"
+              className="rounded-full border border-[#5B8FC4] px-4 py-1.5 text-xs font-semibold text-ice transition-colors hover:border-ivory hover:text-ivory"
             >
               خروج
             </button>

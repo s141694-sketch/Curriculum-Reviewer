@@ -16,7 +16,9 @@ const once = (from, to, label) => {
 
 once("<title>حراك — محلّل المناهج</title>", "<title>حراك — بوصلة المنهج الدراسي</title>", "title");
 once("/* ---------- 1ج. أنماط الطباعة ---------- */", read("src/shell.css") + "\n/* ---------- 1ج. أنماط الطباعة ---------- */", "css");
-once("<body>\n", "<body>\n" + read("src/landing.html") + "\n", "landing");
+// الأمواج مرتين: خلف النظام، وداخل شاشة الدخول التي تغطيه
+const sea = read("src/sea.html");
+once("<body>\n", "<body>\n" + sea + read("src/landing.html").replace("<!--harak-sea-->", sea) + "\n", "landing");
 once(
   `    <h1 class="app-title">محلّل المناهج</h1>\n    <div class="app-org" id="app-org">اسم الجهة</div>\n  </div>\n</header>`,
   `    <h1 class="app-title">بوصلة المنهج الدراسي</h1>\n    <div class="app-org" id="app-org">اسم الجهة</div>\n  </div>\n  <div class="app-user" id="app-user" hidden>\n    <button class="user-btn" type="button" id="user-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu"><span class="avatar" id="app-user-initial" aria-hidden="true"></span><span class="who"><strong id="app-user-name"></strong><span id="app-user-role"></span></span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>\n    <div class="user-menu" id="user-menu" role="menu" hidden>\n      <button type="button" role="menuitem" id="menu-change-password">تغيير كلمة المرور</button>\n      <button type="button" role="menuitem" id="menu-logout" class="danger">تسجيل الخروج</button>\n    </div>\n  </div>\n</header>`,
@@ -35,6 +37,9 @@ once(
     `  <button class="tab-btn" role="tab" id="tab-admin"     aria-controls="panel-admin"     aria-selected="false" type="button" hidden>الإدارة</button>`,
   "admin tab",
 );
+// الشريط العلوي والتبويبات في حزمة زرقاء واحدة (الاتجاه «ب»: المحيط)
+once(`<header class="app-header">`, `<div class="app-top">\n<header class="app-header">`, "app-top open");
+once(`hidden>الإدارة</button>\n</nav>`, `hidden>الإدارة</button>\n</nav>\n</div>`, "app-top close");
 once(`  <section class="tab-panel is-active" role="tabpanel" id="panel-upload"`, `  <section class="tab-panel" role="tabpanel" id="panel-upload"`, "upload panel");
 once(
   `    <div id="report" class="report">\n      <p class="placeholder">لا نتائج بعد. ارفع منهجًا من تبويب "رفع" أو جرّب العينة.</p>\n    </div>`,

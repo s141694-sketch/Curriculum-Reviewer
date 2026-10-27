@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { CompassMark, HarakWordmark } from "@/components/HarakLogo";
+import Magnet from "@/components/Magnet";
 import { ROLE_LABELS, ROLES, type Role } from "@/lib/session";
 
 const roleHints: Record<Role, string> = {
@@ -51,16 +52,16 @@ function LoginForm() {
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 px-6 py-16">
-      <div className="flex flex-col items-center gap-3 text-navy">
+      <div className="flex flex-col items-center gap-3 text-deep">
         <HarakWordmark size={72} />
-        <span className="text-sm font-semibold text-gold-ink">بوصلة المنهج الدراسي</span>
+        <span className="text-sm font-semibold text-ocean">بوصلة المنهج الدراسي</span>
       </div>
 
       <form
         onSubmit={handleSubmit}
         className="flex flex-col gap-5 rounded-3xl border border-line bg-white p-8"
       >
-        <h1 className="font-display text-2xl font-bold text-navy">اختر دورك للدخول</h1>
+        <h1 className="font-display text-2xl font-bold text-deep">اختر دورك للدخول</h1>
 
         <label className="flex flex-col gap-1.5 text-sm font-semibold">
           الاسم
@@ -80,7 +81,7 @@ function LoginForm() {
             <label
               key={option}
               className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${
-                role === option ? "border-navy bg-ivory" : "border-line hover:bg-sand"
+                role === option ? "border-deep bg-ivory" : "border-line hover:bg-tint"
               }`}
             >
               <input
@@ -89,7 +90,7 @@ function LoginForm() {
                 value={option}
                 checked={role === option}
                 onChange={() => setRole(option)}
-                className="mt-1 accent-maroon"
+                className="mt-1 accent-ocean"
               />
               <span className="flex flex-col gap-0.5">
                 <span className="font-semibold">{ROLE_LABELS[option]}</span>
@@ -100,19 +101,21 @@ function LoginForm() {
         </fieldset>
 
         {error && (
-          <p role="alert" className="rounded-xl bg-[#F7E9E9] px-4 py-3 text-sm text-maroon">
+          <p role="alert" className="rounded-xl bg-[#F7E9E9] px-4 py-3 text-sm text-danger">
             {error}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="harak-press flex items-center justify-center gap-2 rounded-xl bg-maroon px-6 py-3.5 font-semibold text-white hover:bg-maroon-soft disabled:opacity-70"
-        >
-          {loading ? <CompassMark size={20} spinning className="text-gold-soft" /> : null}
-          دخول
-        </button>
+        <Magnet padding={50} magnetStrength={5} maxOffset={6} disabled={loading} style={{ display: "block" }}>
+          <button
+            type="submit"
+            disabled={loading}
+            className="harak-press flex w-full items-center justify-center gap-2 rounded-full bg-ocean px-6 py-3.5 font-semibold text-white hover:bg-deep disabled:opacity-70"
+          >
+            {loading ? <CompassMark size={20} spinning className="text-sky-soft" /> : null}
+            دخول
+          </button>
+        </Magnet>
       </form>
     </main>
   );

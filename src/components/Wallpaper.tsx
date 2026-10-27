@@ -1,13 +1,30 @@
 /**
- * Site wallpaper: two faint compass roses that turn very slowly, over the
- * dotted chart grid painted by the body background. Purely decorative.
+ * خلفية الموقع المتحركة: ثلاث طبقات أمواج هادئة أسفل الصفحة تنساب بسرعات واتجاهات مختلفة،
+ * ووردة بوصلة باهتة تدور ببطء في الأعلى، فوق شبكة النقاط التي ترسمها خلفية body.
+ * زخرفية فقط: لا تستقبل المؤشر، ومخفية عن قارئ الشاشة، وتتوقف مع «تقليل الحركة» (globals.css).
  */
 export function Wallpaper() {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <CompassRose className="harak-rose absolute -bottom-52 -left-52 size-[760px] text-navy opacity-[0.06]" />
-      <CompassRose className="harak-rose-reverse absolute -top-40 -right-40 size-[440px] text-gold-ink opacity-[0.08]" />
+      <CompassRose className="harak-rose absolute -top-40 -right-40 size-[460px] text-sky opacity-[0.14]" />
+      <div className="harak-sea">
+        <Wave className="harak-wave harak-wave-3" />
+        <Wave className="harak-wave harak-wave-2" />
+        <Wave className="harak-wave harak-wave-1" />
+      </div>
     </div>
+  );
+}
+
+// موجتان كاملتان على عرض 200%: إزاحة النصف تعيد الشكل نفسه فتتكرر الحركة بلا قفزة
+const WAVE_PATH =
+  "M0 60 C240 20 480 20 720 60 S1200 100 1440 60 S1920 20 2160 60 S2640 100 2880 60 V120 H0 Z";
+
+function Wave({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 2880 120" preserveAspectRatio="none" className={className}>
+      <path d={WAVE_PATH} fill="currentColor" />
+    </svg>
   );
 }
 

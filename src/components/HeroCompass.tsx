@@ -66,19 +66,19 @@ export function HeroCompass() {
       aria-hidden="true"
     >
       <svg viewBox="-230 -230 460 460" className="absolute inset-0 size-full">
-        <circle r="222" fill="#FFFFFF" stroke="#E3D9C4" strokeWidth="2" />
-        <circle r="196" fill="none" stroke="#1B1F4B" strokeOpacity="0.15" strokeDasharray="2 9" />
-        <circle r="150" fill="none" stroke="#D4AD6A" strokeWidth="2" />
-        <line x1="0" y1="-222" x2="0" y2="-200" stroke="#1B1F4B" strokeWidth="3" />
-        <line x1="0" y1="200" x2="0" y2="222" stroke="#1B1F4B" strokeWidth="3" />
-        <line x1="-222" y1="0" x2="-200" y2="0" stroke="#1B1F4B" strokeWidth="3" />
-        <line x1="200" y1="0" x2="222" y2="0" stroke="#1B1F4B" strokeWidth="3" />
+        <circle r="222" fill="#FFFFFF" stroke="#DCE3EC" strokeWidth="2" />
+        <circle r="196" fill="none" stroke="#10367D" strokeOpacity="0.15" strokeDasharray="2 9" />
+        <circle r="150" fill="none" stroke="#74B4DA" strokeWidth="2" />
+        <line x1="0" y1="-222" x2="0" y2="-200" stroke="#10367D" strokeWidth="3" />
+        <line x1="0" y1="200" x2="0" y2="222" stroke="#10367D" strokeWidth="3" />
+        <line x1="-222" y1="0" x2="-200" y2="0" stroke="#10367D" strokeWidth="3" />
+        <line x1="200" y1="0" x2="222" y2="0" stroke="#10367D" strokeWidth="3" />
       </svg>
       <div
         className={settled ? "relative transition-transform duration-700 ease-out" : "relative harak-seek"}
         style={settled ? { transform: `rotate(${angle}deg)` } : undefined}
       >
-        <CompassNeedle height={260} className="drop-shadow-[0_6px_10px_rgba(27,31,75,0.18)]" />
+        <CompassNeedle height={260} className="drop-shadow-[0_6px_10px_rgba(16,54,125,0.18)]" />
       </div>
     </div>
   );

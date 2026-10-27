@@ -11,6 +11,12 @@ check('التبويبات', await p.$$eval('.tab-btn', ts => ts.filter(t => !t.h
 await p.waitForFunction(() => { const s = [...document.querySelectorAll('#panel-curricula h2 [aria-hidden="true"]')]; return s.length && s.every(x => getComputedStyle(x).opacity === '1'); }, null, { timeout: 5000 });
 check('BlurText: العنوان يكتمل ظاهرًا', await p.$eval('#panel-curricula h2', h => [h.tagName, h.querySelectorAll('[aria-hidden="true"]').length, [...h.querySelectorAll('span')].filter(s => !s.closest('[aria-hidden]') && !s.querySelector('span')).map(s => s.textContent)]), ['H2', 1, ['مناهجي']]);
 
+// الهوية الزرقاء: الأمواج تتحرك، وMagnet يغلّف الأزرار الأساسية، والتركيز لا يبيّض الزر الأساسي
+check('الخلفية المتحركة', await p.$eval('body > .harak-sea .harak-wave-1', w => getComputedStyle(w).animationName), 'harak-tide');
+check('Magnet على الزر الأساسي', await p.$eval('[data-empty-new]', x => !!x.closest('.magnet-wrap')));
+await p.focus('[data-empty-new]');
+check('الزر الأساسي يبقى أزرق عند التركيز', await p.$eval('[data-empty-new]', x => getComputedStyle(x).backgroundColor), 'rgb(11, 84, 151)');
+
 // منهج جديد بمسودة من المساعد
 check('زر رئيسي واحد في الحالة الفارغة', await p.$eval('#btn-cur-new', x => x.hidden));
 await p.click('[data-empty-new]'); await p.fill('#cur-subject', 'الملاحة البحرية'); await p.fill('#cur-goals', 'أن يحدد الطالب المواقع.');

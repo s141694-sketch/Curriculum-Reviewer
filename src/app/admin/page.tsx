@@ -67,10 +67,10 @@ export default function AdminPage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-10">
       <header className="flex flex-col gap-1.5">
-        <span className="text-sm font-semibold text-gold-ink">
+        <span className="text-sm font-semibold text-ocean">
           {session ? ROLE_LABELS[session.role] : "لوحة التحكم"}
         </span>
-        <h1 className="font-display text-3xl font-bold text-navy md:text-4xl">
+        <h1 className="font-display text-3xl font-bold text-deep md:text-4xl">
           {isAdmin ? "لوحة التحكم بالنظام" : "لوحة المراجعة"}
         </h1>
       </header>
@@ -98,7 +98,7 @@ export default function AdminPage() {
                   <tr key={i} className="border-t border-line">
                     <td className="px-3 py-2 font-semibold">{l.name}</td>
                     <td className="px-3 py-2">
-                      <span className="rounded-full bg-[#EDEEF6] px-2.5 py-0.5 text-xs font-semibold text-navy">
+                      <span className="rounded-full bg-[#E3F0F8] px-2.5 py-0.5 text-xs font-semibold text-deep">
                         {ROLE_LABELS[l.role]}
                       </span>
                     </td>
@@ -114,7 +114,7 @@ export default function AdminPage() {
         {isAdmin && data?.logins.length ? (
           <button
             onClick={clearLog}
-            className="self-start rounded-xl border-[1.5px] border-maroon px-4 py-2 text-sm font-semibold text-maroon hover:bg-[#F7E9E9]"
+            className="self-start rounded-xl border-[1.5px] border-danger px-4 py-2 text-sm font-semibold text-danger hover:bg-[#F7E9E9]"
           >
             مسح السجل
           </button>
@@ -126,12 +126,12 @@ export default function AdminPage() {
           المناهج محفوظة في متصفحك ({curricula.length} منهجًا). صدّرها كنسخة احتياطية أو استوردها من جهاز آخر.
         </p>
         <div className="flex flex-wrap gap-3">
-          <button onClick={exportJson} className="harak-press rounded-xl bg-navy px-5 py-2.5 text-sm font-semibold text-white">
+          <button onClick={exportJson} className="harak-press rounded-xl bg-deep px-5 py-2.5 text-sm font-semibold text-white">
             تصدير JSON
           </button>
           <button
             onClick={() => importRef.current?.click()}
-            className="harak-press rounded-xl border-[1.5px] border-navy px-5 py-2.5 text-sm font-semibold text-navy hover:bg-sand"
+            className="harak-press rounded-xl border-[1.5px] border-deep px-5 py-2.5 text-sm font-semibold text-deep hover:bg-tint"
           >
             استيراد JSON
           </button>
@@ -144,14 +144,14 @@ export default function AdminPage() {
           />
           <button
             onClick={() => setShowJson((v) => !v)}
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-gold-ink hover:bg-sand"
+            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-ocean hover:bg-tint"
           >
             {showJson ? "إخفاء البيانات" : "عرض البيانات"}
           </button>
         </div>
-        {notice && <p className="text-sm text-navy">{notice}</p>}
+        {notice && <p className="text-sm text-deep">{notice}</p>}
         {showJson && (
-          <pre dir="ltr" className="max-h-96 overflow-auto rounded-xl bg-navy-deep p-4 text-left text-xs leading-relaxed text-gold-soft">
+          <pre dir="ltr" className="max-h-96 overflow-auto rounded-xl bg-ink p-4 text-left text-xs leading-relaxed text-sky-soft">
             {JSON.stringify(curricula, null, 2)}
           </pre>
         )}
@@ -180,8 +180,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-line bg-white p-6">
       <div className="flex items-center gap-3">
-        <Diamond size={10} className="text-gold" />
-        <h2 className="font-display text-xl font-bold text-navy">{title}</h2>
+        <Diamond size={10} className="text-sky" />
+        <h2 className="font-display text-xl font-bold text-deep">{title}</h2>
         <span className="h-px flex-1 bg-line" aria-hidden="true" />
       </div>
       {children}
@@ -191,8 +191,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border-t-4 border-gold bg-white p-4 text-center">
-      <div className="font-display text-3xl font-bold text-navy">{value}</div>
+    <div className="rounded-2xl border-t-4 border-sky bg-white p-4 text-center">
+      <div className="font-display text-3xl font-bold text-deep">{value}</div>
       <div className="text-sm text-muted">{label}</div>
     </div>
   );
@@ -202,7 +202,7 @@ function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-ivory p-3">
       <dt className="text-xs text-muted">{label}</dt>
-      <dd dir="ltr" className="mt-1 text-right font-semibold text-navy">
+      <dd dir="ltr" className="mt-1 text-right font-semibold text-deep">
         {value}
       </dd>
     </div>
