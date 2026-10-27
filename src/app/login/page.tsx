@@ -37,8 +37,8 @@ function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, role }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "تعذّر تسجيل الدخول");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `تعذّر تسجيل الدخول (خطأ ${response.status})`);
       const next = params.get("next");
       router.push(next && next.startsWith("/") ? next : "/");
       router.refresh();

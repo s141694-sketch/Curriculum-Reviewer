@@ -12,7 +12,10 @@ export interface LoginRecord {
   at: string;
 }
 
-const FILE = path.join(process.cwd(), "data", "logins.json");
+// On Vercel only /tmp is writable, so there the log is per-instance and
+// temporary until it moves to a database (cr-q7m.2).
+const DIR = process.env.VERCEL ? path.join("/tmp", "harak-data") : path.join(process.cwd(), "data");
+const FILE = path.join(DIR, "logins.json");
 
 export async function readLogins(): Promise<LoginRecord[]> {
   try {
@@ -22,14 +25,19 @@ export async function readLogins(): Promise<LoginRecord[]> {
   }
 }
 
+// A failed write must never block sign-in; it is logged and skipped.
 export async function appendLogin(record: LoginRecord): Promise<void> {
-  const all = await readLogins();
-  all.unshift(record);
-  await mkdir(path.dirname(FILE), { recursive: true });
-  await writeFile(FILE, JSON.stringify(all.slice(0, 1000), null, 2));
+  try {
+    const all = await readLogins();
+    all.unshift(record);
+    await mkdir(DIR, { recursive: true });
+    await writeFile(FILE, JSON.stringify(all.slice(0, 1000), null, 2));
+  } catch (error) {
+    console.error("Login log not saved:", error);
+  }
 }
 
 export async function clearLogins(): Promise<void> {
-  await mkdir(path.dirname(FILE), { recursive: true });
+  await mkdir(DIR, { recursive: true });
   await writeFile(FILE, "[]");
 }
