@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Curriculum } from "@/types/curriculum";
 import { deleteCurriculum, listCurricula } from "@/lib/storage";
@@ -8,8 +9,10 @@ import { Diamond } from "@/components/HarakLogo";
 import { HeroCompass } from "@/components/HeroCompass";
 import BlurText from "@/components/BlurText";
 import Magnet from "@/components/Magnet";
+import FileFolder from "@/components/FileFolder";
 
 export default function HomePage() {
+  const router = useRouter();
   const [curricula, setCurricula] = useState<Curriculum[]>([]);
 
   useEffect(() => {
@@ -72,31 +75,46 @@ export default function HomePage() {
             لا توجد مناهج بعد. أنشئ منهجاً جديداً لتبدأ.
           </p>
         ) : (
-          <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {curricula.map((curriculum) => (
-              <li
-                key={curriculum.id}
-                className="harak-card relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-white p-5"
-              >
-                <span className="absolute inset-x-0 top-0 h-1 bg-sky" aria-hidden="true" />
-                <Link href={`/curriculum/${curriculum.id}`} className="flex flex-1 flex-col gap-1.5">
-                  <span className="font-display text-xl font-bold text-deep">{curriculum.subject}</span>
-                  <span className="text-sm text-muted">
-                    {curriculum.level} · {curriculum.durationWeeks} أسبوعاً
-                  </span>
-                  <span className="mt-2 text-sm font-medium text-ocean">
-                    {curriculum.modules.length} وحدات
-                  </span>
-                </Link>
-                <button
-                  onClick={() => handleDelete(curriculum.id)}
-                  className="self-end rounded-lg px-2 py-1 text-sm text-deep hover:bg-tint"
+          <>
+            {/* المجلد: أحدث المناهج أوراقاً، وفتح ورقة يفتح المنهج */}
+            <FileFolder
+              files={curricula.map((c) => ({
+                id: c.id,
+                title: c.subject,
+                meta: `${c.level} · ${c.durationWeeks} أسبوعاً`,
+              }))}
+              label="المناهج"
+              kind="منهج"
+              hint="أحدث المناهج تعديلاً. افتح المجلد ثم اختر منهجاً."
+              onOpen={(file) => router.push(`/curriculum/${file.id}`)}
+              className="mb-4"
+            />
+            <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {curricula.map((curriculum) => (
+                <li
+                  key={curriculum.id}
+                  className="harak-card relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-line bg-white p-5"
                 >
-                  حذف
-                </button>
-              </li>
-            ))}
-          </ul>
+                  <span className="absolute inset-x-0 top-0 h-1 bg-sky" aria-hidden="true" />
+                  <Link href={`/curriculum/${curriculum.id}`} className="flex flex-1 flex-col gap-1.5">
+                    <span className="font-display text-xl font-bold text-deep">{curriculum.subject}</span>
+                    <span className="text-sm text-muted">
+                      {curriculum.level} · {curriculum.durationWeeks} أسبوعاً
+                    </span>
+                    <span className="mt-2 text-sm font-medium text-ocean">
+                      {curriculum.modules.length} وحدات
+                    </span>
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(curriculum.id)}
+                    className="self-end rounded-lg px-2 py-1 text-sm text-deep hover:bg-tint"
+                  >
+                    حذف
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
     </main>

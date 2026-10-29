@@ -5,6 +5,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import BlurText from '../../src/components/BlurText.jsx';
 import Magnet from '../../src/components/Magnet.jsx';
+import FileFolder from '../../src/components/FileFolder.jsx';
 
 // كلمات لا حروف: تقسيم الحروف العربية يفصل الحروف المتصلة
 const PRESETS = {
@@ -85,3 +86,26 @@ new MutationObserver(records => {
     });
   }
 }).observe(document.body, { childList: true, subtree: true });
+
+// ---------- مجلد الملفات المحفوظة (Folder من React Bits) ----------
+// القائمة التي يرسمها shell.js أو المحلّل هي المصدر: كل عنصر فيها يحمل data-folder-id وعنوانه ووصفه،
+// ويُعاد رسم المجلد كلما تغيّرت. فتح ورقة من المجلد يضغط زر الفتح نفسه في القائمة، فلا يتكرر منطق الفتح.
+function mountFolder(host) {
+  const source = document.querySelector(host.dataset.folderSource);
+  if (!source) return;
+  const root = createRoot(host);
+  const { folderLabel: label, folderKind: kind, folderHint: hint } = host.dataset;
+  const open = file => source.querySelector(`[data-open="${CSS.escape(file.id)}"]`)?.click();
+  const render = () => {
+    const files = [...source.querySelectorAll('[data-folder-id]')].map(el => ({
+      id: el.dataset.folderId,
+      title: el.dataset.folderTitle,
+      meta: el.dataset.folderMeta,
+    }));
+    root.render(<FileFolder files={files} label={label} kind={kind} hint={hint} onOpen={open} />);
+  };
+  new MutationObserver(render).observe(source, { childList: true, subtree: true });
+  render();
+}
+
+document.querySelectorAll('[data-folder-source]').forEach(mountFolder);

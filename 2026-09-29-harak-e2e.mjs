@@ -19,6 +19,7 @@ check('الزر الأساسي يبقى أزرق عند التركيز', await p
 
 // منهج جديد بمسودة من المساعد
 check('زر رئيسي واحد في الحالة الفارغة', await p.$eval('#btn-cur-new', x => x.hidden));
+check('لا مجلد والقائمة فارغة', await p.$eval('#cur-list-view .file-folder', f => f.hidden));
 await p.click('[data-empty-new]'); await p.fill('#cur-subject', 'الملاحة البحرية'); await p.fill('#cur-goals', 'أن يحدد الطالب المواقع.');
 await p.click('#btn-cur-ai'); await p.waitForSelector('#cur-editor-view:not([hidden])', { timeout: 15000 });
 check('وحدات المسودة', await p.$$eval('.module-card', m => m.length), 2);
@@ -29,6 +30,22 @@ await p.click('#btn-cur-analyze'); await p.fill('#brief-text', ''); await p.clic
 await p.waitForSelector('#panel-results.is-active', { timeout: 15000 }); await p.waitForTimeout(900);
 check('أرقام الملخص', await p.$$eval('#report .summary-card .num', ns => ns.length), n => n >= 4);
 check('النتائج: لا حالة فارغة', await p.$eval('#results-empty', e => e.hidden));
+
+// مجلد الملفات المحفوظة (Folder من React Bits): المناهج في تبويبها والتقارير في الإعدادات، والورقة تفتح ملفها
+await p.click('#btn-save'); await closeToasts(p);
+await p.click('#tab-curricula'); await p.click('#cur-editor-view [data-cur-back]');
+await p.waitForSelector('#cur-list-view .folder-root');
+check('مجلد المناهج: التسمية والأوراق', await p.$eval('#cur-list-view .folder-shelf', s => [s.querySelector('.folder-stage').getAttribute('aria-label'), [...s.querySelectorAll('.file-card-title')].map(t => t.textContent)]), ['مجلد المناهج', ['الملاحة البحرية']]);
+await p.click('#cur-list-view .folder-stage'); await p.waitForTimeout(1200);
+check('المجلد يُفتح', await p.$eval('#cur-list-view .folder-stage', s => s.getAttribute('aria-expanded')), 'true');
+await shot(p, 'h-folder.png');
+await p.click('#cur-list-view .folder-item'); await p.waitForSelector('#cur-editor-view:not([hidden])');
+check('ورقة المجلد تفتح المنهج', await p.inputValue('#ed-subject'), 'الملاحة البحرية');
+await p.click('#tab-settings'); await p.waitForSelector('#panel-settings .folder-root');
+check('مجلد التقارير', await p.$$eval('#panel-settings .file-card-title', ts => ts.length), 1);
+await p.click('#panel-settings .folder-stage'); await p.waitForTimeout(1200);
+await p.click('#panel-settings .folder-item'); await p.waitForSelector('#panel-results.is-active');
+check('ورقة التقرير تفتح نتائجه', await p.$$eval('#report .summary-card .num', ns => ns.length), n => n >= 4);
 
 // المساعد
 await p.click('#tab-curricula'); await p.click('#btn-cur-ask');
@@ -67,6 +84,7 @@ check('المصمم التعليمي: لا إدارة', await p.$eval('#tab-admi
 check('المصمم التعليمي يرى المناهج المشتركة', await p.$$eval('.cur-card', c => c.length), 1);
 await p.reload(); await p.waitForLoadState('load');
 check('إعادة التحميل تبقي الجلسة', await p.isHidden('#landing'));
+check('إعادة التحميل تعرض المناهج', await p.isVisible('#panel-curricula .cur-card'));
 
 check('لا أخطاء JavaScript', errs, []);
 await b.close();

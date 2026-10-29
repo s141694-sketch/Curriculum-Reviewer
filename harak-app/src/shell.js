@@ -372,7 +372,8 @@ function renderCurricula() {
   const list = [...curricula].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   $('cur-list').innerHTML = list.length
     ? `<div class="cur-grid">${list.map(c => `
-        <div class="cur-card" data-open="${c.id}" role="button" tabindex="0" aria-label="فتح منهج ${escapeHtml(c.subject)}">
+        <div class="cur-card" data-open="${c.id}" role="button" tabindex="0" aria-label="فتح منهج ${escapeHtml(c.subject)}"
+             data-folder-id="${c.id}" data-folder-title="${escapeHtml(c.subject)}" data-folder-meta="${escapeHtml(c.level)} · ${countOf(c.durationWeeks, NOUNS.weeks)}">
           <strong>${escapeHtml(c.subject)}</strong>
           <span class="meta">${escapeHtml(c.level)} · ${countOf(c.durationWeeks, NOUNS.weeks)}</span>
           <span class="count">${countOf(c.modules.length, NOUNS.units)}، ${countOf(c.modules.reduce((n, m) => n + m.topics.length, 0), NOUNS.topics)}</span>

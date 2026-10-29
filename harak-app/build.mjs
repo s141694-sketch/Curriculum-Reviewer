@@ -55,9 +55,21 @@ once(`ارفع منهجًا من تبويب "تحليل منهج" أو جرّب 
 once("const update = () => { btn.hidden = location.hash !== '#dev'; };", "const update = () => { btn.hidden = true; };", "dev button");
 once(`placeholder="ع1 يذكر الطالب أجزاء النبات&#10;ع2 يشرح الطالب عملية التمثيل الضوئي"`, `placeholder="م1 يحدد الطالب موقع السفينة على الخريطة الملاحية&#10;م2 يطبّق الطالب القواعد الدولية لمنع التصادم في البحر"`, "standards placeholder");
 once("</main>", read("src/panels.html") + "</main>", "panels");
-// مكوّنات React (BlurText من React Bits) محزومة في سكربت واحد يُدمج بعد shell.js
-const islands = buildSync({
+// التقارير المحفوظة في مجلد أيضًا (Folder من React Bits): كل عنصر يحمل عنوانه ووصفه للمجلد
+once(
+  `      <ul class="reports-list" id="reports-list"></ul>`,
+  `      <div class="folder-shelf" data-folder-source="#reports-list" data-folder-label="التقارير" data-folder-kind="تقرير" data-folder-hint="أحدث التقارير المحفوظة. افتح المجلد ثم اختر تقريرًا."></div>\n      <ul class="reports-list" id="reports-list"></ul>`,
+  "reports folder",
+);
+once(
+  "<li data-id=\"${r.id}\">",
+  "<li data-id=\"${r.id}\" data-folder-id=\"${r.id}\" data-folder-title=\"${escapeHtml(r.fileName)}\" data-folder-meta=\"${new Date(r.savedAt).toLocaleDateString('ar-OM-u-nu-latn', { dateStyle: 'medium' })} · الأهداف: ${r.analysis.stats.objectives}\">",
+  "reports folder items",
+);
+// مكوّنات React (BlurText وMagnet وFolder من React Bits) محزومة في سكربت واحد يُدمج بعد shell.js، وأنماطها في <style>
+const bundle = buildSync({
   entryPoints: [resolve(here, "src/islands.jsx")],
+  outdir: resolve(here, "dist-islands"), // لا يُكتب شيء (write: false)، لكن esbuild يحتاجه لفصل CSS عن JS
   bundle: true,
   minify: true,
   format: "iife",
@@ -67,8 +79,13 @@ const islands = buildSync({
   legalComments: "eof",
   logLevel: "error",
   write: false,
-}).outputFiles[0].text;
+}).outputFiles;
+const islands = bundle.find((f) => f.path.endsWith(".js")).text;
+// أنماط المكوّنات (Folder.css وFileFolder.css) تُضاف إلى نهاية أنماط الصفحة
+const islandsCss = bundle.find((f) => f.path.endsWith(".css"))?.text ?? "";
 if (/<\/script/i.test(islands)) throw new Error("حزمة المكوّنات تحتوي </script>");
+if (/<\/style/i.test(islandsCss)) throw new Error("أنماط المكوّنات تحتوي </style>");
+once("</style>\n</head>", `/* ---------- مكوّنات React ---------- */\n${islandsCss}</style>\n</head>`, "islands css");
 once("</body>\n</html>", `<script>\n${read("src/shell.js")}\n</script>\n<script>\n${islands}</script>\n\n</body>\n</html>`, "script");
 
 const out = resolve(here, "harak.html");

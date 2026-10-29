@@ -77,6 +77,9 @@
 [hidden] { display: none !important; }
 
 /* المناهج */
+/* مجلد الملفات المحفوظة فوق القائمة الكاملة؛ يختفي هامشه مع المجلد حين تخلو القائمة */
+.folder-shelf > .file-folder { margin-bottom: calc(var(--space-unit) * 3); }
+.folder-shelf .file-folder-hint { color: var(--color-muted); }
 .cur-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: calc(var(--space-unit) * 2); }
 .cur-card { position: relative; overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 16px; padding: calc(var(--space-unit) * 2.5); display: flex; flex-direction: column; gap: calc(var(--space-unit) / 2); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
 .cur-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: var(--color-accent); }
