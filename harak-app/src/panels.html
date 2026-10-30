@@ -78,10 +78,8 @@
       </aside>
       <div class="chat">
         <div class="chat-log" id="chat-log" aria-live="polite"></div>
-        <form class="chat-input" id="chat-form">
-          <textarea id="chat-text" placeholder="اسأل عن المنهج، أو اطلب تحسين هدف، أو ناقش خطة الدورة…" rows="2"></textarea>
-          <button class="btn btn-primary" type="submit" id="chat-send">إرسال</button>
-        </form>
+        <!-- PromptBar من React Bits (islands.jsx): @ لمنهج أو ملف، / للأسئلة الجاهزة، واختيار النموذج -->
+        <div class="chat-input chat-prompt" id="chat-prompt"></div>
       </div>
     </div>
   </section>

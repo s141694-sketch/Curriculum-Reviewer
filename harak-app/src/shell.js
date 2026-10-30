@@ -179,8 +179,6 @@ function applyRole() {
     $('admin-title').textContent = u.role === 'admin' ? 'لوحة التحكم بالنظام' : 'لوحة الإدارة';
   }
   if (!elevated && $('tab-admin').getAttribute('aria-selected') === 'true') activateTab('tab-curricula');
-  if (window.positionTabIndicator) positionTabIndicator();
-  if (window.syncTabEdges) syncTabEdges();
 }
 
 function showAuth(view) {
@@ -502,7 +500,7 @@ function touch(c) {
     toast('اكتب ما تريده من التحليل ثم اضغط «حلّل».', 'info');
     $('brief-text').focus();
   });
-  $('btn-cur-ask').addEventListener('click', () => { $('ai-context').value = currentId; activateTab('tab-assistant'); $('chat-text').focus(); });
+  $('btn-cur-ask').addEventListener('click', () => { $('ai-context').value = currentId; activateTab('tab-assistant'); focusPrompt(); });
   renderCurricula();
 })();
 
@@ -577,7 +575,8 @@ const AI = {
     if (buf.trim()) yield buf.trim();
   },
 
-  async *rawStream(messages, onStatus) {
+  // signal (اختياري): يوقف الطلب والتدفق حين يضغط المستخدم «إيقاف»
+  async *rawStream(messages, onStatus, signal) {
     const S = this.settings;
     if (S.engine === 'webllm') {
       if (!this.webllm) {
@@ -585,6 +584,7 @@ const AI = {
         const mod = await import('https://esm.run/@mlc-ai/web-llm');
         this.webllm = await mod.CreateMLCEngine(this.model(), { initProgressCallback: p => onStatus(p.text) });
       }
+      signal?.addEventListener('abort', () => this.webllm.interruptGenerate(), { once: true });
       const chunks = await this.webllm.chat.completions.create({ messages, stream: true, temperature: 0.3 });
       for await (const ch of chunks) { const d = ch.choices?.[0]?.delta?.content; if (d) yield d; }
       return;
@@ -598,8 +598,8 @@ const AI = {
       ? { model: this.model(), messages, stream: true, options: { temperature: 0.3, num_ctx: 8192, repeat_penalty: 1.1 } }
       : { model: this.model(), messages, stream: true, temperature: 0.3 };
     let res;
-    try { res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) }); }
-    catch { throw new Error(`تعذّر الوصول إلى ${url}. هل الخادم يعمل؟ (Ollama: شغّله بـ OLLAMA_ORIGINS="*" ثم أعد المحاولة)`); }
+    try { res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal }); }
+    catch (e) { if (e.name === 'AbortError') throw e; throw new Error(`تعذّر الوصول إلى ${url}. هل الخادم يعمل؟ (Ollama: شغّله بـ OLLAMA_ORIGINS="*" ثم أعد المحاولة)`); }
     if (!res.ok) throw new Error(`الخادم ردّ بخطأ ${res.status}: ${(await res.text()).slice(0, 200)}`);
     for await (const line of this.readLines(res)) {
       if (native) {
@@ -613,10 +613,10 @@ const AI = {
   },
 
   // التدفق بعد حذف الحروف الدخيلة
-  async *stream(messages, onStatus = () => {}) {
+  async *stream(messages, onStatus = () => {}, signal) {
     this.lastScrubbed = 0;
     let last = '', prevRemoved = 0;
-    for await (const d of this.rawStream(messages, onStatus)) {
+    for await (const d of this.rawStream(messages, onStatus, signal)) {
       let { clean, removed } = scrubForeign(d);
       this.lastScrubbed += removed;
       // الحذف يترك مسافتين متتاليتين؛ تُدمجان داخل الجزء الواحد وعند حدود الأجزاء
@@ -679,6 +679,17 @@ function analysisSummary() {
   return `الوحدات ${s.units}، الدروس ${s.lessons}، الأهداف ${s.objectives}. توزيع بلوم: ${Object.entries(s.bloomCounts).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join('، ')}. المجالات: معرفي ${s.domainCounts.cognitive}، وجداني ${s.domainCounts.affective}، نفس‑حركي ${s.domainCounts.psychomotor}. دروس تفتقر إلى أنشطة أو تقويم: ${missing.length ? missing.join('، ') : 'لا شيء'}. أهداف بأخطاء صياغة: ${a.quality.filter(q => q.errors.length).length}.`;
 }
 
+// ---------- سطر التفكير (ThoughtLine من React Bits) ----------
+// shell.js يرسل الحالة كاملة، و islands.jsx يرسمها في [data-thought=id]. run جديد = سطر جديد بساعة جديدة
+// عند الاستقرار تُمرَّر المدة الفعلية مقرّبة إلى أعلى عُشر ثانية، فلا يظهر «0.0 ث» لعمل تمّ فعلًا
+const lineStarts = new Map();
+function showThought(id, line) {
+  if (line.working) { if (!lineStarts.has(id + line.run)) lineStarts.set(id + line.run, performance.now()); }
+  else if (line.run && lineStarts.has(id + line.run)) line = { ...line, elapsed: Math.max(0.1, Math.ceil((performance.now() - lineStarts.get(id + line.run)) / 100) / 10) };
+  document.dispatchEvent(new CustomEvent('harak:thought', { detail: { id, ...line } }));
+}
+const focusPrompt = () => document.querySelector('#chat-prompt .prompt-bar__input')?.focus();
+
 // ---------- المساعد ----------
 let chat = store.read(HARAK_KEYS.chat, []);
 function refreshContextOptions() {
@@ -692,7 +703,8 @@ function renderChat() {
   if (!chat.length) { log.innerHTML = '<div class="chat-hello"><span class="harak-wordmark" aria-hidden="true">حر<svg viewBox="0 0 48 176" style="width:.25em;height:.93em"><polygon points="24,0 40,88 24,176 8,88" fill="#10367D"/><circle cx="24" cy="88" r="8" fill="#D4AD6A"/></svg>ك</span><br>اختر منهجًا من القائمة ثم اسأل، أو استخدم الأسئلة الجاهزة.<br>المساعد يعمل بنموذج مفتوح المصدر على جهازك.</div>'; return; }
   log.innerHTML = chat.map((m, i) => {
     const applicable = m.role === 'assistant' && /"modules"\s*:/.test(m.content);
-    const body = m.pending && !m.content ? '<div class="skeleton" aria-label="جارٍ إعداد الرد"><span></span><span></span><span></span></div>' : m.role === 'assistant' ? renderMarkdown(m.content) : escapeHtml(m.content);
+    const files = m.files && m.files.length ? `<div class="msg-files">${m.files.map(n => `<span>مرفق: ${escapeHtml(n)}</span>`).join('')}</div>` : '';
+    const body = m.pending && !m.content ? '<div class="skeleton" aria-label="جارٍ إعداد الرد"><span></span><span></span><span></span></div>' : m.role === 'assistant' ? renderMarkdown(m.content) : escapeHtml(m.content) + files;
     return `<div class="msg ${m.role}">${body}${applicable ? `<div class="apply"><button class="btn btn-sm" type="button" data-apply="${i}">تطبيق هذه النسخة على المنهج المحدد</button></div>` : ''}${m.role === 'assistant' && m.content ? `<button class="msg-copy" type="button" data-copy-msg="${i}" aria-label="نسخ الرد">نسخ</button>` : ''}</div>`;
   }).join('');
   log.scrollTop = log.scrollHeight;
@@ -739,12 +751,6 @@ function renderChat() {
   });
   $('btn-ai-clear').addEventListener('click', () => { chat = []; store.write(HARAK_KEYS.chat, chat); renderChat(); toast('مُسحت المحادثة.', 'info'); });
   document.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => send(b.dataset.quick)));
-  $('chat-form').addEventListener('submit', e => {
-    e.preventDefault();
-    if (busy) { toast('انتظر اكتمال الرد الحالي، ثم أرسل سؤالك.', 'info'); return; } // يبقى النص المكتوب كما هو
-    const t = $('chat-text').value.trim(); if (t) { $('chat-text').value = ''; send(t); }
-  });
-  $('chat-text').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $('chat-form').requestSubmit(); } });
   $('chat-log').addEventListener('click', async e => {
     const copy = e.target.closest('[data-copy-msg]');
     if (copy) { navigator.clipboard?.writeText(chat[Number(copy.dataset.copyMsg)].content).then(() => toast('نُسخ الرد.', 'success')); return; }
@@ -761,30 +767,109 @@ function renderChat() {
   });
 
   let busy = false;
-  // أثناء وصول الرد: يُعطَّل الإرسال والأسئلة الجاهزة، ويبقى الحقل متاحًا لكتابة السؤال التالي
+  let controller = null;
+  // أثناء وصول الرد: تُعطَّل الأسئلة الجاهزة، ويصير زر الإرسال في PromptBar زر إيقاف، ويبقى الحقل متاحًا للسؤال التالي
   const setChatBusy = v => {
-    busy = v; $('chat-send').classList.toggle('is-busy', v); $('chat-send').disabled = v;
+    busy = v;
     document.querySelectorAll('[data-quick]').forEach(x => { x.disabled = v; });
+    document.dispatchEvent(new CustomEvent('harak:chat'));
   };
-  async function send(text) {
+  // files: [{ name, text }] ملفات أرفقها المستخدم بهذا السؤال؛ تُرسل نصوصها للنموذج وتظهر أسماؤها فقط
+  async function send(text, { files = [], withAnalysis = false } = {}) {
     if (busy) return; setChatBusy(true);
-    chat.push({ role: 'user', content: text });
+    chat.push({ role: 'user', content: text, files: files.map(f => f.name) });
     const reply = { role: 'assistant', content: '', pending: true }; chat.push(reply); renderChat();
-    const ctx = { curriculum: getCur($('ai-context').value) || null, analysis: $('ai-include-analysis').checked ? analysisSummary() : '' };
+    const ctx = { curriculum: getCur($('ai-context').value) || null, analysis: withAnalysis || $('ai-include-analysis').checked ? analysisSummary() : '' };
     const history = chat.slice(-11, -1).filter(m => m.content).map(m => ({ role: m.role, content: m.content }));
+    const budget = Math.floor(AI.textBudget() / Math.max(1, files.length));
+    if (files.length) history[history.length - 1].content += files.map(f => `\n\nملف مرفق «${f.name}»:\n${f.text.slice(0, budget)}`).join('');
     const messages = [{ role: 'system', content: AI.systemPrompt(ctx) }, ...history];
+    controller = new AbortController();
     try {
-      for await (const d of AI.stream(messages, s => status(s))) { reply.content += d; renderChat(); }
+      for await (const d of AI.stream(messages, s => status(s), controller.signal)) { reply.content += d; renderChat(); }
       if (!reply.content) reply.content = '(لم يصل رد)';
       if (AI.lastScrubbed) status(`حُذف ${countOf(AI.lastScrubbed, NOUNS.foreign)} من الرد.`, '');
     } catch (e) {
-      reply.role = 'system'; reply.content = 'تعذّر الاتصال بالمحرّك: ' + (e.message || String(e));
-      status(reply.content, 'err');
+      if (e.name === 'AbortError') reply.content = reply.content ? reply.content + '\n\n(أُوقف الرد بطلبك.)' : '(أُوقف الرد بطلبك.)';
+      else { reply.role = 'system'; reply.content = 'تعذّر الاتصال بالمحرّك: ' + (e.message || String(e)); status(reply.content, 'err'); }
     } finally {
+      controller = null;
       setChatBusy(false); delete reply.pending;
       store.write(HARAK_KEYS.chat, chat.slice(-60)); renderChat();
     }
   }
+
+  // نص الملف المرفق بالمحادثة بقارئات المحلّل نفسها، دون شرط الحد الأدنى من النص العربي الذي يطلبه التحليل
+  async function fileText(file) {
+    const type = fileExtension(file.name);
+    if (type === 'pdf') return (await extractPdfPages(await file.arrayBuffer(), [])).map(normalizeText).join('\n');
+    if (type === 'docx') return normalizeText(await extractDocxText(await file.arrayBuffer()));
+    if (type === 'txt') return normalizeText(await file.text());
+    throw new Error('الصيغ المقبولة: PDF نصي، DOCX، TXT.');
+  }
+
+  // ---------- جسر PromptBar (React Bits) في islands.jsx ----------
+  // / للأسئلة الجاهزة، و@ لاختيار منهج أو آخر تحليل أو إرفاق ملف، واختيار النموذج من النماذج المنزّلة في Ollama
+  const QUICK = [...document.querySelectorAll('[data-quick]')].map(b => ({ name: '/' + b.textContent.trim(), prompt: b.dataset.quick }));
+  const attached = new Map(); // اسم الملف ← نصه، لما أُرفق ولم يُرسل بعد
+  let installed = [];
+  const loadModels = () => {
+    if (S.engine !== 'ollama') { installed = []; return; }
+    AI.listModels().then(names => { installed = names; document.dispatchEvent(new CustomEvent('harak:chat')); }).catch(() => {});
+  };
+  $('ai-engine').addEventListener('change', loadModels);
+  loadModels();
+  window.harakChat = {
+    busy: () => busy,
+    commands: () => QUICK.map((q, i) => ({ key: 'q' + i, name: q.name, description: q.prompt })),
+    sources: () => [
+      { key: 'file', name: 'ملف من هذا الجهاز', description: 'PDF أو DOCX أو TXT', kind: 'file', attach: true },
+      ...(state.analysis ? [{ key: 'analysis', name: 'آخر تحليل', description: 'نتائج التحليل الآلي الأخير', kind: 'analysis' }] : []),
+      ...curricula.map(c => ({ key: 'c-' + c.id, name: c.subject, description: `${c.level} · ${countOf(c.durationWeeks, NOUNS.weeks)}`, kind: 'curriculum' })),
+    ],
+    models: () => {
+      const current = AI.model();
+      const names = installed.includes(current) ? installed : [current, ...installed];
+      return names.map(n => ({ key: n, name: n, tag: n === current ? 'الحالي' : S.engine === 'ollama' ? 'على جهازك' : '' }));
+    },
+    model: () => AI.model(),
+    attach: () => new Promise(resolve => {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.pdf,.docx,.txt'; input.multiple = true;
+      input.addEventListener('cancel', () => resolve(null));
+      input.addEventListener('change', async () => {
+        const names = [];
+        for (const file of input.files) {
+          try {
+            const text = (await fileText(file)).trim();
+            if (!text) throw new Error('لا يحوي نصًا قابلًا للقراءة.');
+            attached.set(file.name, text); names.push(file.name);
+          } catch (e) { toast(`تعذّرت قراءة «${file.name}»: ${e.message || String(e)}`, 'warn'); }
+        }
+        resolve(names.length ? names : null);
+      });
+      input.click();
+    }),
+    send(text, { attachments = [], model } = {}) {
+      if (busy) return;
+      if (model && model.key !== AI.model()) {
+        if (S.engine === 'webllm') S.webllmModel = model.key; else if (S.engine === 'openai') S.openaiModel = model.key; else S.model = model.key;
+        AI.save(); $('ai-model').value = AI.model(); locality();
+      }
+      // «@منهج» يحدد سياق المحادثة، و«@آخر تحليل» يرفق نتائجه وإن لم يُختر ذلك في الجانب
+      const named = [...curricula].sort((a, b) => b.subject.length - a.subject.length).find(c => text.includes('@' + c.subject));
+      if (named) $('ai-context').value = named.id;
+      const withAnalysis = !!state.analysis && text.includes('@آخر تحليل');
+      // «/سؤال جاهز» يُستبدل بنصه الكامل، وما بعده يُضاف إليه
+      const quick = QUICK.find(q => text === q.name || text.startsWith(q.name + ' ') || text.startsWith(q.name + '\n'));
+      const prompt = quick ? quick.prompt + (text.slice(quick.name.length).trim() ? '\n\n' + text.slice(quick.name.length).trim() : '') : text;
+      const files = attachments.filter(n => attached.has(n)).map(n => ({ name: n, text: attached.get(n) }));
+      attachments.forEach(n => attached.delete(n));
+      send(prompt || 'لخّص الملفات المرفقة.', { files, withAnalysis });
+    },
+    stop: () => controller?.abort(),
+  };
+  document.dispatchEvent(new CustomEvent('harak:chat'));
   renderChat();
 })();
 
@@ -812,20 +897,35 @@ function renderChat() {
       </div>`;
   }
 
+  // خطوات المحلّل (#steps) بصياغة أوضح، تظهر تحت سطر التفكير بدل القائمة المرقّمة
+  const STEP_LABELS = { 1: 'قراءة الملف', 2: 'استخراج الوحدات والدروس والأهداف', 3: 'تصنيف الأهداف على مستويات بلوم', 4: 'مطابقة المعايير', 5: 'حساب الاكتمال والإحصاءات' };
+  let line = null;
+  const stepsSoFar = () => [...document.querySelectorAll('#steps li')]
+    .filter(li => /is-(active|done)/.test(li.className)).map(li => STEP_LABELS[li.dataset.step] || li.textContent.trim());
+  new MutationObserver(() => { if (line && line.working) { line.steps = stepsSoFar(); showThought('analysis', line); } })
+    .observe($('steps'), { attributes: true, subtree: true, attributeFilter: ['class'] });
+  const settle = ok => { line = { ...line, working: false, steps: stepsSoFar(), doneLabel: ok ? 'اكتمل التحليل في' : 'توقّف التحليل بعد' }; showThought('analysis', line); };
+
   // يُستدعى من زر «حلّل» بدل runAnalysis مباشرة
   window.harakAnalyze = async function (file) {
     const brief = text.value.trim();
     const withAuto = auto.checked;
     if (!brief && !withAuto) { toast('اكتب ما تريده من التحليل أو فعّل التحليل الآلي.', 'warn'); return; }
     state.customReport = null;
+    const run = Date.now();
+    line = { run, working: true, label: 'يحلّل «حراك» المنهج…', steps: [] };
+    showThought('analysis', line); showThought('report', { hidden: true }); showThought('review', { hidden: true });
     if (withAuto) {
+      const before = state.analysis;
       await runAnalysis(file);
+      settle(!!state.analysis && state.analysis !== before);
       if (!state.analysis) return;
     } else {
       clearAlerts(); resetSteps();
       $('btn-analyze').disabled = true;
       try { setStep(1); state.doc = await readDocument(file); state.file = file; state.analysis = null; setStep(1, 'done'); }
-      catch (e) { setStep(1, 'error'); showAlert(e.code || 'ERROR', e.message || String(e), 'danger'); $('btn-analyze').disabled = false; return; }
+      catch (e) { setStep(1, 'error'); settle(false); showAlert(e.code || 'ERROR', e.message || String(e), 'danger'); $('btn-analyze').disabled = false; return; }
+      settle(true);
       $('btn-analyze').disabled = false;
       renderResults(); activateTab('tab-results');
     }
@@ -835,11 +935,14 @@ function renderChat() {
     state.customReport = report;
     renderCustom(report, true); syncResultChrome();
     activateTab('tab-results');
+    const reportLine = { run, working: true, label: 'يكتب «حراك» التقرير بحسب طلبك…', steps: ['تجهيز نص المنهج', `إرسال طلبك إلى النموذج «${report.model}»`] };
+    showThought('report', reportLine);
     const docText = state.doc.pages.map(p => p.text).join('\n').slice(0, AI.textBudget());
     const sys = 'أنت «حراك»، مراجع مناهج خبير في أكاديمية السلطان قابوس البحرية. نفّذ طلب المستخدم على نص المنهج المرفق بدقة والتزم بالطلب فقط. ' + AI.langInstruction() + ' نسّق الرد بعناوين (#) وقوائم (-) بصيغة Markdown بسيطة بلا جداول. لا تخترع محتوى غير موجود في النص؛ عند رصد خطأ أو ملاحظة اقتبس السطر المعني ثم اكتب التصحيح أو الاقتراح.';
     const user = `الطلب: ${brief}\n\n${withAuto && state.analysis ? 'ملخص التحليل الآلي: ' + analysisSummary() + '\n\n' : ''}نص المنهج:\n${docText}`;
     try {
       for await (const d of AI.stream([{ role: 'system', content: sys }, { role: 'user', content: user }], s => window.aiStatus && window.aiStatus(s))) {
+        if (!report.text) { reportLine.steps = [...reportLine.steps, 'كتابة التقرير']; showThought('report', reportLine); }
         report.text += d; renderCustom(report, true);
       }
       if (!report.text) report.text = '(لم يصل رد من النموذج)';
@@ -849,6 +952,7 @@ function renderChat() {
     } catch (e) {
       report.error = 'تعذّر تنفيذ الطلب بالذكاء الاصطناعي: ' + (e.message || String(e)) + ' (راجع إعدادات المحرّك في تبويب «المساعد»)';
     }
+    showThought('report', { ...reportLine, working: false, doneLabel: report.error ? 'توقّف التقرير بعد' : 'أُعدّ التقرير في' });
     renderCustom(report, false); syncResultChrome();
   };
 
@@ -1116,7 +1220,9 @@ function animateSummary() {
   btn.addEventListener('click', async () => {
     const a = state.analysis; if (!a) return;
     btn.classList.add('is-busy'); btn.innerHTML = NEEDLE_SVG + 'جارٍ التقييم…';
-    box.innerHTML = '<p class="placeholder">النموذج يقرأ المنهج والنتائج الآلية…</p>';
+    box.innerHTML = '';
+    const line = { run: Date.now(), working: true, label: 'يقيّم «حراك» المنهج…', steps: ['قراءة نص المنهج ونتائج التحليل الآلي', `تقييم النموذج «${AI.model()}» للأهداف والبنية`] };
+    showThought('review', line);
     const text = state.doc.pages.map(p => p.text).join('\n').slice(0, AI.textBudget());
     const objectives = a.bloom.slice(0, 40).map(b => `- ${b.text} (المستوى المكتشف: ${b.level || 'غير محدد'})`).join('\n');
     const sys = 'أنت مراجع مناهج خبير في أكاديمية السلطان قابوس البحرية. قيّم المنهج المرفق بموضوعية وفق تصنيف بلوم المعدَّل وأركان الهدف السلوكي واكتمال عناصر الدرس (أهداف، أنشطة، تقويم، مراجع) وملاءمة المحتوى للمستوى. ' + AI.langInstruction() + ' أجب بـJSON صالح فقط، بلا شرح ولا علامات ```، بهذا الشكل: {"score": 0-100, "overall": "فقرة", "strengths": ["..."], "weaknesses": ["..."], "objectives": [{"text": "الهدف كما ورد", "level": "مستوى بلوم", "issue": "المشكلة", "rewrite": "صياغة سلوكية أفضل تبدأ بـ أن"}], "missing": ["..."], "recommendations": ["..."]}. اختر للأهداف أضعف 3 إلى 8 أهداف فقط.';
@@ -1126,57 +1232,22 @@ function animateSummary() {
       let review;
       try { review = JSON.parse(extractJson(out)); } catch { review = { raw: out }; }
       a.aiReview = { ...review, model: AI.model(), at: new Date().toISOString() };
+      showThought('review', { ...line, working: false, doneLabel: 'اكتمل التقييم في' });
       render(); animateSummary(); toast('اكتمل التقييم المنظّم.', 'success');
     } catch (e) {
+      showThought('review', { ...line, working: false, doneLabel: 'توقّف التقييم بعد' });
       box.innerHTML = `<div class="alert alert-danger">${escapeHtml(e.message || String(e))}<br><small>تحقق من إعدادات المحرّك في تبويب «المساعد».</small></div>`;
     } finally { btn.classList.remove('is-busy'); btn.textContent = 'تقييم منظّم بدرجة'; }
   });
 })();
 
-// ---------- التبويبات: أيقونات ومؤشر نشط منزلق ----------
+// ---------- التبويبات ----------
+// أزرار التبويبات الأصلية (.tab-btn) تبقى مخفية مصدرًا للحالة: islands.jsx يرسمها بـ PillNav من React Bits
+// ويضغط الزر الأصلي عند الاختيار، فيعمل activateTab وكل ما رُبط بالأزرار كما هو
 (function initTabsChrome() {
-  const ICONS = {
-    'tab-curricula': '<path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"/><path d="M12 6v14"/>',
-    'tab-assistant': '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
-    'tab-upload': '<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 15v4h16v-4"/>',
-    'tab-results': '<path d="M5 20V11M12 20V5M19 20v-6"/>',
-    'tab-reference': '<circle cx="12" cy="12" r="9"/><path d="M12 5.5l2 6.5h-4z"/><path d="M10 12h4l-2 6.5z"/>',
-    'tab-settings': '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
-    'tab-admin': '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/>',
-  };
-  const tabs = document.querySelector('.tabs');
-  document.querySelectorAll('.tab-btn').forEach(t => {
-    const d = ICONS[t.id];
-    if (d) t.insertAdjacentHTML('afterbegin', `<svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`);
-  });
-  const ind = document.createElement('span'); ind.className = 'tab-indicator'; ind.setAttribute('aria-hidden', 'true'); tabs.appendChild(ind);
-  window.positionTabIndicator = function () {
-    const a = tabs.querySelector('.tab-btn[aria-selected="true"]');
-    if (!a || a.hidden || !a.offsetWidth) { ind.style.opacity = '0'; return; }
-    ind.style.opacity = '1';
-    // كبسولة عاجية خلف التبويب النشط: عرض وارتفاع حقيقيان (التحجيم يشوّه الحواف المستديرة)
-    ind.style.width = a.offsetWidth + 'px';
-    ind.style.height = a.offsetHeight + 'px';
-    ind.style.transform = `translate(${a.offsetLeft}px, ${a.offsetTop}px)`;
-    // أول تموضع بلا حركة، ثم تنزلق الكبسولة بين التبويبات
-    if (!ind.classList.contains('is-ready')) requestAnimationFrame(() => ind.classList.add('is-ready'));
-  };
   const base = window.activateTab;
   window.activateTab = function (id) {
-    base(id); positionTabIndicator();
-    const a = tabs.querySelector('.tab-btn[aria-selected="true"]');
-    if (a && tabs.scrollWidth > tabs.clientWidth) a.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
-    if (a && a.id === 'tab-admin' && window.renderAdmin) renderAdmin();
+    base(id);
+    if ($('tab-admin').getAttribute('aria-selected') === 'true' && window.renderAdmin) renderAdmin();
   };
-  // تلاشٍ خفيف عند طرف الشريط حين توجد تبويبات خارج العرض (RTL: scrollLeft سالب في Chromium)
-  const edges = () => {
-    const max = tabs.scrollWidth - tabs.clientWidth, x = Math.abs(tabs.scrollLeft);
-    tabs.classList.toggle('more-end', max > 1 && x < max - 1);
-    tabs.classList.toggle('more-start', max > 1 && x > 1);
-  };
-  tabs.addEventListener('scroll', edges, { passive: true });
-  window.addEventListener('resize', () => { positionTabIndicator(); edges(); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { positionTabIndicator(); edges(); });
-  requestAnimationFrame(() => { positionTabIndicator(); edges(); });
-  window.syncTabEdges = edges;
 })();

@@ -55,6 +55,8 @@ once(`ارفع منهجًا من تبويب "تحليل منهج" أو جرّب 
 once("const update = () => { btn.hidden = location.hash !== '#dev'; };", "const update = () => { btn.hidden = true; };", "dev button");
 once(`placeholder="ع1 يذكر الطالب أجزاء النبات&#10;ع2 يشرح الطالب عملية التمثيل الضوئي"`, `placeholder="م1 يحدد الطالب موقع السفينة على الخريطة الملاحية&#10;م2 يطبّق الطالب القواعد الدولية لمنع التصادم في البحر"`, "standards placeholder");
 once("</main>", read("src/panels.html") + "</main>", "panels");
+// سطر التفكير (ThoughtLine من React Bits) لتقدّم التحليل مكان قائمة الخطوات المرقّمة
+once(`      </ol>\n      <div id="warnings" aria-live="polite"></div>`, `      </ol>\n      <div class="thought-host" data-thought="analysis" hidden></div>\n      <div id="warnings" aria-live="polite"></div>`, "analysis thought");
 // التقارير المحفوظة في مجلد أيضًا (Folder من React Bits): كل عنصر يحمل عنوانه ووصفه للمجلد
 once(
   `      <ul class="reports-list" id="reports-list"></ul>`,

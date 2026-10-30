@@ -56,7 +56,7 @@ await logout(p);
 // ٥) مصمم المنهج: يرى الإدارة دون إدارة المستخدمين
 await loginFirstTime(p, 'khalid.review', 'TempPass2027', 'Khalid2026review');
 check('دور مصمم المنهج', await p.textContent('#app-user-role'), 'مصمم المنهج');
-await p.click('#tab-admin');
+await p.click('[data-tab=tab-admin]');
 check('مصمم المنهج لا يرى إدارة الحسابات', await p.$eval('#accounts-card', c => c.hidden));
 check('سجل الدخول يشمل المحاولات الفاشلة', await p.$$eval('#users-table tbody tr', rs => [rs.length, rs.filter(x => x.textContent.includes('فاشل')).length]), [5, 2]);
 await logout(p);
@@ -69,7 +69,7 @@ check('كلمة صحيحة أثناء القفل مرفوضة', (await p.textCon
 
 // ٧) المدير: فك القفل، إعادة التعيين، التعطيل
 await login(p, ADMIN.username, ADMIN.password); await p.waitForSelector('#landing', { state: 'hidden' });
-await p.click('#tab-admin');
+await p.click('[data-tab=tab-admin]');
 const statusOf = name => p.$eval(`#accounts-table tr:has-text("${name}") td:nth-child(4)`, t => t.textContent);
 check('حالة مقفل', await statusOf('salem.design'), 'مقفل');
 await p.click('#accounts-table tr:has-text("salem.design") [data-act="unlock"]');
@@ -95,7 +95,7 @@ await p.fill('#cp-current', ADMIN.password); await p.click('#dlg-ok'); await p.w
 check('تنبيه التغيير', await p.textContent('.toast:last-child'), 'غُيّرت كلمة المرور.');
 
 // ٩) التصدير
-await p.click('#tab-admin');
+await p.click('[data-tab=tab-admin]');
 const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#btn-accounts-export')]);
 const exported = readFileSync(await dl.path(), 'utf8');
 check('التصدير بلا كلمات صريحة', [JSON.parse(exported).users.length, !exported.includes('Mariam2027admin') && !exported.includes('Salem2026design')], [3, true]);
@@ -115,7 +115,7 @@ check('الحساب المعطّل', await p.textContent('#login-error'), 'هذ�
 // ١٢) الاستيراد على جهاز جديد
 const ctx2 = await b.newContext({ viewport: { width: 1366, height: 900 } }); const p2 = await ctx2.newPage(); watchErrors(p2, errs, 'p2 ');
 await setupAdmin(p2, { fullName: 'مدير ثانٍ', username: 'second.admin', password: 'Second2026admin' });
-await p2.click('#tab-admin');
+await p2.click('[data-tab=tab-admin]');
 await p2.setInputFiles('#accounts-import', { name: 'users.json', mimeType: 'application/json', buffer: Buffer.from(exported) });
 await p2.click('#dlg-ok'); await p2.waitForFunction(() => document.querySelectorAll('#accounts-table tbody tr').length === 4);
 check('الصفوف بعد الاستيراد', await p2.$$eval('#accounts-table tbody tr', rs => rs.length), 4);
@@ -123,11 +123,11 @@ await logout(p2); await login(p2, ADMIN.username, 'Mariam2027admin');
 check('المدير المستورد يدخل', await p2.isHidden('#landing'));
 
 // ١٣) نظافة النصوص
-await p2.click('#tab-reference');
+await p2.click('[data-tab=tab-reference]');
 const text = await p2.evaluate(() => document.body.innerText);
 check('لا كلمات غير رسمية أو أدوار قديمة', ['مؤقت —', 'هيكل مؤقت', 'بند مؤقت', 'غير رسمي', 'تجريبي', 'تبديل الدور', 'جرّب على عينة', 'مراجع مناهج', 'مصمم منهج'].filter(w => text.includes(w)), []);
 check('اسم المرجع الداخلي', text.includes('قائمة تحقق عامة لمبادئ الاعتماد الأكاديمي'));
-check('مؤشر التبويب ظاهر', await p2.$eval('.tab-indicator', i => getComputedStyle(i).opacity), '1');
+check('القسم الحالي في الشريط', await p2.$eval('.harak-nav [aria-current=page]', x => x.dataset.tab), 'tab-reference');
 
 // ١٤) الجوال
 const m = await b.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true }); const pm = await m.newPage(); watchErrors(pm, errs, 'mobile ');

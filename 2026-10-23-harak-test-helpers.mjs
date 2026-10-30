@@ -49,7 +49,7 @@ export async function setupAdmin(p, a = ADMIN) {
 }
 
 export async function addUser(p, u) {
-  await p.click('#tab-admin');
+  await p.click('[data-tab=tab-admin]');
   await p.fill('#nu-fullname', u.fullName); await p.fill('#nu-username', u.username);
   await p.selectOption('#nu-role', u.role); await p.fill('#nu-password', u.password);
   await p.click('#nu-submit');
